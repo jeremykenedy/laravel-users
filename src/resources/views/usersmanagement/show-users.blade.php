@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('laravelusers::layouts.app')
 
 @section('template_title')
   Showing Users
@@ -41,7 +41,7 @@
 
                     <div class="panel-body">
 
-                        @include('partials.form-status')
+                        @include('laravelusers::partials.form-status')
 
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-condensed data-table">
@@ -92,14 +92,14 @@
         </div>
     </div>
 
-    @include('modals.modal-delete')
+    @include('laravelusers::modals.modal-delete')
 
 @endsection
 
 @section('template_scripts')
     @if (count($users) > 10)
-        @include('scripts.datatables')
+        @include('laravelusers::scripts.datatables')
     @endif
-    @include('scripts.delete-modal-script')
-    @include('scripts.save-modal-script')
+    @include('laravelusers::scripts.delete-modal-script')
+    @include('laravelusers::scripts.save-modal-script')
 @endsection

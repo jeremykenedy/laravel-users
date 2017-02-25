@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('laravelusers::layouts.app')
 
 @section('template_title')
   Editing User {{ $user->name }}
@@ -35,13 +35,13 @@
 
           </div>
 
-          {!! Form::model($user, array('action' => array('UsersManagementController@update', $user->id), 'method' => 'PUT')) !!}
+          {!! Form::model($user, array('action' => array('\jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@update', $user->id), 'method' => 'PUT')) !!}
 
             {!! csrf_field() !!}
 
             <div class="panel-body">
 
-              @include('partials.form-status')
+              @include('laravelusers::partials.form-status')
 
               <div class="form-group has-feedback row">
                 {!! Form::label('name', 'Name' , array('class' => 'col-md-3 control-label')); !!}
@@ -110,15 +110,15 @@
     </div>
   </div>
 
-  @include('modals.modal-save')
-  @include('modals.modal-delete')
+  @include('laravelusers::modals.modal-save')
+  @include('laravelusers::modals.modal-delete')
 
 @endsection
 
 @section('template_scripts')
 
-  @include('scripts.delete-modal-script')
-  @include('scripts.save-modal-script')
+  @include('laravelusers::scripts.delete-modal-script')
+  @include('laravelusers::scripts.save-modal-script')
 
   <script type="text/javascript">
     $('.btn-change-pw').click(function(event) {

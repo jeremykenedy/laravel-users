@@ -32,7 +32,8 @@ class UsersManagementController extends Controller
     {
         $users = User::all();
 
-        return View('usersmanagement.show-users', compact('users'));
+        return View('laravelusers::usersmanagement.show-users', compact('users'));
+
     }
 
     /**
@@ -42,7 +43,7 @@ class UsersManagementController extends Controller
      */
     public function create()
     {
-        return view('usersmanagement.create-user');
+        return view('laravelusers::usersmanagement.create-user');
     }
 
     /**
@@ -85,7 +86,7 @@ class UsersManagementController extends Controller
 
         $user = User::find($id);
 
-        return view('usersmanagement.show-user')->withUser($user);
+        return view('laravelusers::usersmanagement.show-user')->withUser($user);
     }
 
     /**
@@ -97,7 +98,7 @@ class UsersManagementController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('usersmanagement.edit-user')->withUser($user);
+        return view('laravelusers::usersmanagement.edit-user')->withUser($user);
     }
 
     /**
@@ -153,12 +154,13 @@ class UsersManagementController extends Controller
     {
 
         $currentUser = Auth::user();
-        $user = User::find($id);
+        $user = User::findOrFail($id);
 
         if ($currentUser != $user) {
             $user->delete();
             return redirect('users')->with('success', 'Successfully deleted the user!');
         }
         return back()->with('error', 'You cannot delete yourself!');
+
     }
 }

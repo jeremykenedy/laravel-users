@@ -1,4 +1,4 @@
-# Laravel-Users | A Laravel Users Management Package | v0.0.1
+# Laravel-Users | A Laravel Users Management Package | v0.0.2
 
 ## Introduction
 
@@ -45,10 +45,10 @@ Built for Laravel 5.2, 5.3, and 5.4+.
       'Html' => Collective\Html\HtmlFacade::class,
    ```
 
-4. Publish the packages assets by running the following from your projects root folder:
+4. Publish the packages language files by running the following from your projects root folder:
 
    ```
-      php artisan vendor:publish
+      php artisan vendor:publish --tag=laravelusers
    ```
 
 ## Routes

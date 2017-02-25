@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('laravelusers::layouts.app')
 
 @section('template_title')
   Create New User
@@ -25,9 +25,9 @@
           </div>
           <div class="panel-body">
 
-            @include('partials.form-status')
+            @include('laravelusers::partials.form-status')
 
-            {!! Form::open(array('action' => 'UsersManagementController@store', 'method' => 'POST', 'role' => 'form')) !!}
+            {!! Form::open(array('action' => '\jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@store', 'method' => 'POST', 'role' => 'form')) !!}
 
               {!! csrf_field() !!}
 

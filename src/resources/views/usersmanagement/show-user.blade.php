@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('laravelusers::layouts.app')
 
 @section('template_title')
   Showing User {{ $user->name }}
@@ -38,7 +38,7 @@
     <div class="row">
       <div class="col-md-10 col-md-offset-1">
 
-        @include('partials.form-status')
+        @include('laravelusers::partials.form-status')
 
         <div class="panel panel-default">
           <div class="panel-heading">
@@ -93,12 +93,12 @@
     </div>
   </div>
 
-  @include('modals.modal-delete')
+  @include('laravelusers::modals.modal-delete')
 
 @endsection
 
 @section('template_scripts')
 
-  @include('scripts.delete-modal-script')
+  @include('laravelusers::scripts.delete-modal-script')
 
 @endsection

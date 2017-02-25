@@ -18,9 +18,9 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/resources/views/', 'laravelusers');
 		$this->loadTranslationsFrom(__DIR__.'/resources/lang/en/', 'laravelusers');
 
-		$this->publishes([
-		    __DIR__.'/resources/views/' => resource_path('views/vendor/laravelusers'),
-		], 'laravelusers');
+		// $this->publishes([
+		//     __DIR__.'/resources/views/' => resource_path('views/vendor/laravelusers'),
+		// ], 'laravelusers');
 
 		$this->publishes([
 		    __DIR__.'/resources/lang/en/' => resource_path('lang/vendor/laravelusers'),
@@ -36,7 +36,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
     public function register()
     {
         include __DIR__.'/routes/web.php';
-        $this->app->make('jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController');
+        $this->app->make('jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController');
     }
 
 
