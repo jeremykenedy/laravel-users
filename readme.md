@@ -32,7 +32,6 @@ Built for Laravel 5.2, 5.3, and 5.4+.
 
    ```
       Collective\Html\HtmlServiceProvider::class,
-
       jeremykenedy\laravelusers\LaravelUsersServiceProvider::class,
 
    ```
