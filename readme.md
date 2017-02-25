@@ -1,4 +1,4 @@
-# Laravel-Users | A Laravel Users Management Package | v0.0.2
+# Laravel-Users | A Laravel Users Management Package | v0.0.3rc
 
 ## Introduction
 
@@ -65,18 +65,18 @@ Built for Laravel 5.2, 5.3, and 5.4+.
 
 ## Screenshots
 
-![Show Users]()
-![Show User]()
-![Edit User]()
-![Edit User Password]()
-![Create User]()
-
-![Create User Modal]()
+![Show Users](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-users.jpg)
+![Show User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-user.jpg)
+![Edit User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user.jpg)
+![Edit User Password](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user-pw.jpg)
+![Create User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/create-user.jpg)
+![Create User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/save-user-modal.jpg)
 ![Edit User Modal]()
-![Delete User Modal]()
+![Delete User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/delete-user-modal.jpg)
+![Error Create](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-create.jpg)
+![Error Update](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-update.jpg)
+![Error Delete](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-delete.jpg)
 
 ## License
 
 Laravel-Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
-
-
