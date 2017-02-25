@@ -33,7 +33,6 @@ Built for Laravel 5.2, 5.3, and 5.4+.
    ```
       Collective\Html\HtmlServiceProvider::class,
       jeremykenedy\laravelusers\LaravelUsersServiceProvider::class,
-
    ```
 
 3. Register the dependencies aliases with laravel in `config/app.php` section under `aliases` with the following:
