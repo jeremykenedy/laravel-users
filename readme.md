@@ -11,22 +11,22 @@ Built for Laravel 5.2, 5.3, and 5.4+.
 
    Example new project creation command:
 
-   ```laravel new laravel-users-example```
+    ```laravel new laravel-users-example```
 
 * [Laravel Authentication Scaffolding](https://laravel.com/docs/authentication)
 
-   Authentication installation command:
+   Authentication installation commands:
 
-   ```php artisan make:auth```
-
+    ```php artisan make:auth```
+    ```php artisan migrate```
 
 ## Installation
 
 1. From your projects root folder in terminal run:
 
-   ```
-      composer require jeremykenedy/laravel-users
-   ```
+    ```
+        composer require jeremykenedy/laravel-users
+    ```
 
 2. Register the package with laravel in `config/app.php` under `providers` with the following:
 
@@ -37,16 +37,16 @@ Built for Laravel 5.2, 5.3, and 5.4+.
 
 3. Register the dependencies aliases with laravel in `config/app.php` section under `aliases` with the following:
 
-   ```
-      'Form' => Collective\Html\FormFacade::class,
-      'Html' => Collective\Html\HtmlFacade::class,
-   ```
+    ```
+        'Form' => Collective\Html\FormFacade::class,
+        'Html' => Collective\Html\HtmlFacade::class,
+    ```
 
 4. Publish the packages language files by running the following from your projects root folder:
 
-   ```
-      php artisan vendor:publish --tag=laravelusers
-   ```
+    ```
+        php artisan vendor:publish --tag=laravelusers
+    ```
 
 ## Routes
 
