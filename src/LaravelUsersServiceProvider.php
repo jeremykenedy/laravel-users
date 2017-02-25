@@ -23,7 +23,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
 		// ], 'laravelusers');
 
 		$this->publishes([
-		    __DIR__.'/resources/lang/en/' => resource_path('lang/vendor/laravelusers'),
+            __DIR__.'/resources/lang/en/' => resource_path('lang/en'),
 		], 'laravelusers');
 
     }
