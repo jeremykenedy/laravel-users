@@ -1,4 +1,4 @@
-# Laravel-Users | A Laravel Users Management Package | v0.0.0
+# Laravel-Users | A Laravel Users Management Package | v0.0.1
 
 ## Introduction
 
