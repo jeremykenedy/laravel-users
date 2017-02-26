@@ -1,4 +1,4 @@
-# Laravel-Users | A Laravel Users Management Package | v1.0.0
+# Laravel-Users | A Laravel Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) | v1.0.0
 
 [![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
 [![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
@@ -6,7 +6,7 @@
 
 ## Introduction
 
-A Users Management Package that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
+A Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Built for Laravel 5.2, 5.3, and 5.4+.
 
 ## Requirements
