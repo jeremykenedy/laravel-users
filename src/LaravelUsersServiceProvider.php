@@ -18,12 +18,12 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/resources/views/', 'laravelusers');
 		$this->loadTranslationsFrom(__DIR__.'/resources/lang/en/', 'laravelusers');
 
-		// $this->publishes([
-		//     __DIR__.'/resources/views/' => resource_path('views/vendor/laravelusers'),
-		// ], 'laravelusers');
+		$this->publishes([
+		    __DIR__.'/resources/views/' => resource_path('views/vendor/laravelusers'),
+		], 'laravelusers');
 
 		$this->publishes([
-            __DIR__.'/resources/lang/en/' => resource_path('lang/en'),
+                    __DIR__.'/resources/lang/en/' => resource_path('lang/en'),
 		], 'laravelusers');
 
     }
