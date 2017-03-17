@@ -1,4 +1,4 @@
-# Laravel-Users | A Laravel Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) | v1.0.0
+# Laravel-Users | A Laravel Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) | v1.0.1
 
 [![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
 [![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
