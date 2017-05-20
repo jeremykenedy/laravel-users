@@ -9,8 +9,6 @@
 A Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Built for Laravel 5.2, 5.3, and 5.4+.
 
-Note: for Laravel 5.2 you will need to use `v0.9.0`
-
 ## Requirements
 
 * [Laravel 5.2, 5.3, or 5.4 or newer](https://laravel.com/docs/installation)
@@ -30,16 +28,23 @@ Note: for Laravel 5.2 you will need to use `v0.9.0`
 
 1. From your projects root folder in terminal run:
 
-    Laravel 5.3 < use:
+    Laravel 5.2 use:
+    ```
+        composer require jeremykenedy/laravel-users:1.2.0
+    ```
+
+    Laravel 5.3 use:
+
+    ```
+        composer require jeremykenedy/laravel-users:1.3.0
+    ```
+
+    Laravel 5.4 use:
 
     ```
         composer require jeremykenedy/laravel-users
     ```
 
-    Laravel 5.2 > use:
-    ```
-        composer require jeremykenedy/laravel-users:0.9.0
-    ```
 
 2. Register the package with laravel in `config/app.php` under `providers` with the following:
 
