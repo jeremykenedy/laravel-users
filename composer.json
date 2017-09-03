@@ -12,11 +12,21 @@
     ],
     "require": {
         "php": ">=5.6.4",
-        "laravelcollective/html": "^5.4.0"
+        "laravelcollective/html": "^5.4.0|^5.5.0"
     },
     "autoload": {
         "psr-4": {
             "jeremykenedy\\laravelusers\\": "src/"
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "jeremykenedy\\laravelusers\\LaravelUsersServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
     }
 }

@@ -7,11 +7,11 @@
 ## Introduction
 
 A Users Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
-Built for Laravel 5.2, 5.3, and 5.4+.
+Built for Laravel 5.2, 5.3, 5.4, and 5.5+.
 
 ## Requirements
 
-* [Laravel 5.2, 5.3, or 5.4 or newer](https://laravel.com/docs/installation)
+* [Laravel 5.2, 5.3, 5.4, and 5.5+](https://laravel.com/docs/installation)
 
    Example new project creation command:
 
@@ -42,18 +42,33 @@ Built for Laravel 5.2, 5.3, and 5.4+.
     Laravel 5.4 use:
 
     ```
+        composer require jeremykenedy/laravel-users:1.4.0
+    ```
+
+    Laravel 5.5+ use:
+
+    ```
         composer require jeremykenedy/laravel-users
     ```
 
+2. Register Package
+* Laravel 5.4 and up
+Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
-2. Register the package with laravel in `config/app.php` under `providers` with the following:
+* Laravel 5.4 and below
+Register the package with laravel in `config/app.php` under `providers` with the following:
 
    ```
       Collective\Html\HtmlServiceProvider::class,
       jeremykenedy\laravelusers\LaravelUsersServiceProvider::class,
    ```
 
-3. Register the dependencies aliases with laravel in `config/app.php` section under `aliases` with the following:
+3. Register the dependencies aliases
+* Laravel 5.4 and up
+Uses package auto discovery feature, no need to edit the `config/app.php` file.
+
+* Laravel 5.4 and below
+In `config/app.php` section under `aliases` with the following:
 
     ```
         'Form' => Collective\Html\FormFacade::class,
