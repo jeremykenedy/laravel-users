@@ -52,7 +52,7 @@ Built for Laravel 5.2, 5.3, 5.4, and 5.5+.
     ```
 
 2. Register Package
-* Laravel 5.4 and up
+* Laravel 5.5 and up
 Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
 * Laravel 5.4 and below
@@ -64,7 +64,7 @@ Register the package with laravel in `config/app.php` under `providers` with the
    ```
 
 3. Register the dependencies aliases
-* Laravel 5.4 and up
+* Laravel 5.5 and up
 Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
 * Laravel 5.4 and below
