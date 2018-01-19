@@ -2,17 +2,14 @@
 
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
-use Illuminate\Foundation\Auth\RegistersUsers;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Http\Requests;
-use Validator;
 use App\User;
 use Auth;
+use Illuminate\Http\Request;
+use Validator;
 
 class UsersManagementController extends Controller
 {
-
     /**
      * Create a new controller instance.
      *
@@ -33,7 +30,6 @@ class UsersManagementController extends Controller
         $users = User::all();
 
         return View('laravelusers::usersmanagement.show-users', compact('users'));
-
     }
 
     /**
@@ -49,27 +45,29 @@ class UsersManagementController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'name'      => 'required|max:255',
             'email'     => 'required|email|max:255|unique:users',
-            'password'  => 'required|confirmed|min:6'
+            'password'  => 'required|confirmed|min:6',
         ]);
 
         if ($validator->fails()) {
             $errors = $validator->errors();
+
             return view('laravelusers::usersmanagement.create-user', compact('errors'));
         } else {
-            $user               = new User;
-            $user->name         = $request->input('name');
-            $user->email        = $request->input('email');
-            $user->password     = bcrypt($request->input('password'));
+            $user = new User();
+            $user->name = $request->input('name');
+            $user->email = $request->input('email');
+            $user->password = bcrypt($request->input('password'));
             $user->save();
+
             return redirect('users')->with('success', 'Successfully created user!');
         }
     }
@@ -77,12 +75,12 @@ class UsersManagementController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-
         $user = User::find($id);
 
         return view('laravelusers::usersmanagement.show-user')->withUser($user);
@@ -91,43 +89,46 @@ class UsersManagementController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
         $user = User::findOrFail($id);
+
         return view('laravelusers::usersmanagement.edit-user')->withUser($user);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-
         $currentUser = Auth::user();
-        $user        = User::find($id);
-        $emailCheck  = ($request->input('email') != '') && ($request->input('email') != $currentUser->email);
+        $user = User::find($id);
+        $emailCheck = ($request->input('email') != '') && ($request->input('email') != $currentUser->email);
 
         if ($emailCheck) {
             $validator = Validator::make($request->all(), [
                 'name'      => 'required|max:255',
                 'email'     => 'nullable|email|max:255|unique:users',
-                'password'  => 'present|confirmed|min:6'
+                'password'  => 'present|confirmed|min:6',
             ]);
         } else {
             $validator = Validator::make($request->all(), [
                 'name'      => 'required|max:255',
-                'password'  => 'nullable|confirmed|min:6'
+                'password'  => 'nullable|confirmed|min:6',
             ]);
         }
         if ($validator->fails()) {
             $errors = $validator->errors();
+
             return view('laravelusers::usersmanagement.edit-user', compact('errors', 'user'));
         } else {
             $user->name = $request->input('name');
@@ -138,6 +139,7 @@ class UsersManagementController extends Controller
                 $user->password = bcrypt($request->input('password'));
             }
             $user->save();
+
             return back()->with('success', 'Successfully updated user');
         }
     }
@@ -145,20 +147,21 @@ class UsersManagementController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-
         $currentUser = Auth::user();
         $user = User::findOrFail($id);
 
         if ($currentUser != $user) {
             $user->delete();
+
             return redirect('users')->with('success', 'Successfully deleted the user!');
         }
-        return back()->with('error', 'You cannot delete yourself!');
 
+        return back()->with('error', 'You cannot delete yourself!');
     }
 }
