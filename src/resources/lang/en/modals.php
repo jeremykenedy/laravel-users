@@ -11,7 +11,6 @@ return [
     |
     */
 
-
     // Default Save Modal;
     'confirm_modal_title_text'                  => 'Confirm Save',
     'confirm_modal_title_std_msg'               => 'Please confirm your request.',
@@ -23,7 +22,5 @@ return [
     'confirm_modal_button_cancel_icon'          => 'fa-times',
     'edit_user__modal_text_confirm_title'       => 'Confirm Save',
     'edit_user__modal_text_confirm_message'     => 'Please confirm your changes.',
-
-
 
 ];
