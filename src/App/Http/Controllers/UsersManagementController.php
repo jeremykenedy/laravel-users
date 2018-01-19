@@ -62,9 +62,8 @@ class UsersManagementController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $this->throwValidationException(
-                $request, $validator
-            );
+            $errors = $validator->errors();
+            return view('laravelusers::usersmanagement.create-user', compact('errors'));
         } else {
             $user               = new User;
             $user->name         = $request->input('name');
@@ -128,9 +127,8 @@ class UsersManagementController extends Controller
             ]);
         }
         if ($validator->fails()) {
-            $this->throwValidationException(
-                $request, $validator
-            );
+            $errors = $validator->errors();
+            return view('laravelusers::usersmanagement.edit-user', compact('errors', 'user'));
         } else {
             $user->name = $request->input('name');
             if ($emailCheck) {
