@@ -138,6 +138,7 @@ class UsersManagementController extends Controller
             if ($request->input('password') != null) {
                 $user->password = bcrypt($request->input('password'));
             }
+            $user->updated_at = \Carbon\Carbon::now();
             $user->save();
 
             return back()->with('success', 'Successfully updated user');
