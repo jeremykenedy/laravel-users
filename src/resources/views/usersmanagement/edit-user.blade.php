@@ -93,7 +93,7 @@
                 <div class="col-xs-6">
                   <a href="#" class="btn btn-default btn-block margin-bottom-1 btn-change-pw" title="Change Password">
                     <i class="fa fa-fw fa-lock" aria-hidden="true"></i>
-                    Change <span class="hidden-xs">Password</span>
+                    <span class="toggle">Change</span> <span class="hidden-xs">Password</span>
                   </a>
                 </div>
 
@@ -126,7 +126,7 @@
       $('.pw-change-container').slideToggle(100);
       $(this).find('.fa').toggleClass('fa-times');
       $(this).find('.fa').toggleClass('fa-lock');
-      $(this).find('span').toggleText('', 'Cancel');
+      $(this).find('toggle').toggleText('Change', 'Cancel');
     });
     $("input").keyup(function() {
       if(!$('input').val()){
