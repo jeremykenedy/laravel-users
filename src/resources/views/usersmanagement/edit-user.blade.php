@@ -93,12 +93,12 @@
                 <div class="col-xs-6">
                   <a href="#" class="btn btn-default btn-block margin-bottom-1 btn-change-pw" title="Change Password">
                     <i class="fa fa-fw fa-lock" aria-hidden="true"></i>
-                    <span></span> Change Password
+                    Change <span class="hidden-xs">Password</span>
                   </a>
                 </div>
 
                 <div class="col-xs-6">
-                  {!! Form::button('<i class="fa fa-fw fa-save" aria-hidden="true"></i> Save Changes', array('class' => 'btn btn-success btn-block margin-bottom-1 btn-save','type' => 'button', 'data-toggle' => 'modal', 'data-target' => '#confirmSave', 'data-title' => Lang::get('modals.edit_user__modal_text_confirm_title'), 'data-message' => Lang::get('modals.edit_user__modal_text_confirm_message'))) !!}
+                  {!! Form::button('<i class="fa fa-fw fa-save" aria-hidden="true"></i> Save <span class="hidden-xs">Changes</span>', array('class' => 'btn btn-success btn-block margin-bottom-1 btn-save','type' => 'button', 'data-toggle' => 'modal', 'data-target' => '#confirmSave', 'data-title' => Lang::get('modals.edit_user__modal_text_confirm_title'), 'data-message' => Lang::get('modals.edit_user__modal_text_confirm_message'))) !!}
                 </div>
               </div>
             </div>
