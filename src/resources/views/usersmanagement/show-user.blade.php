@@ -47,7 +47,7 @@
 
             <a href="/users/" class="btn btn-primary btn-xs pull-right">
               <i class="fa fa-fw fa-mail-reply" aria-hidden="true"></i>
-              <span class="hidden-xs">Back to </span>Users
+              Back to Users
             </a>
 
           </div>
