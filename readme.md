@@ -9,7 +9,6 @@
 - [Requirements](#requirements)
 - [Installation Instructions](#installation-instructions)
 - [Configuration](#configuration)
-    - [Environment File](#environment-file)
 - [Routes](#routes)
 - [Screenshots](#screenshots)
 - [File Tree](#file-tree)
@@ -98,7 +97,7 @@ In `config/app.php` section under `aliases` with the following:
     ```
 
 ### Configuration
-Laravel Users can be configured directly in `/config/laravelusers.php` if you published the assets.
+Laravel Users can be configured directly in [`/config/laravelusers.php`](https://github.com/jeremykenedy/laravel-users/blob/master/src/config/laravelusers.php) once you publish the assets.
 
 ```php
     /*
