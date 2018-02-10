@@ -201,9 +201,49 @@ Laravel Users can be configured directly in `/config/laravelusers.php` if you pu
 ### File Tree
 
 ```bash
-
-
-
+laravel-users/
+├── .gitignore
+├── LICENSE
+├── composer.json
+├── readme.md
+└── src
+    ├── LaravelUsersServiceProvider.php
+    ├── app
+    │   └── Http
+    │       └── Controllers
+    │           └── UsersManagementController.php
+    ├── config
+    │   └── laravelusers.php
+    ├── resources
+    │   ├── lang
+    │   │   └── en
+    │   │       ├── app.php
+    │   │       ├── forms.php
+    │   │       ├── laravelusers.php
+    │   │       └── modals.php
+    │   └── views
+    │       ├── layouts
+    │       │   └── app.blade.php
+    │       ├── modals
+    │       │   ├── modal-delete.blade.php
+    │       │   └── modal-save.blade.php
+    │       ├── partials
+    │       │   ├── form-status.blade.php
+    │       │   └── styles.blade.php
+    │       ├── scripts
+    │       │   ├── check-changed.blade.php
+    │       │   ├── datatables.blade.php
+    │       │   ├── delete-modal-script.blade.php
+    │       │   ├── save-modal-script.blade.php
+    │       │   ├── toggleText.blade.php
+    │       │   └── tooltips.blade.php
+    │       └── usersmanagement
+    │           ├── create-user.blade.php
+    │           ├── edit-user.blade.php
+    │           ├── show-user.blade.php
+    │           └── show-users.blade.php
+    └── routes
+        └── web.php
 ```
 
 * Tree command can be installed using brew: `brew install tree`
