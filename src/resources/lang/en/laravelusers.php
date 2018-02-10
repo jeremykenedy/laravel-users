@@ -60,6 +60,8 @@ return [
         'roleRequired'          => 'User role is required.',
         'user-creation-success' => 'Successfully created user!',
         'update-user-success'   => 'Successfully updated user!'
+        'delete-success'        => 'Successfully deleted the user!',
+        'cannot-delete-yourself' => 'You cannot delete yourself!',
     ],
 
     'show-user' => [

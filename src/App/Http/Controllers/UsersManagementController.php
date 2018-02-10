@@ -249,9 +249,9 @@ class UsersManagementController extends Controller
 
         if ($currentUser != $user) {
             $user->delete();
-            return redirect('users')->with('success', 'Successfully deleted the user!');
+            return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
 
-        return back()->with('error', 'You cannot delete yourself!');
+        return back()->with('error', trans('laravelusers::laravelusers.messages.cannot-delete-yourself'));
     }
 }
