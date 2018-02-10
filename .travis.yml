@@ -23,3 +23,5 @@ before_script:
   - composer install --prefer-source --no-interaction
   - composer require jeremykenedy/laravel-users
   - php artisan vendor:publish --tag=laravelusers
+  - php artisan make:auth
+  - php artisan migrate
