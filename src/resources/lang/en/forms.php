@@ -60,7 +60,11 @@ return [
 	'create_user_ph_education'			=> 'User Education',
 	'create_user_icon_education'		=> 'fa-graduation-cap',
 
-	'create_user_button_text'			=> 'Create New User',
+    'create_user_label_role' 			=> 'User Role',
+    'create_user_ph_role'    			=> 'Select User Role',
+    'create_user_icon_role'  			=> 'fa-shield',
+
+	'create_user_button_text'			=> '<i class="fa fa-user-plus" aria-hidden="true"></i> Create New User',
 
 	// EDIT USER AS ADMINISTRATOR FORM
 	'edit-user-admin-title'				=>	'Edit User Information',
@@ -72,14 +76,18 @@ return [
 	'ph-useremail'						=> 'User Email',
 
 	'label-userrole_id'					=> 'User Access Level',
-	'option-label'						=>	'Select a Level',
-	'option-user'						=>	'User',
-	'option-editor'						=>	'Editor',
-	'option-admin'						=>	'Administrator',
-	'submit-btn-text'					=>	'Edit the User!',
+	'option-label'						=> 'Select a Level',
+	'option-user'						=> 'User',
+	'option-editor'						=> 'Editor',
+	'option-admin'						=> 'Administrator',
+	'submit-btn-text'					=> 'Edit the User!',
 
-	'submit-btn-icon'					=>	'fa-save',
-	'username-icon'						=>	'fa-user',
-	'useremail-icon'					=>	'fa-envelope-o',
+	'submit-btn-icon'					=> 'fa-save',
+	'username-icon'						=> 'fa-user',
+	'useremail-icon'					=> 'fa-envelope-o',
+
+	'change-pw' 						=> 'Change Password',
+	'cancel' 							=> 'Cancel',
+	'save-changes' 						=> '<i class="fa fa-fw fa-save" aria-hidden="true"></i> Save Changes',
 
 ];

@@ -34,7 +34,7 @@
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a href="{{ url('/users/create') }}">
+                                            <a href="{{ route('users.create') }}">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
                                                     <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                                 @endif
@@ -51,7 +51,7 @@
                                         </li>
                                     </ul>
                                 @else
-                                    <a href="{{ url('/users/create') }}" class="btn btn-default btn-sm pull-right">
+                                    <a href="{{ route('users.create') }}" class="btn btn-default btn-sm pull-right">
                                         @if(config('laravelusers.fontAwesomeEnabled'))
                                             <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                         @endif

@@ -87,6 +87,7 @@
             </nav>
 
             @yield('content')
+
         </div>
 
         {{-- Scripts --}}
@@ -99,13 +100,9 @@
         @if(config('laravelusers.enableAppJs'))
             <script src="{{ asset(config('laravelusers.appJsPublicFile')) }}"></script>
         @endif
-        <script type="text/javascript">
-            $.fn.extend({
-              toggleText: function(a, b){
-                  return this.text(this.text() == b ? a : b);
-              }
-            });
-        </script>
+        @include('laravelusers::scripts.toggleText')
+
         @yield('template_scripts')
+
     </body>
 </html>

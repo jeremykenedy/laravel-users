@@ -1,4 +1,8 @@
 <style type="text/css" media="screen">
+    .no-padding {
+        padding: 0;
+    }
+
     .modal .modal-header {
         -webkit-border-top-left-radius: 5px;
         -webkit-border-top-right-radius: 5px;
@@ -27,9 +31,7 @@
         color:#fff;
         background-color: #428bca;
     }
-    .no-padding {
-        padding: 0;
-    }
+
     .users-table {
         border: 0;
     }
@@ -63,5 +65,32 @@
     }
     .users-table .dropdown-menu > li button:hover {
         background: rgba(0,0,0,.04);
+    }
+
+    .user-table {
+        border: 0;
+    }
+    .user-table tr th {
+        border: 0 !important;
+    }
+    .user-table tr th:first-child,
+    .user-table tr td:first-child {
+        padding-left: 15px;
+    }
+    .user-table tr th:last-child,
+    .user-table tr td:last-child {
+        padding-right: 15px;
+    }
+    .user-table .table-responsive,
+    .user-table .table-responsive table {
+        margin-bottom: 0;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .btn-save,
+    .pw-change-container {
+      display: none;
     }
 </style>

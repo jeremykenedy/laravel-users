@@ -65,7 +65,18 @@ class UsersManagementController extends Controller
      */
     public function create()
     {
-        return view('laravelusers::usersmanagement.create-user');
+        $roles = [];
+
+        if ($this->_rolesEnabled) {
+            $roles = config('laravelusers.roleModel')::all();
+        }
+
+        $data = [
+            'rolesEnabled'  => $this->_rolesEnabled,
+            'roles'         => $roles,
+        ];
+
+        return view('laravelusers::usersmanagement.create-user')->with($data);
     }
 
     /**
@@ -77,26 +88,46 @@ class UsersManagementController extends Controller
      */
     public function store(Request $request)
     {
+        $rules = [
+            'name'                  => 'required|max:255|unique:users',
+            'email'                 => 'required|email|max:255|unique:users',
+            'password'              => 'required|confirmed|min:6',
+            'password_confirmation' => 'required|same:password',
+        ];
 
-        $validator = Validator::make($request->all(), [
-            'name'      => 'required|max:255',
-            'email'     => 'required|email|max:255|unique:users',
-            'password'  => 'required|confirmed|min:6'
-        ]);
+        if ($this->_rolesEnabled) {
+            $rules['role'] = 'required';
+        }
+
+        $messages = [
+            'name.unique'         => trans('laravelusers::laravelusers.messages.userNameTaken'),
+            'name.required'       => trans('laravelusers::laravelusers.messages.userNameRequired'),
+            'email.required'      => trans('laravelusers::laravelusers.messages.emailRequired'),
+            'email.email'         => trans('laravelusers::laravelusers.messages.emailInvalid'),
+            'password.required'   => trans('laravelusers::laravelusers.messages.passwordRequired'),
+            'password.min'        => trans('laravelusers::laravelusers.messages.PasswordMin'),
+            'password.max'        => trans('laravelusers::laravelusers.messages.PasswordMax'),
+            'role.required'       => trans('laravelusers::laravelusers.messages.roleRequired'),
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            $this->throwValidationException(
-                $request, $validator
-            );
-        } else {
-            $user               = new config('laravelusers.defaultUserModel');
-            $user->name         = $request->input('name');
-            $user->email        = $request->input('email');
-            $user->password     = bcrypt($request->input('password'));
-            $user->save();
-
-            return redirect('users')->with('success', 'Successfully created user!');
+            return back()->withErrors($validator)->withInput();
         }
+
+        $user = config('laravelusers.defaultUserModel')::create([
+            'name'             => $request->input('name'),
+            'email'            => $request->input('email'),
+            'password'         => bcrypt($request->input('password')),
+        ]);
+
+        if ($this->_rolesEnabled) {
+            $user->attachRole($request->input('role'));
+            $user->save();
+        }
+
+        return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
     }
 
     /**
@@ -121,9 +152,29 @@ class UsersManagementController extends Controller
      */
     public function edit($id)
     {
-        $user = config('laravelusers.defaultUserModel')::findOrFail($id);
+        $user           = config('laravelusers.defaultUserModel')::findOrFail($id);
+        $roles          = [];
+        $currentRole    = '';
 
-        return view('laravelusers::usersmanagement.edit-user')->withUser($user);
+        if ($this->_rolesEnabled) {
+            $roles = config('laravelusers.roleModel')::all();
+
+            foreach ($user->roles as $user_role) {
+                $currentRole = $user_role;
+            }
+        }
+
+        $data = [
+            'user'          => $user,
+            'rolesEnabled'  => $this->_rolesEnabled,
+        ];
+
+        if ($this->_rolesEnabled) {
+            $data['roles']          = $roles;
+            $data['currentRole']    = $currentRole;
+        }
+
+        return view('laravelusers::usersmanagement.edit-user')->with($data);
     }
 
     /**
@@ -136,38 +187,52 @@ class UsersManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $currentUser = Auth::user();
-        $user        = config('laravelusers.defaultUserModel')::find($id);
-        $emailCheck  = ($request->input('email') != '') && ($request->input('email') != $currentUser->email);
+        $user           = config('laravelusers.defaultUserModel')::find($id);
+        $emailCheck     = ($request->input('email') != '') && ($request->input('email') != $user->email);
+        $passwordCheck  = $request->input('password') != null;
+
+        $rules = [
+            'name' => 'required|max:255',
+        ];
 
         if ($emailCheck) {
-            $validator = Validator::make($request->all(), [
-                'name'      => 'required|max:255',
-                'email'     => 'nullable|email|max:255|unique:users',
-                'password'  => 'present|confirmed|min:6'
-            ]);
-        } else {
-            $validator = Validator::make($request->all(), [
-                'name'      => 'required|max:255',
-                'password'  => 'nullable|confirmed|min:6'
-            ]);
+            $rules['email'] = 'required|email|max:255|unique:users';
         }
-        if ($validator->fails()) {
-            $this->throwValidationException(
-                $request, $validator
-            );
-        } else {
-            $user->name = $request->input('name');
-            if ($emailCheck) {
-                $user->email = $request->input('email');
-            }
-            if ($request->input('password') != null) {
-                $user->password = bcrypt($request->input('password'));
-            }
-            $user->save();
 
-            return back()->with('success', 'Successfully updated user');
+        if ($passwordCheck) {
+            $rules['password'] = 'required|min:6|max:20|confirmed';
+            $rules['password_confirmation'] = 'required|same:password';
         }
+
+        if ($this->_rolesEnabled) {
+            $rules['role'] = 'required';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $user->name = $request->input('name');
+
+        if ($emailCheck) {
+            $user->email = $request->input('email');
+        }
+
+        if ($passwordCheck) {
+            $user->password = bcrypt($request->input('password'));
+        }
+
+        if ($this->_rolesEnabled) {
+            $user->detachAllRoles();
+            $user->attachRole($request->input('role'));
+        }
+
+        $user->save();
+
+        return back()->with('success', trans('laravelusers::laravelusers.messages.update-user-success'));
     }
 
     /**

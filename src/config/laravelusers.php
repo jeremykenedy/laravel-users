@@ -20,6 +20,9 @@ return [
     // Optional Roles Middleware
     'rolesMiddlware'                => 'role:admin',
 
+    // Optional Role Model
+    'roleModel'                     => 'jeremykenedy\LaravelRoles\Models\Role',
+
     // Enable Soft Deletes
     'softDeletedEnabled'            => false,
 
