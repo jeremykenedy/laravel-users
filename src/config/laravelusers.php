@@ -15,7 +15,7 @@ return [
     'authEnabled'                   => true,
 
     // Enable Optional Roles Middleware
-    'rolesEnabled'                  => true,
+    'rolesEnabled'                  => false,
 
     // Optional Roles Middleware
     'rolesMiddlware'                => 'role:admin',
@@ -23,7 +23,7 @@ return [
     // Optional Role Model
     'roleModel'                     => 'jeremykenedy\LaravelRoles\Models\Role',
 
-    // Enable Soft Deletes
+    // Enable Soft Deletes - Not yet setup - on the roadmap.
     'softDeletedEnabled'            => false,
 
     // Laravel Default User Model
