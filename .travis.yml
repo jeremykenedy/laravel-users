@@ -29,4 +29,3 @@ before_script:
   - php artisan make:auth
   - composer dump-autoload
   - php artisan clear-compiled
-  - php artisan migrate
