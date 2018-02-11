@@ -3,9 +3,7 @@
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests;
 use Auth;
-use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -82,7 +80,7 @@ class UsersManagementController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      *
      * @return \Illuminate\Http\Response
      */
@@ -133,7 +131,7 @@ class UsersManagementController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      *
      * @return \Illuminate\Http\Response
      */
@@ -147,14 +145,15 @@ class UsersManagementController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
-        $user           = config('laravelusers.defaultUserModel')::findOrFail($id);
-        $roles          = [];
-        $currentRole    = '';
+        $user = config('laravelusers.defaultUserModel')::findOrFail($id);
+        $roles = [];
+        $currentRole = '';
 
         if ($this->_rolesEnabled) {
             $roles = config('laravelusers.roleModel')::all();
@@ -170,8 +169,8 @@ class UsersManagementController extends Controller
         ];
 
         if ($this->_rolesEnabled) {
-            $data['roles']          = $roles;
-            $data['currentRole']    = $currentRole;
+            $data['roles'] = $roles;
+            $data['currentRole'] = $currentRole;
         }
 
         return view('laravelusers::usersmanagement.edit-user')->with($data);
@@ -180,16 +179,16 @@ class UsersManagementController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
      *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        $user           = config('laravelusers.defaultUserModel')::find($id);
-        $emailCheck     = ($request->input('email') != '') && ($request->input('email') != $user->email);
-        $passwordCheck  = $request->input('password') != null;
+        $user = config('laravelusers.defaultUserModel')::find($id);
+        $emailCheck = ($request->input('email') != '') && ($request->input('email') != $user->email);
+        $passwordCheck = $request->input('password') != null;
 
         $rules = [
             'name' => 'required|max:255',
@@ -209,7 +208,6 @@ class UsersManagementController extends Controller
         }
 
         $validator = Validator::make($request->all(), $rules);
-
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -238,7 +236,7 @@ class UsersManagementController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      *
      * @return \Illuminate\Http\Response
      */
@@ -249,6 +247,7 @@ class UsersManagementController extends Controller
 
         if ($currentUser != $user) {
             $user->delete();
+
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
 
