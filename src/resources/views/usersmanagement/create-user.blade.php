@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-  @lang('laravelusers::laravelusers.create-new-user')
+    @lang('laravelusers::laravelusers.create-new-user')
 @endsection
 
 @section('template_linked_css')
@@ -12,11 +12,21 @@
         <link rel="stylesheet" type="text/css" href="{{ config('laravelusers.fontAwesomeCdn') }}">
     @endif
     @include('laravelusers::partials.styles')
+    @include('laravelusers::partials.bs-visibility-css')
 @endsection
 
 @section('content')
 
-  <div class="container">
+    <div class="container">
+
+        @if(config('laravelusers.enablePackageBootstapAlerts'))
+            <div class="row">
+                <div class="col-sm-12">
+                    @include('laravelusers::partials.form-status')
+                </div>
+            </div>
+        @endif
+
     <div class="row">
       <div class="col-md-10 col-md-offset-1">
         <div class="panel panel-default">
@@ -177,4 +187,7 @@
 @endsection
 
 @section('template_scripts')
+    @if(config('laravelusers.tooltipsEnabled'))
+        @include('laravelusers::scripts.tooltips')
+    @endif
 @endsection

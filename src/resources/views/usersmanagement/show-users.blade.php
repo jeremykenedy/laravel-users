@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-  @lang('laravelusers::laravelusers.showing-all-users')
+    @lang('laravelusers::laravelusers.showing-all-users')
 @endsection
 
 @section('template_linked_css')
@@ -12,10 +12,18 @@
         <link rel="stylesheet" type="text/css" href="{{ config('laravelusers.fontAwesomeCdn') }}">
     @endif
     @include('laravelusers::partials.styles')
+    @include('laravelusers::partials.bs-visibility-css')
 @endsection
 
 @section('content')
     <div class="container">
+        @if(config('laravelusers.enablePackageBootstapAlerts'))
+            <div class="row">
+                <div class="col-sm-12">
+                    @include('laravelusers::partials.form-status')
+                </div>
+            </div>
+        @endif
         <div class="row">
             <div class="col-sm-12">
                 <div class="panel panel-default">
@@ -64,11 +72,12 @@
 
                     <div class="panel-body">
 
-                        @include('laravelusers::partials.form-status')
-
                         <div class="table-responsive users-table">
-                            <table class="table table-striped table-condensed data-table">
-                                <thead>
+                            <table class="table table-striped table-sm data-table">
+                                <caption>
+                                    {{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}
+                                </caption>
+                                <thead class="thead">
                                     <tr>
                                         <th>@lang('laravelusers::laravelusers.users-table.id')</th>
                                         <th>@lang('laravelusers::laravelusers.users-table.name')</th>
@@ -110,7 +119,7 @@
                                             <td>
                                                 {!! Form::open(array('url' => 'users/' . $user->id, 'class' => '', 'data-toggle' => 'tooltip', 'title' => trans('laravelusers::laravelusers.tooltips.delete'))) !!}
                                                     {!! Form::hidden('_method', 'DELETE') !!}
-                                                    {!! Form::button(trans('laravelusers::laravelusers.buttons.delete'), array('class' => 'btn btn-danger btn-sm','type' => 'button', 'style' =>'width: 100%;' ,'data-toggle' => 'modal', 'data-target' => '#confirmDelete', 'data-title' => trans('laravelusers::modals.delete_user_title'), 'data-message' => trans('laravelusers::modals.delete_user_message'))) !!}
+                                                    {!! Form::button(trans('laravelusers::laravelusers.buttons.delete'), array('class' => 'btn btn-danger btn-sm','type' => 'button', 'style' =>'width: 100%;' ,'data-toggle' => 'modal', 'data-target' => '#confirmDelete', 'data-title' => trans('laravelusers::modals.delete_user_title'), 'data-message' => trans('laravelusers::modals.delete_user_message', ['user' => $user->name]))) !!}
                                                 {!! Form::close() !!}
                                             </td>
                                             <td>

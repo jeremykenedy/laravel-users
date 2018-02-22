@@ -15,14 +15,17 @@
 @endif
 
 @if (session('error'))
-  <div class="alert alert-danger alert-dismissable">
-    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-    <h4>
-      <i class="icon fa fa-warning fa-fw" aria-hidden="true"></i>
-      Error
-    </h4>
+<div class="alert alert-danger alert-dismissable" role="alert">
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  <h4 class="alert-heading">
+    <i class="fas fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+    Error
+  </h4>
+  <hr>
+  <p class="mb-0">
     {{ session('error') }}
-  </div>
+  </p>
+</div>
 @endif
 
 @if (count($errors) > 0)

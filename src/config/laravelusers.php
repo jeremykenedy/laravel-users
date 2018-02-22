@@ -29,6 +29,9 @@ return [
     // Laravel Default User Model
     'defaultUserModel'              => 'App\User',
 
+    // Use Package Bootstrap Flash Alerts
+    'enablePackageBootstapAlerts'   => true,
+
     // Users List Pagination
     'enablePagination'              => true,
     'paginateListSize'              => 25,
@@ -42,25 +45,27 @@ return [
 
     // Bootstrap Tooltips
     'tooltipsEnabled'               => true,
+    'enableBootstrapPopperJsCdn'    => true,
+    'bootstrapPopperJsCdn'          => 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js',
 
     // Icons
     'fontAwesomeEnabled'            => true,
-    'fontAwesomeCdn'                => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+    'fontAwesomeCdn'                => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
 
     // Extended blade options for packages app.blade.php
-    'enableBootstrapCssCdn'         => true,
-    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
+    'enableBootstrapCssCdn'         => false,
+    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
 
     'enableAppCss'                  => true,
     'appCssPublicFile'              => 'css/app.css',
 
     'enableBootstrapJsCdn'          => true,
-    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js',
+    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
 
     'enableAppJs'                   => false,
     'appJsPublicFile'               => 'js/app.js',
 
     'enablejQueryCdn'               => true,
-    'jQueryCdn'                     => 'http://code.jquery.com/jquery-3.3.1.min.js',
+    'jQueryCdn'                     => 'https://code.jquery.com/jquery-3.3.1.min.js',
 
 ];

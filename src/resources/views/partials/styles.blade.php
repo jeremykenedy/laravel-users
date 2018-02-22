@@ -2,14 +2,13 @@
     .no-padding {
         padding: 0;
     }
-
     .modal .modal-header {
-        -webkit-border-top-left-radius: 5px;
-        -webkit-border-top-right-radius: 5px;
-        -moz-border-radius-topleft: 5px;
-        -moz-border-radius-topright: 5px;
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
+        -webkit-border-top-left-radius: .2rem;
+        -webkit-border-top-right-radius: .2rem;
+        -moz-border-radius-topleft: .2rem;
+        -moz-border-radius-topright: .2rem;
+        border-top-left-radius: .2rem;
+        border-top-right-radius: .2rem;
     }
     .modal-success .modal-header {
         color: #ffffff;
