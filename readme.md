@@ -20,7 +20,7 @@
 ### About
 A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Easily start creating, updating, editing, and deleting users in minutes with minimal setup required.
-Built for Laravel 5.2, 5.3, 5.4, and 5.5+. This package is easily configurable and customizable.
+Built for Laravel 5.2, 5.3, 5.4, 5.5, and 5.6+. This package is easily configurable and customizable.
 
 Laravel users can work out the box with or without the following roles packages:
 * [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
@@ -41,15 +41,21 @@ Laravel users can work out the box with or without the following roles packages:
 |Lots of [configuration](#configuration) options|
 
 ### Requirements
-* [Laravel 5.2, 5.3, 5.4, and 5.5+](https://laravel.com/docs/installation)
+* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6+](https://laravel.com/docs/installation)
 
 ### Installation Instructions
 1. From your projects root folder in terminal run:
 
-    Laravel 5.5+ use:
+    Laravel 5.6+ use:
 
     ```
         composer require jeremykenedy/laravel-users
+    ```
+
+    Laravel 5.5 use:
+
+    ```
+        composer require jeremykenedy/laravel-users:2.0.2
     ```
 
     Laravel 5.4 use:
@@ -116,7 +122,7 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
     'authEnabled'                   => true,
 
     // Enable Optional Roles Middleware
-    'rolesEnabled'                  => true,
+    'rolesEnabled'                  => false,
 
     // Optional Roles Middleware
     'rolesMiddlware'                => 'role:admin',
@@ -124,11 +130,14 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
     // Optional Role Model
     'roleModel'                     => 'jeremykenedy\LaravelRoles\Models\Role',
 
-    // Enable Soft Deletes
+    // Enable Soft Deletes - Not yet setup - on the roadmap.
     'softDeletedEnabled'            => false,
 
     // Laravel Default User Model
     'defaultUserModel'              => 'App\User',
+
+    // Use Package Bootstrap Flash Alerts
+    'enablePackageBootstapAlerts'   => true,
 
     // Users List Pagination
     'enablePagination'              => true,
@@ -143,26 +152,28 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 
     // Bootstrap Tooltips
     'tooltipsEnabled'               => true,
+    'enableBootstrapPopperJsCdn'    => true,
+    'bootstrapPopperJsCdn'          => 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js',
 
     // Icons
     'fontAwesomeEnabled'            => true,
-    'fontAwesomeCdn'                => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+    'fontAwesomeCdn'                => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
 
     // Extended blade options for packages app.blade.php
     'enableBootstrapCssCdn'         => true,
-    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
+    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
 
     'enableAppCss'                  => true,
     'appCssPublicFile'              => 'css/app.css',
 
     'enableBootstrapJsCdn'          => true,
-    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js',
+    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
 
-    'enableAppJs'                   => false,
+    'enableAppJs'                   => true,
     'appJsPublicFile'               => 'js/app.js',
 
     'enablejQueryCdn'               => true,
-    'jQueryCdn'                     => 'http://code.jquery.com/jquery-3.3.1.min.js',
+    'jQueryCdn'                     => 'https://code.jquery.com/jquery-3.3.1.min.js',
 ```
 
 ### Routes
@@ -204,48 +215,56 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 
 ```bash
 laravel-users/
+├── .env.travis
 ├── .gitignore
+├── .travis.yml
 ├── LICENSE
 ├── composer.json
+├── phpunit.xml
 ├── readme.md
-└── src
-    ├── LaravelUsersServiceProvider.php
-    ├── app
-    │   └── Http
-    │       └── Controllers
-    │           └── UsersManagementController.php
-    ├── config
-    │   └── laravelusers.php
-    ├── resources
-    │   ├── lang
-    │   │   └── en
-    │   │       ├── app.php
-    │   │       ├── forms.php
-    │   │       ├── laravelusers.php
-    │   │       └── modals.php
-    │   └── views
-    │       ├── layouts
-    │       │   └── app.blade.php
-    │       ├── modals
-    │       │   ├── modal-delete.blade.php
-    │       │   └── modal-save.blade.php
-    │       ├── partials
-    │       │   ├── form-status.blade.php
-    │       │   └── styles.blade.php
-    │       ├── scripts
-    │       │   ├── check-changed.blade.php
-    │       │   ├── datatables.blade.php
-    │       │   ├── delete-modal-script.blade.php
-    │       │   ├── save-modal-script.blade.php
-    │       │   ├── toggleText.blade.php
-    │       │   └── tooltips.blade.php
-    │       └── usersmanagement
-    │           ├── create-user.blade.php
-    │           ├── edit-user.blade.php
-    │           ├── show-user.blade.php
-    │           └── show-users.blade.php
-    └── routes
-        └── web.php
+├── src
+│   ├── App
+│   │   └── Http
+│   │       └── Controllers
+│   │           └── UsersManagementController.php
+│   ├── LaravelUsersFacade.php
+│   ├── LaravelUsersServiceProvider.php
+│   ├── config
+│   │   └── laravelusers.php
+│   ├── resources
+│   │   ├── lang
+│   │   │   └── en
+│   │   │       ├── app.php
+│   │   │       ├── forms.php
+│   │   │       ├── laravelusers.php
+│   │   │       └── modals.php
+│   │   └── views
+│   │       ├── layouts
+│   │       │   └── app.blade.php
+│   │       ├── modals
+│   │       │   ├── modal-delete.blade.php
+│   │       │   └── modal-save.blade.php
+│   │       ├── partials
+│   │       │   ├── bs-visibility-css.blade.php
+│   │       │   ├── form-status.blade.php
+│   │       │   └── styles.blade.php
+│   │       ├── scripts
+│   │       │   ├── check-changed.blade.php
+│   │       │   ├── datatables.blade.php
+│   │       │   ├── delete-modal-script.blade.php
+│   │       │   ├── save-modal-script.blade.php
+│   │       │   ├── toggleText.blade.php
+│   │       │   └── tooltips.blade.php
+│   │       └── usersmanagement
+│   │           ├── create-user.blade.php
+│   │           ├── edit-user.blade.php
+│   │           ├── show-user.blade.php
+│   │           └── show-users.blade.php
+│   └── routes
+│       └── web.php
+└── tests
+    ├── Feature
+    └── TestCase.php
 ```
 
 * Tree command can be installed using brew: `brew install tree`

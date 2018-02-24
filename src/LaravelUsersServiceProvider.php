@@ -37,6 +37,10 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/config/' . $this->_packageTag . '.php', $this->_packageTag);
         $this->publishFiles();
         $this->app->make('jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController');
+        $this->app->singleton(UsersManagementController::class, function () {
+            return new App\Http\Controllers\UsersManagementController();
+        });
+        $this->app->alias(UsersManagementController::class, 'laravelusers');
     }
 
     /**

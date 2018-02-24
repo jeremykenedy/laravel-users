@@ -26,8 +26,8 @@
         @endif
         <div class="row">
             <div class="col-sm-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
+                <div class="card">
+                    <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
 
                             @lang('laravelusers::laravelusers.showing-all-users')
@@ -46,7 +46,7 @@
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
                                                     <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                                 @endif
-                                                @lang('laravelusers::laravelusers.create-new-user')
+                                                @lang('laravelusers::laravelusers.buttons.create-new')
                                             </a>
                                         </li>
                                         <li>
@@ -59,18 +59,18 @@
                                         </li>
                                     </ul>
                                 @else
-                                    <a href="{{ route('users.create') }}" class="btn btn-default btn-sm pull-right">
+                                    <a href="{{ route('users.create') }}" class="btn btn-default btn-sm pull-right" data-toggle="tooltip" data-placement="left" title="@lang('laravelusers::laravelusers.tooltips.create-new')">
                                         @if(config('laravelusers.fontAwesomeEnabled'))
                                             <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                         @endif
-                                        @lang('laravelusers::laravelusers.create-new-user')
+                                        @lang('laravelusers::laravelusers.buttons.create-new')
                                     </a>
                                 @endif
                             </div>
                         </div>
                     </div>
 
-                    <div class="panel-body">
+                    <div class="card-body">
 
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-sm data-table">

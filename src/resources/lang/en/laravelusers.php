@@ -12,8 +12,6 @@ return [
     'users-menu-alt'        => 'Show Users Management Menu',
     'create-new-user'       => 'Create New User',
     'show-deleted-users'    => 'Show Deleted User',
-
-    'create-new-user'       => 'Create New User',
     'editing-user'          => 'Editing User :name',
     'showing-user'          => 'Showing User :name',
     'showing-user-title'    => ':name\'s Information',
@@ -31,19 +29,23 @@ return [
     ],
 
     'buttons' => [
+        'create-new'    => '<span class="hidden-xs hidden-sm">New User</span>',
         'delete'        => '<i class="far fa-trash-alt fa-fw" aria-hidden="true"></i>  <span class="hidden-xs hidden-sm">Delete</span><span class="hidden-xs hidden-sm hidden-md"> User</span>',
         'show'          => '<i class="fas fa-eye fa-fw" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Show</span><span class="hidden-xs hidden-sm hidden-md"> User</span>',
         'edit'          => '<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Edit</span><span class="hidden-xs hidden-sm hidden-md"> User</span>',
         'back-to-users' => '<span class="hidden-sm hidden-xs">Back to </span><span class="hidden-xs">Users</span>',
         'back-to-user'  => 'Back  <span class="hidden-xs">to User</span>',
-        'delete-user'   => '<i class="fas fa-trash-o fa-fw" aria-hidden="true"></i>  <span class="hidden-xs">Delete</span><span class="hidden-xs"> User</span>',
-        'edit-user'     => '<i class="fas fa-pencil fa-fw" aria-hidden="true"></i> <span class="hidden-xs">Edit</span><span class="hidden-xs"> User</span>',
+        'delete-user'   => '<i class="far fa-trash-alt fa-fw" aria-hidden="true"></i>  <span class="hidden-xs">Delete</span><span class="hidden-xs"> User</span>',
+        'edit-user'     => '<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i> <span class="hidden-xs">Edit</span><span class="hidden-xs"> User</span>',
     ],
 
     'tooltips' => [
-        'delete'    => 'Delete',
-        'show'      => 'Show',
-        'edit'      => 'Edit',
+        'delete'        => 'Delete',
+        'show'          => 'Show',
+        'edit'          => 'Edit',
+        'create-new'    => 'Create New User',
+        'back-users'    => 'Back to users',
+        'email-user'    => 'Email :user',
     ],
 
     'messages' => [

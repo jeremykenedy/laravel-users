@@ -19,6 +19,17 @@
             "jeremykenedy\\laravelusers\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "jeremykenedy\\laravelusers\\Test\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "illuminate/support": "^5.6",
+        "orchestra/testbench": "~3.0",
+        "phpunit/phpunit": "^7.0",
+        "laravel/laravel": "dev-develop"
+    },
     "extra": {
         "laravel": {
             "providers": [

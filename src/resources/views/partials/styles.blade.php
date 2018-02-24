@@ -92,4 +92,10 @@
     .pw-change-container {
       display: none;
     }
+    .has-error,
+    .has-error input,
+    .has-error select,
+    .has-error textarea {
+        border-color: #d9534f;
+    }
 </style>

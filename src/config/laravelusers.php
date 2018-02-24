@@ -53,7 +53,7 @@ return [
     'fontAwesomeCdn'                => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
 
     // Extended blade options for packages app.blade.php
-    'enableBootstrapCssCdn'         => false,
+    'enableBootstrapCssCdn'         => true,
     'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
 
     'enableAppCss'                  => true,
@@ -62,7 +62,7 @@ return [
     'enableBootstrapJsCdn'          => true,
     'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
 
-    'enableAppJs'                   => false,
+    'enableAppJs'                   => true,
     'appJsPublicFile'               => 'js/app.js',
 
     'enablejQueryCdn'               => true,

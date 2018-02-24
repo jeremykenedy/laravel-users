@@ -62,7 +62,7 @@ return [
 
     'create_user_label_role' 			=> 'User Role',
     'create_user_ph_role'    			=> 'Select User Role',
-    'create_user_icon_role'  			=> 'fa-shield',
+    'create_user_icon_role'  			=> 'fas fa-fw fas fa-shield-alt',
 
 	'create_user_button_text'			=> '<i class="fa fa-user-plus" aria-hidden="true"></i> Create New User',
 
