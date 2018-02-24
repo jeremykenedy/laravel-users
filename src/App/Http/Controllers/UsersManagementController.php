@@ -87,10 +87,10 @@ class UsersManagementController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name'                  => 'required|max:255|unique:users',
+            'name'                  => 'required|string|max:255|unique:users',
             'email'                 => 'required|email|max:255|unique:users',
-            'password'              => 'required|confirmed|min:6',
-            'password_confirmation' => 'required|same:password',
+            'password'              => 'required|string|confirmed|min:6',
+            'password_confirmation' => 'required|string|same:password',
         ];
 
         if ($this->_rolesEnabled) {
@@ -199,8 +199,8 @@ class UsersManagementController extends Controller
         }
 
         if ($passwordCheck) {
-            $rules['password'] = 'required|min:6|max:20|confirmed';
-            $rules['password_confirmation'] = 'required|same:password';
+            $rules['password'] = 'required|string|min:6|max:20|confirmed';
+            $rules['password_confirmation'] = 'required|string|same:password';
         }
 
         if ($this->_rolesEnabled) {
