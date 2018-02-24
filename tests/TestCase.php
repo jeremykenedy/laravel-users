@@ -9,8 +9,10 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 class TestCase extends OrchestraTestCase
 {
     /**
-     * Load package service provider
-     * @param  \Illuminate\Foundation\Application $app
+     * Load package service provider.
+     *
+     * @param \Illuminate\Foundation\Application $app
+     *
      * @return jeremykenedy\laravelusers\LaravelUsersServiceProvider
      */
     protected function getPackageProviders($app)
@@ -19,8 +21,10 @@ class TestCase extends OrchestraTestCase
     }
 
     /**
-     * Load package alias
-     * @param  \Illuminate\Foundation\Application $app
+     * Load package alias.
+     *
+     * @param \Illuminate\Foundation\Application $app
+     *
      * @return array
      */
     protected function getPackageAliases($app)
