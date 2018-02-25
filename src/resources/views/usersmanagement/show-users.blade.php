@@ -72,6 +72,23 @@
 
                     <div class="card-body">
 
+<div class="row">
+    <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
+        {!! Form::open(['route' => 'search-users', 'method' => 'POST', 'role' => 'form', 'class' => 'needs-validation', 'id' => 'search_users']) !!}
+            {!! csrf_field() !!}
+            <div class="input-group mb-3">
+                {!! Form::text('user_search_box', NULL, ['id' => 'user_search_box', 'class' => 'form-control', 'placeholder' => 'Search users', 'aria-label' => 'Search users']) !!}
+                <div class="input-group-append">
+                    {!! Form::button('<i class="fas fa-search" aria-hidden="true"></i>', ['class' => 'btn btn-secondary','type' => 'submit']) !!}
+                </div>
+            </div>
+        {!! Form::close() !!}
+    </div>
+</div>
+
+<div id="search_results"></div>
+
+
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-sm data-table">
                                 <caption>
@@ -143,6 +160,7 @@
 
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -161,4 +179,35 @@
     @if(config('laravelusers.tooltipsEnabled'))
         @include('laravelusers::scripts.tooltips')
     @endif
+
+    <script>
+        $(function() {
+            $('#search_users').submit(function(e) {
+                e.preventDefault();
+
+                var resultsContainer = $('#search_results');
+                var form = $(this);
+
+                resultsContainer.html('');
+
+                $.ajax({
+                    type:'POST',
+                    url: "{{ route('search-users') }}",
+                    data: form.serialize(),
+                    success: function (result) {
+                        var jsonData = JSON.parse(result);
+                        if (jsonData.length != 0) {
+                            $.each(jsonData, function(index, val) {
+                                resultsContainer.append('<div>' + val.name + '</div>');
+                            });
+                        } else {
+                            resultsContainer.append('<div>no results</div>');
+                        };
+                    },
+                });
+
+            });
+        });
+    </script>
+
 @endsection

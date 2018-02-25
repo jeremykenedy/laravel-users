@@ -4,6 +4,7 @@ namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -253,4 +254,41 @@ class UsersManagementController extends Controller
 
         return back()->with('error', trans('laravelusers::laravelusers.messages.cannot-delete-yourself'));
     }
+
+    /**
+     * Method to search the users.
+     *
+     * @param  Request $request
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function search(Request $request){
+
+        $searchTerm = $request->input('user_search_box');
+        $searchRules = [
+            'user_search_box' => 'required|string|max:255',
+        ];
+        $searchMessages = [
+            'user_search_box.required' => 'Search term is required',
+            'user_search_box.string' => 'Search term has invalid characters',
+            'user_search_box.max' => 'Search term has too many characters - 255 allowed',
+        ];
+
+        $validator = Validator::make($request->all(), $searchRules, $searchMessages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                json_encode($validator)
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $results = config('laravelusers.defaultUserModel')::where('id', 'like', $searchTerm.'%')
+                            ->orWhere('name', 'like', $searchTerm.'%')
+                            ->orWhere('email', 'like', $searchTerm.'%')->get();
+
+        return response()->json([
+            json_encode($results)
+        ], Response::HTTP_OK);
+    }
+
 }
