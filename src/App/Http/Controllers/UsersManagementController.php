@@ -4,8 +4,8 @@ namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Auth;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Validator;
 
 class UsersManagementController extends Controller
@@ -250,6 +250,7 @@ class UsersManagementController extends Controller
 
         if ($currentUser->id != $user->id) {
             $user->delete();
+
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
 
@@ -259,27 +260,27 @@ class UsersManagementController extends Controller
     /**
      * Method to search the users.
      *
-     * @param  Request $request
+     * @param Request $request
      *
      * @return \Illuminate\Http\Response
      */
-    public function search(Request $request){
-
+    public function search(Request $request)
+    {
         $searchTerm = $request->input('user_search_box');
         $searchRules = [
             'user_search_box' => 'required|string|max:255',
         ];
         $searchMessages = [
             'user_search_box.required' => 'Search term is required',
-            'user_search_box.string' => 'Search term has invalid characters',
-            'user_search_box.max' => 'Search term has too many characters - 255 allowed',
+            'user_search_box.string'   => 'Search term has invalid characters',
+            'user_search_box.max'      => 'Search term has too many characters - 255 allowed',
         ];
 
         $validator = Validator::make($request->all(), $searchRules, $searchMessages);
 
         if ($validator->fails()) {
             return response()->json([
-                json_encode($validator)
+                json_encode($validator),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -290,14 +291,13 @@ class UsersManagementController extends Controller
         // Attach roles to results
         foreach ($results as $result) {
             $roles = [
-                'roles' => $result->roles
+                'roles' => $result->roles,
             ];
             $result->push($roles);
         }
 
         return response()->json([
-            json_encode($results)
+            json_encode($results),
         ], Response::HTTP_OK);
     }
-
 }
