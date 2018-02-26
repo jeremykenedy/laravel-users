@@ -45,6 +45,9 @@ return [
     'enablePagination'              => true,
     'paginateListSize'              => 25,
 
+    // Enable Search Users- Uses jQuery Ajax
+    'enableSearchUsers'             => true,
+
     // Users List JS DataTables - not recommended use with pagination
     'enabledDatatablesJs'           => false,
     'datatablesJsStartCount'        => 25,

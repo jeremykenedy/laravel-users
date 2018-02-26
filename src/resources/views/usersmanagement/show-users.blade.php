@@ -72,35 +72,11 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
 
-                                {!! Form::open(['route' => 'search-users', 'method' => 'POST', 'role' => 'form', 'class' => 'needs-validation', 'id' => 'search_users']) !!}
-                                    {!! csrf_field() !!}
-                                    <div class="input-group mb-3">
-                                        {!! Form::text('user_search_box', NULL, ['id' => 'user_search_box', 'class' => 'form-control', 'placeholder' => trans('laravelusers::forms.search-users-ph'), 'aria-label' => trans('laravelusers::forms.search-users-ph'), 'required' => false]) !!}
-                                        <div class="input-group-append">
-                                            <a href="#" class="btn btn-warning clear-search" data-toggle="tooltip" title="@lang('laravelusers::laravelusers.tooltips.clear-search')">
-                                                @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="fas fa-times" aria-hidden="true"></i>
-                                                    <span class="sr-only">
-                                                        @lang('laravelusers::laravelusers.tooltips.clear-search')
-                                                    </span>
-                                                @else
-                                                    @lang('laravelusers::laravelusers.tooltips.clear-search')
-                                                @endif
-                                            </a>
-                                            @if(config('laravelusers.fontAwesomeEnabled'))
-                                                {!! Form::button('<i class="fas fa-search" aria-hidden="true"></i> <span class="sr-only"> ' . trans('laravelusers::laravelusers.tooltips.submit-search') . ' </span>', ['class' => 'btn btn-secondary', 'type' => 'submit', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => trans('laravelusers::laravelusers.tooltips.submit-search')]) !!}
-                                            @else
-                                                {!! Form::button(trans('laravelusers::laravelusers.tooltips.submit-search'), ['class' => 'btn btn-secondary', 'type' => 'submit', 'title' => trans('laravelusers::laravelusers.tooltips.submit-search')]) !!}
-                                            @endif
-                                        </div>
-                                    </div>
-                                {!! Form::close() !!}
+                        @if(config('laravelusers.enableSearchUsers'))
+                            @include('laravelusers::partials.search-users-form')
+                        @endif
 
-                            </div>
-                        </div>
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-sm data-table">
                                 <caption id="user_count">
@@ -164,7 +140,9 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                                <tbody id="search_results"></tbody>
+                                @if(config('laravelusers.enableSearchUsers'))
+                                    <tbody id="search_results"></tbody>
+                                @endif
                             </table>
 
                             @if($pagintaionEnabled)
@@ -192,96 +170,8 @@
     @if(config('laravelusers.tooltipsEnabled'))
         @include('laravelusers::scripts.tooltips')
     @endif
-
-    <script>
-        $(function() {
-
-            var cardTitle = $('#card_title');
-            var usersTable = $('#users_table');
-            var resultsContainer = $('#search_results');
-            var usersCount = $('#user_count');
-            var clearSearchTrigger = $('.clear-search');
-            var searchform = $('#search_users');
-
-            searchform.submit(function(e) {
-                e.preventDefault();
-                resultsContainer.html('');
-                usersTable.hide();
-                clearSearchTrigger.show();
-
-                var noResulsHtml = '<tr>' +
-                                    '<td>@lang("laravelusers::laravelusers.search.no-results")</td>' +
-                                    '<td></td>' +
-                                    '<td class="hidden-xs"></td>' +
-                                    '<td class="hidden-sm hidden-xs"></td>' +
-                                    '<td class="hidden-sm hidden-xs hidden-md"></td>' +
-                                    '<td class="hidden-sm hidden-xs hidden-md"></td>' +
-                                    '<td></td>' +
-                                    '<td></td>' +
-                                    '<td></td>' +
-                                    '</tr>';
-
-                $.ajax({
-                    type:'POST',
-                    url: "{{ route('search-users') }}",
-                    data: searchform.serialize(),
-                    success: function (result) {
-                        var jsonData = JSON.parse(result);
-                        if (jsonData.length != 0) {
-                            $.each(jsonData, function(index, val) {
-                                var rolesHtml = '';
-                                var roleClass = '';
-                                $.each(val.roles, function(roleIndex, role) {
-                                    if (role.name == "User") {
-                                        roleClass = 'primary';
-                                    } else if (role.name == "Admin") {
-                                        roleClass = 'warning';
-                                    } else if (role.name == "Unverified") {
-                                        roleClass = 'danger';
-                                    } else {
-                                        roleClass = 'dark';
-                                    };
-                                    rolesHtml = '<span class="badge badge-' + roleClass + '">' + role.name + '</span> ';
-                                });
-                                resultsContainer.append('<tr>' +
-                                    '<td>' + val.id + '</td>' +
-                                    '<td>' + val.name + '</td>' +
-                                    '<td class="hidden-xs">' + val.email + '</td>' +
-                                    '@if(config("laravelusers.rolesEnabled"))<td class="hidden-sm hidden-xs"> ' +
-                                     rolesHtml  +
-                                    '</td>' +
-                                    '@endif<td class="hidden-sm hidden-xs hidden-md">' + val.created_at + '</td>' +
-                                    '<td class="hidden-sm hidden-xs hidden-md">' + val.updated_at + '</td>' +
-                                    '<td>delete</td>' +
-                                    '<td>show</td>' +
-                                    '<td>edit</td>' +
-                                '</tr>');
-                            });
-                        } else {
-                            resultsContainer.append(noResulsHtml);
-                        };
-                        usersCount.html(jsonData.length + " @lang('laravelusers::laravelusers.search.found-footer')");
-                        cardTitle.html("@lang('laravelusers::laravelusers.search.title')");
-                    },
-                    error: function (response, status, error) {
-                        if (response.status === 422) {
-                            resultsContainer.append(noResulsHtml);
-                            usersCount.html(0 + " @lang('laravelusers::laravelusers.search.found-footer')");
-                            cardTitle.html("@lang('laravelusers::laravelusers.search.title')");
-                        };
-                    },
-                });
-            });
-            clearSearchTrigger.click(function(e) {
-                e.preventDefault();
-                clearSearchTrigger.hide();
-                usersTable.show();
-                resultsContainer.html('');
-                cardTitle.html("@lang('laravelusers::laravelusers.showing-all-users')");
-                usersCount.html("{{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}");
-            });
-
-        });
-    </script>
+    @if(config('laravelusers.enableSearchUsers'))
+        @include('laravelusers::scripts.search-users')
+    @endif
 
 @endsection

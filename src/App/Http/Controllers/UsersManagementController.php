@@ -248,9 +248,8 @@ class UsersManagementController extends Controller
         $currentUser = Auth::user();
         $user = config('laravelusers.defaultUserModel')::findOrFail($id);
 
-        if ($currentUser != $user) {
+        if ($currentUser->id != $user->id) {
             $user->delete();
-
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
 
