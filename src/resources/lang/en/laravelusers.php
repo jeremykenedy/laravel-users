@@ -46,6 +46,8 @@ return [
         'create-new'    => 'Create New User',
         'back-users'    => 'Back to users',
         'email-user'    => 'Email :user',
+        'submit-search' => 'Submit Users Search',
+        'clear-search'  => 'Clear Search Results',
     ],
 
     'messages' => [
@@ -76,5 +78,11 @@ return [
         'updated'           => 'Updated <span class="hidden-xs">at</span>',
         'labelRole'         => 'User Role',
         'labelAccessLevel'  => '<span class="hidden-xs">User</span> Access Level|<span class="hidden-xs">User</span> Access Levels',
+    ],
+
+    'search'  => [
+        'title'         => 'Showing Search Results',
+        'found-footer'  => ' Record(s) found',
+        'no-results'    => 'No Results',
     ],
 ];

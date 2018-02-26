@@ -98,4 +98,7 @@
     .has-error textarea {
         border-color: #d9534f;
     }
+    .clear-search {
+        display: none;
+    }
 </style>

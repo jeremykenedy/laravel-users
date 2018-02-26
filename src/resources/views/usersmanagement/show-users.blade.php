@@ -30,7 +30,9 @@
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
 
-                            @lang('laravelusers::laravelusers.showing-all-users')
+                            <span id="card_title">
+                                @lang('laravelusers::laravelusers.showing-all-users')
+                            </span>
 
                             <div class="btn-group pull-right btn-group-xs">
                                 @if(config('laravelusers.softDeletedEnabled'))
@@ -69,29 +71,39 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
 
-<div class="row">
-    <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
-        {!! Form::open(['route' => 'search-users', 'method' => 'POST', 'role' => 'form', 'class' => 'needs-validation', 'id' => 'search_users']) !!}
-            {!! csrf_field() !!}
-            <div class="input-group mb-3">
-                {!! Form::text('user_search_box', NULL, ['id' => 'user_search_box', 'class' => 'form-control', 'placeholder' => 'Search users', 'aria-label' => 'Search users']) !!}
-                <div class="input-group-append">
-                    {!! Form::button('<i class="fas fa-search" aria-hidden="true"></i>', ['class' => 'btn btn-secondary','type' => 'submit']) !!}
-                </div>
-            </div>
-        {!! Form::close() !!}
-    </div>
-</div>
+                                {!! Form::open(['route' => 'search-users', 'method' => 'POST', 'role' => 'form', 'class' => 'needs-validation', 'id' => 'search_users']) !!}
+                                    {!! csrf_field() !!}
+                                    <div class="input-group mb-3">
+                                        {!! Form::text('user_search_box', NULL, ['id' => 'user_search_box', 'class' => 'form-control', 'placeholder' => trans('laravelusers::forms.search-users-ph'), 'aria-label' => trans('laravelusers::forms.search-users-ph'), 'required' => false]) !!}
+                                        <div class="input-group-append">
+                                            <a href="#" class="btn btn-warning clear-search" data-toggle="tooltip" title="@lang('laravelusers::laravelusers.tooltips.clear-search')">
+                                                @if(config('laravelusers.fontAwesomeEnabled'))
+                                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                                    <span class="sr-only">
+                                                        @lang('laravelusers::laravelusers.tooltips.clear-search')
+                                                    </span>
+                                                @else
+                                                    @lang('laravelusers::laravelusers.tooltips.clear-search')
+                                                @endif
+                                            </a>
+                                            @if(config('laravelusers.fontAwesomeEnabled'))
+                                                {!! Form::button('<i class="fas fa-search" aria-hidden="true"></i> <span class="sr-only"> ' . trans('laravelusers::laravelusers.tooltips.submit-search') . ' </span>', ['class' => 'btn btn-secondary', 'type' => 'submit', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => trans('laravelusers::laravelusers.tooltips.submit-search')]) !!}
+                                            @else
+                                                {!! Form::button(trans('laravelusers::laravelusers.tooltips.submit-search'), ['class' => 'btn btn-secondary', 'type' => 'submit', 'title' => trans('laravelusers::laravelusers.tooltips.submit-search')]) !!}
+                                            @endif
+                                        </div>
+                                    </div>
+                                {!! Form::close() !!}
 
-<div id="search_results"></div>
-
-
+                            </div>
+                        </div>
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-sm data-table">
-                                <caption>
+                                <caption id="user_count">
                                     {{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}
                                 </caption>
                                 <thead class="thead">
@@ -109,7 +121,7 @@
                                         <th class="no-search no-sort"></th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="users_table">
                                     @foreach($users as $user)
                                         <tr>
                                             <td>{{$user->id}}</td>
@@ -119,15 +131,15 @@
                                                 <td class="hidden-sm hidden-xs">
                                                     @foreach ($user->roles as $user_role)
                                                         @if ($user_role->name == 'User')
-                                                            @php $labelClass = 'primary' @endphp
+                                                            @php $badgeClass = 'primary' @endphp
                                                         @elseif ($user_role->name == 'Admin')
-                                                            @php $labelClass = 'warning' @endphp
+                                                            @php $badgeClass = 'warning' @endphp
                                                         @elseif ($user_role->name == 'Unverified')
-                                                            @php $labelClass = 'danger' @endphp
+                                                            @php $badgeClass = 'danger' @endphp
                                                         @else
-                                                            @php $labelClass = 'default' @endphp
+                                                            @php $badgeClass = 'dark' @endphp
                                                         @endif
-                                                        <span class="label label-{{$labelClass}}">{{ $user_role->name }}</span>
+                                                        <span class="badge badge-{{$badgeClass}}">{{ $user_role->name }}</span>
                                                     @endforeach
                                                 </td>
                                             @endif
@@ -152,6 +164,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
+                                <tbody id="search_results"></tbody>
                             </table>
 
                             @if($pagintaionEnabled)
@@ -182,31 +195,92 @@
 
     <script>
         $(function() {
-            $('#search_users').submit(function(e) {
+
+            var cardTitle = $('#card_title');
+            var usersTable = $('#users_table');
+            var resultsContainer = $('#search_results');
+            var usersCount = $('#user_count');
+            var clearSearchTrigger = $('.clear-search');
+            var searchform = $('#search_users');
+
+            searchform.submit(function(e) {
                 e.preventDefault();
-
-                var resultsContainer = $('#search_results');
-                var form = $(this);
-
                 resultsContainer.html('');
+                usersTable.hide();
+                clearSearchTrigger.show();
+
+                var noResulsHtml = '<tr>' +
+                                    '<td>@lang("laravelusers::laravelusers.search.no-results")</td>' +
+                                    '<td></td>' +
+                                    '<td class="hidden-xs"></td>' +
+                                    '<td class="hidden-sm hidden-xs"></td>' +
+                                    '<td class="hidden-sm hidden-xs hidden-md"></td>' +
+                                    '<td class="hidden-sm hidden-xs hidden-md"></td>' +
+                                    '<td></td>' +
+                                    '<td></td>' +
+                                    '<td></td>' +
+                                    '</tr>';
 
                 $.ajax({
                     type:'POST',
                     url: "{{ route('search-users') }}",
-                    data: form.serialize(),
+                    data: searchform.serialize(),
                     success: function (result) {
                         var jsonData = JSON.parse(result);
                         if (jsonData.length != 0) {
                             $.each(jsonData, function(index, val) {
-                                resultsContainer.append('<div>' + val.name + '</div>');
+                                var rolesHtml = '';
+                                var roleClass = '';
+                                $.each(val.roles, function(roleIndex, role) {
+                                    if (role.name == "User") {
+                                        roleClass = 'primary';
+                                    } else if (role.name == "Admin") {
+                                        roleClass = 'warning';
+                                    } else if (role.name == "Unverified") {
+                                        roleClass = 'danger';
+                                    } else {
+                                        roleClass = 'dark';
+                                    };
+                                    rolesHtml = '<span class="badge badge-' + roleClass + '">' + role.name + '</span> ';
+                                });
+                                resultsContainer.append('<tr>' +
+                                    '<td>' + val.id + '</td>' +
+                                    '<td>' + val.name + '</td>' +
+                                    '<td class="hidden-xs">' + val.email + '</td>' +
+                                    '@if(config("laravelusers.rolesEnabled"))<td class="hidden-sm hidden-xs"> ' +
+                                     rolesHtml  +
+                                    '</td>' +
+                                    '@endif<td class="hidden-sm hidden-xs hidden-md">' + val.created_at + '</td>' +
+                                    '<td class="hidden-sm hidden-xs hidden-md">' + val.updated_at + '</td>' +
+                                    '<td>delete</td>' +
+                                    '<td>show</td>' +
+                                    '<td>edit</td>' +
+                                '</tr>');
                             });
                         } else {
-                            resultsContainer.append('<div>no results</div>');
+                            resultsContainer.append(noResulsHtml);
+                        };
+                        usersCount.html(jsonData.length + " @lang('laravelusers::laravelusers.search.found-footer')");
+                        cardTitle.html("@lang('laravelusers::laravelusers.search.title')");
+                    },
+                    error: function (response, status, error) {
+                        if (response.status === 422) {
+                            resultsContainer.append(noResulsHtml);
+                            usersCount.html(0 + " @lang('laravelusers::laravelusers.search.found-footer')");
+                            cardTitle.html("@lang('laravelusers::laravelusers.search.title')");
                         };
                     },
                 });
-
             });
+            clearSearchTrigger.click(function(e) {
+                e.preventDefault();
+                clearSearchTrigger.hide();
+                usersTable.show();
+                resultsContainer.html('');
+                cardTitle.html("@lang('laravelusers::laravelusers.showing-all-users')");
+                usersCount.html("{{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}");
+            });
+
         });
     </script>
 

@@ -13,6 +13,7 @@ class UsersManagementController extends Controller
     private $_authEnabled;
     private $_rolesEnabled;
     private $_rolesMiddlware;
+    private $_rolesMiddleWareEnabled;
 
     /**
      * Create a new controller instance.
@@ -24,12 +25,13 @@ class UsersManagementController extends Controller
         $this->_authEnabled = config('laravelusers.authEnabled');
         $this->_rolesEnabled = config('laravelusers.rolesEnabled');
         $this->_rolesMiddlware = config('laravelusers.rolesMiddlware');
+        $this->_rolesMiddleWareEnabled = config('laravelusers.rolesMiddlwareEnabled');
 
         if ($this->_authEnabled) {
             $this->middleware('auth');
         }
 
-        if ($this->_rolesEnabled) {
+        if ($this->_rolesEnabled && $this->_rolesMiddleWareEnabled) {
             $this->middleware($this->_rolesMiddlware);
         }
     }
@@ -285,6 +287,14 @@ class UsersManagementController extends Controller
         $results = config('laravelusers.defaultUserModel')::where('id', 'like', $searchTerm.'%')
                             ->orWhere('name', 'like', $searchTerm.'%')
                             ->orWhere('email', 'like', $searchTerm.'%')->get();
+
+        // Attach roles to results
+        foreach ($results as $result) {
+            $roles = [
+                'roles' => $result->roles
+            ];
+            $result->push($roles);
+        }
 
         return response()->json([
             json_encode($results)

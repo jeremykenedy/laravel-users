@@ -14,8 +14,17 @@ return [
     // Enable `auth` middleware
     'authEnabled'                   => true,
 
-    // Enable Optional Roles Middleware
-    'rolesEnabled'                  => false,
+    // Enable Optional Roles Middleware on the users assignments
+    'rolesEnabled'                  => true,
+
+    /*
+     | Enable Roles Middlware on the usability of this package.
+     | This requires the middleware from the roles package to be registered in `App\Http\Kernel.php`
+     | An Example: of roles middleware entry in protected `$routeMiddleware` array would be:
+     | 'role' => \jeremykenedy\LaravelRoles\Middleware\VerifyRole::class,
+     */
+
+    'rolesMiddlwareEnabled'         => true,
 
     // Optional Roles Middleware
     'rolesMiddlware'                => 'role:admin',
