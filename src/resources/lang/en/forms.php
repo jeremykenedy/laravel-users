@@ -45,8 +45,8 @@ return [
     'create_user_icon_bio'              => 'fa-pencil',
 
     'create_user_label_twitter_username' => 'User Twitter Username',
-    'create_user_ph_twitter_username'   => 'User Twitter Username',
-    'create_user_icon_twitter_username' => 'fa-twitter',
+    'create_user_ph_twitter_username'    => 'User Twitter Username',
+    'create_user_icon_twitter_username'  => 'fa-twitter',
 
     'create_user_label_github_username' => 'User GitHub Username',
     'create_user_ph_github_username'    => 'User GitHub Username',
