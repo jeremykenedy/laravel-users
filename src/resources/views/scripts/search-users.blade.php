@@ -1,25 +1,22 @@
 <script>
     $(function() {
-
         var cardTitle = $('#card_title');
         var usersTable = $('#users_table');
         var resultsContainer = $('#search_results');
         var usersCount = $('#user_count');
         var clearSearchTrigger = $('.clear-search');
         var searchform = $('#search_users');
-
+        var searchformInput = $('#user_search_box');
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-
         searchform.submit(function(e) {
             e.preventDefault();
             resultsContainer.html('');
             usersTable.hide();
             clearSearchTrigger.show();
-
             let noResulsHtml = '<tr>' +
                                 '<td>@lang("laravelusers::laravelusers.search.no-results")</td>' +
                                 '<td></td>' +
@@ -91,14 +88,25 @@
                 },
             });
         });
+        searchformInput.keyup(function(event) {
+            if ($('#user_search_box').val() != '') {
+                clearSearchTrigger.show();
+            } else {
+                clearSearchTrigger.hide();
+                resultsContainer.html('');
+                usersTable.show();
+                cardTitle.html("@lang('laravelusers::laravelusers.showing-all-users')");
+                usersCount.html("{{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}");
+            };
+        });
         clearSearchTrigger.click(function(e) {
             e.preventDefault();
             clearSearchTrigger.hide();
             usersTable.show();
             resultsContainer.html('');
+            searchformInput.val('');
             cardTitle.html("@lang('laravelusers::laravelusers.showing-all-users')");
             usersCount.html("{{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}");
         });
-
     });
 </script>
