@@ -33,13 +33,14 @@ Laravel users can work out the box with or without the following roles packages:
 | Laravel Users Features  |
 | :------------ |
 |Full CRUD of Laravel Users|
-|Works with built in [auth scaffolding](https://laravel.com/docs/5.5/authentication)|
+|Works with built in [auth scaffolding](https://laravel.com/docs/5.6/authentication)|
 |Works with various [Roles/ACL Packages](https://github.com/jeremykenedy/laravel-roles)|
-|Uses [Language localization](https://laravel.com/docs/5.5/localization) File System|
+|Uses [Language localization](https://laravel.com/docs/5.6/localization) File System|
 |Uses [font awesome](https://fontawesome.com/icons), cdn can be optionally called in config|
-|Can use built in [pagination](https://laravel.com/docs/5.5/pagination) and/or [datatables.js](https://datatables.net/)|
-|Lots of [configuration](#configuration) options|
+|Can use built in [pagination](https://laravel.com/docs/5.6/pagination) and/or [datatables.js](https://datatables.net/)|
 |Can search all users by name, id, or email|
+|Lots of [configuration](#configuration) options|
+
 
 ### Requirements
 * [Laravel 5.2, 5.3, 5.4, 5.5, 5.6+](https://laravel.com/docs/installation)
@@ -117,13 +118,22 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
     */
 
     // The parent blade file
-    'laravelUsersBladeExtended'     => 'laravelusers::layouts.app',     // 'layouts.app'
+    'laravelUsersBladeExtended'     => 'laravelusers::layouts.app', // 'layouts.app'
 
     // Enable `auth` middleware
     'authEnabled'                   => true,
 
-    // Enable Optional Roles Middleware
-    'rolesEnabled'                  => false,
+    // Enable Optional Roles Middleware on the users assignments
+    'rolesEnabled'                  => true,
+
+    /*
+     | Enable Roles Middlware on the usability of this package.
+     | This requires the middleware from the roles package to be registered in `App\Http\Kernel.php`
+     | An Example: of roles middleware entry in protected `$routeMiddleware` array would be:
+     | 'role' => \jeremykenedy\LaravelRoles\Middleware\VerifyRole::class,
+     */
+
+    'rolesMiddlwareEnabled'         => true,
 
     // Optional Roles Middleware
     'rolesMiddlware'                => 'role:admin',
@@ -143,6 +153,9 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
     // Users List Pagination
     'enablePagination'              => true,
     'paginateListSize'              => 25,
+
+    // Enable Search Users- Uses jQuery Ajax
+    'enableSearchUsers'             => true,
 
     // Users List JS DataTables - not recommended use with pagination
     'enabledDatatablesJs'           => false,
@@ -223,53 +236,54 @@ laravel-users/
 ├── composer.json
 ├── phpunit.xml
 ├── readme.md
-├── src
-│   ├── App
-│   │   └── Http
-│   │       └── Controllers
-│   │           └── UsersManagementController.php
-│   ├── LaravelUsersFacade.php
-│   ├── LaravelUsersServiceProvider.php
-│   ├── config
-│   │   └── laravelusers.php
-│   ├── resources
-│   │   ├── lang
-│   │   │   └── en
-│   │   │       ├── app.php
-│   │   │       ├── forms.php
-│   │   │       ├── laravelusers.php
-│   │   │       └── modals.php
-│   │   └── views
-│   │       ├── layouts
-│   │       │   └── app.blade.php
-│   │       ├── modals
-│   │       │   ├── modal-delete.blade.php
-│   │       │   └── modal-save.blade.php
-│   │       ├── partials
-│   │       │   ├── bs-visibility-css.blade.php
-│   │       │   ├── form-status.blade.php
-│   │       │   └── styles.blade.php
-│   │       ├── scripts
-│   │       │   ├── check-changed.blade.php
-│   │       │   ├── datatables.blade.php
-│   │       │   ├── delete-modal-script.blade.php
-│   │       │   ├── save-modal-script.blade.php
-│   │       │   ├── toggleText.blade.php
-│   │       │   └── tooltips.blade.php
-│   │       └── usersmanagement
-│   │           ├── create-user.blade.php
-│   │           ├── edit-user.blade.php
-│   │           ├── show-user.blade.php
-│   │           └── show-users.blade.php
-│   └── routes
-│       └── web.php
-└── tests
-    ├── Feature
-    └── TestCase.php
+└── src
+    ├── App
+    │   └── Http
+    │       └── Controllers
+    │           └── UsersManagementController.php
+    ├── LaravelUsersFacade.php
+    ├── LaravelUsersServiceProvider.php
+    ├── config
+    │   └── laravelusers.php
+    ├── resources
+    │   ├── lang
+    │   │   └── en
+    │   │       ├── app.php
+    │   │       ├── forms.php
+    │   │       ├── laravelusers.php
+    │   │       └── modals.php
+    │   └── views
+    │       ├── layouts
+    │       │   └── app.blade.php
+    │       ├── modals
+    │       │   ├── modal-delete.blade.php
+    │       │   └── modal-save.blade.php
+    │       ├── partials
+    │       │   ├── bs-visibility-css.blade.php
+    │       │   ├── form-status.blade.php
+    │       │   ├── search-users-form.blade.php
+    │       │   └── styles.blade.php
+    │       ├── scripts
+    │       │   ├── check-changed.blade.php
+    │       │   ├── datatables.blade.php
+    │       │   ├── delete-modal-script.blade.php
+    │       │   ├── save-modal-script.blade.php
+    │       │   ├── search-users.blade.php
+    │       │   ├── toggleText.blade.php
+    │       │   └── tooltips.blade.php
+    │       └── usersmanagement
+    │           ├── create-user.blade.php
+    │           ├── edit-user.blade.php
+    │           ├── show-user.blade.php
+    │           └── show-users.blade.php
+    └── routes
+        └── web.php
+
+
 ```
 
 * Tree command can be installed using brew: `brew install tree`
-* File tree generated using command `tree -a -I '.git|node_modules|vendor|storage|tests`
+* File tree generated using command `tree -a -I '.git|node_modules|vendor|storage|tests'`
 
 ### License
 Laravel-Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
