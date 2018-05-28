@@ -9,7 +9,7 @@ return [
     */
 
     // The parent blade file
-    'laravelUsersBladeExtended'     => 'laravelusers::layouts.app',     // 'layouts.app'
+    'laravelUsersBladeExtended'     => 'laravelusers::layouts.template',     // 'layouts.app'
 
     // Enable `auth` middleware
     'authEnabled'                   => true,
@@ -21,10 +21,10 @@ return [
     'rolesMiddlware'                => 'role:admin',
 
     // Optional Role Model
-    'roleModel'                     => 'jeremykenedy\LaravelRoles\Models\Role',
+    'roleModel'                     => 'Spatie\Permission\Models\Role',
 
     // Enable Soft Deletes - Not yet setup - on the roadmap.
-    'softDeletedEnabled'            => false,
+    'softDeletedEnabled'            => true,
 
     // Laravel Default User Model
     'defaultUserModel'              => 'App\User',
@@ -34,11 +34,11 @@ return [
     'paginateListSize'              => 25,
 
     // Users List JS DataTables - not recommended use with pagination
-    'enabledDatatablesJs'           => false,
+    'enabledDatatablesJs'           => true,
     'datatablesJsStartCount'        => 25,
-    'datatablesCssCDN'              => 'https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css',
-    'datatablesJsCDN'               => 'https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js',
-    'datatablesJsPresetCDN'         => 'https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js',
+    'datatablesCssCDN'              => 'https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap.min.css',
+    'datatablesJsCDN'               => 'https://cdn.datatables.net/2.2.1/js/jquery.dataTables.min.js',
+    'datatablesJsPresetCDN'         => 'https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap.min.js',
 
     // Bootstrap Tooltips
     'tooltipsEnabled'               => true,
@@ -49,15 +49,15 @@ return [
 
     // Extended blade options for packages app.blade.php
     'enableBootstrapCssCdn'         => true,
-    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
+    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css',
 
     'enableAppCss'                  => true,
     'appCssPublicFile'              => 'css/app.css',
 
     'enableBootstrapJsCdn'          => true,
-    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js',
+    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css',
 
-    'enableAppJs'                   => false,
+    'enableAppJs'                   => true,
     'appJsPublicFile'               => 'js/app.js',
 
     'enablejQueryCdn'               => true,
