@@ -125,7 +125,7 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
     'authEnabled'                   => true,
 
     // Enable Optional Roles Middleware on the users assignments
-    'rolesEnabled'                  => true,
+    'rolesEnabled'                  => false,
 
     /*
      | Enable Roles Middlware on the usability of this package.
@@ -147,6 +147,12 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 
     // Laravel Default User Model
     'defaultUserModel'              => 'App\User',
+
+    // Use the provided blade templates or extend to your own templates.
+    'showUsersBlade'                => 'laravelusers::usersmanagement.show-users',
+    'createUserBlade'               => 'laravelusers::usersmanagement.create-user',
+    'showIndividualUserBlade'       => 'laravelusers::usersmanagement.show-user',
+    'editIndividualUserBlade'       => 'laravelusers::usersmanagement.edit-user',
 
     // Use Package Bootstrap Flash Alerts
     'enablePackageBootstapAlerts'   => true,
