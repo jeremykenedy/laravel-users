@@ -56,7 +56,7 @@ class UsersManagementController extends Controller
             'pagintaionEnabled' => $pagintaionEnabled,
         ];
 
-        return view('laravelusers::usersmanagement.show-users', $data);
+        return view(config('laravelusers.showUsersBlade'), $data);
     }
 
     /**
@@ -77,7 +77,7 @@ class UsersManagementController extends Controller
             'roles'         => $roles,
         ];
 
-        return view('laravelusers::usersmanagement.create-user')->with($data);
+        return view(config('laravelusers.createUserBlade'))->with($data);
     }
 
     /**
@@ -142,7 +142,7 @@ class UsersManagementController extends Controller
     {
         $user = config('laravelusers.defaultUserModel')::find($id);
 
-        return view('laravelusers::usersmanagement.show-user')->withUser($user);
+        return view(config('laravelusers.showIndividualUserBlade'))->withUser($user);
     }
 
     /**
@@ -176,7 +176,7 @@ class UsersManagementController extends Controller
             $data['currentRole'] = $currentRole;
         }
 
-        return view('laravelusers::usersmanagement.edit-user')->with($data);
+        return view(config('laravelusers.editIndividualUserBlade'))->with($data);
     }
 
     /**

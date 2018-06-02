@@ -38,6 +38,12 @@ return [
     // Laravel Default User Model
     'defaultUserModel'              => 'App\User',
 
+    // Use the provided blade templates or extend to your own templates.
+    'showUsersBlade'                => 'laravelusers::usersmanagement.show-users',
+    'createUserBlade'               => 'laravelusers::usersmanagement.create-user',
+    'showIndividualUserBlade'       => 'laravelusers::usersmanagement.show-user',
+    'editIndividualUserBlade'       => 'laravelusers::usersmanagement.edit-user',
+
     // Use Package Bootstrap Flash Alerts
     'enablePackageBootstapAlerts'   => true,
 
