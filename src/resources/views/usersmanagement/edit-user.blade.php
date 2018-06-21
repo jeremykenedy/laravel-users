@@ -108,7 +108,11 @@
                                             <option value="">{{ trans('laravelusers::forms.create_user_ph_role') }}</option>
                                             @if ($roles)
                                                 @foreach($roles as $role)
-                                                    <option value="{{ $role->id }}" {{ $currentRole->id == $role->id ? 'selected="selected"' : '' }}>{{ $role->name }}</option>
+                                                    @if ($currentRole)
+                                                        <option value="{{ $role->id }}" {{ $currentRole->id == $role->id ? 'selected="selected"' : '' }}>{{ $role->name }}</option>
+                                                    @else
+                                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                    @endif
                                                 @endforeach
                                             @endif
                                         </select>
