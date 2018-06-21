@@ -102,7 +102,7 @@ In `config/app.php` section under `aliases` with the following:
         'Html' => Collective\Html\HtmlFacade::class,
     ```
 
-4. Publish the packages language files by running the following from your projects root folder:
+4. Publish the package config and language files by running the following from your projects root folder:
 
     ```
         php artisan vendor:publish --tag=laravelusers
