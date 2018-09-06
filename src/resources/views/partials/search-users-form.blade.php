@@ -5,14 +5,14 @@
             <div class="input-group mb-3">
                 {!! Form::text('user_search_box', NULL, ['id' => 'user_search_box', 'class' => 'form-control', 'placeholder' => trans('laravelusers::forms.search-users-ph'), 'aria-label' => trans('laravelusers::forms.search-users-ph'), 'required' => false]) !!}
                 <div class="input-group-append">
-                    <a href="#" class="btn btn-warning clear-search" data-toggle="tooltip" title="@lang('laravelusers::laravelusers.tooltips.clear-search')">
+                    <a href="#" class="btn btn-warning clear-search" data-toggle="tooltip" title="{!! trans('laravelusers::laravelusers.tooltips.clear-search') !!}">
                         @if(config('laravelusers.fontAwesomeEnabled'))
                             <i class="fas fa-times" aria-hidden="true"></i>
                             <span class="sr-only">
-                                @lang('laravelusers::laravelusers.tooltips.clear-search')
+                                {!! trans('laravelusers::laravelusers.tooltips.clear-search') !!}
                             </span>
                         @else
-                            @lang('laravelusers::laravelusers.tooltips.clear-search')
+                            {!! trans('laravelusers::laravelusers.tooltips.clear-search') !!}
                         @endif
                     </a>
                     @if(config('laravelusers.fontAwesomeEnabled'))

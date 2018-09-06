@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-    @lang('laravelusers::laravelusers.showing-all-users')
+    {!! trans('laravelusers::laravelusers.showing-all-users') !!}
 @endsection
 
 @section('template_linked_css')
@@ -31,7 +31,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
 
                             <span id="card_title">
-                                @lang('laravelusers::laravelusers.showing-all-users')
+                                {!! trans('laravelusers::laravelusers.showing-all-users') !!}
                             </span>
 
                             <div class="btn-group pull-right btn-group-xs">
@@ -39,7 +39,7 @@
                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fa fa-ellipsis-v fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">
-                                            @lang('laravelusers::laravelusers.users-menu-alt')
+                                            {!! trans('laravelusers::laravelusers.users-menu-alt') !!}
                                         </span>
                                     </button>
                                     <ul class="dropdown-menu">
@@ -48,7 +48,7 @@
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
                                                     <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                                 @endif
-                                                @lang('laravelusers::laravelusers.buttons.create-new')
+                                                {!! trans('laravelusers::laravelusers.buttons.create-new') !!}
                                             </a>
                                         </li>
                                         <li>
@@ -56,16 +56,16 @@
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
                                                     <i class="fa fa-fw fa-group" aria-hidden="true"></i>
                                                 @endif
-                                                @lang('laravelusers::laravelusers.show-deleted-users')
+                                                {!! trans('laravelusers::laravelusers.show-deleted-users') !!}
                                             </a>
                                         </li>
                                     </ul>
                                 @else
-                                    <a href="{{ route('users.create') }}" class="btn btn-default btn-sm pull-right" data-toggle="tooltip" data-placement="left" title="@lang('laravelusers::laravelusers.tooltips.create-new')">
+                                    <a href="{{ route('users.create') }}" class="btn btn-default btn-sm pull-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.create-new') !!}">
                                         @if(config('laravelusers.fontAwesomeEnabled'))
                                             <i class="fa fa-fw fa-user-plus" aria-hidden="true"></i>
                                         @endif
-                                        @lang('laravelusers::laravelusers.buttons.create-new')
+                                        {!! trans('laravelusers::laravelusers.buttons.create-new') !!}
                                     </a>
                                 @endif
                             </div>
@@ -80,19 +80,19 @@
                         <div class="table-responsive users-table">
                             <table class="table table-striped table-sm data-table">
                                 <caption id="user_count">
-                                    {{ trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) }}
+                                    {!! trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) !!}
                                 </caption>
                                 <thead class="thead">
                                     <tr>
-                                        <th>@lang('laravelusers::laravelusers.users-table.id')</th>
-                                        <th>@lang('laravelusers::laravelusers.users-table.name')</th>
-                                        <th class="hidden-xs">@lang('laravelusers::laravelusers.users-table.email')</th>
+                                        <th>{!! trans('laravelusers::laravelusers.users-table.id') !!}</th>
+                                        <th>{!! trans('laravelusers::laravelusers.users-table.name') !!}</th>
+                                        <th class="hidden-xs">{!! trans('laravelusers::laravelusers.users-table.email') !!}</th>
                                         @if(config('laravelusers.rolesEnabled'))
-                                            <th class="hidden-sm hidden-xs">@lang('laravelusers::laravelusers.users-table.role')</th>
+                                            <th class="hidden-sm hidden-xs">{!! trans('laravelusers::laravelusers.users-table.role') !!}</th>
                                         @endif
-                                        <th class="hidden-sm hidden-xs hidden-md">@lang('laravelusers::laravelusers.users-table.created')</th>
-                                        <th class="hidden-sm hidden-xs hidden-md">@lang('laravelusers::laravelusers.users-table.updated')</th>
-                                        <th class="no-search no-sort">@lang('laravelusers::laravelusers.users-table.actions')</th>
+                                        <th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.created') !!}</th>
+                                        <th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.updated') !!}</th>
+                                        <th class="no-search no-sort">{!! trans('laravelusers::laravelusers.users-table.actions') !!}</th>
                                         <th class="no-search no-sort"></th>
                                         <th class="no-search no-sort"></th>
                                     </tr>
@@ -128,13 +128,13 @@
                                                 {!! Form::close() !!}
                                             </td>
                                             <td>
-                                                <a class="btn btn-sm btn-success btn-block" href="{{ URL::to('users/' . $user->id) }}" data-toggle="tooltip" title="@lang('laravelusers::laravelusers.tooltips.show')">
-                                                    @lang('laravelusers::laravelusers.buttons.show')
+                                                <a class="btn btn-sm btn-success btn-block" href="{{ URL::to('users/' . $user->id) }}" data-toggle="tooltip" title="{!! trans('laravelusers::laravelusers.tooltips.show') !!}">
+                                                    {!! trans('laravelusers::laravelusers.buttons.show') !!}
                                                 </a>
                                             </td>
                                             <td>
-                                                <a class="btn btn-sm btn-info btn-block" href="{{ URL::to('users/' . $user->id . '/edit') }}" data-toggle="tooltip" title="@lang('laravelusers::laravelusers.tooltips.edit')">
-                                                    @lang('laravelusers::laravelusers.buttons.edit')
+                                                <a class="btn btn-sm btn-info btn-block" href="{{ URL::to('users/' . $user->id . '/edit') }}" data-toggle="tooltip" title="{!! trans('laravelusers::laravelusers.tooltips.edit') !!}">
+                                                    {!! trans('laravelusers::laravelusers.buttons.edit') !!}
                                                 </a>
                                             </td>
                                         </tr>

@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    @lang('laravelusers::modals.edit_user__modal_text_confirm_title')
+                    {!! trans('laravelusers::modals.edit_user__modal_text_confirm_title') !!}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -12,7 +12,7 @@
             </div>
             <div class="modal-body">
                 <p>
-                    @lang('laravelusers::modals.confirm_modal_title_text')
+                    {!! trans('laravelusers::modals.confirm_modal_title_text') !!}
                 </p>
             </div>
             <div class="modal-footer">

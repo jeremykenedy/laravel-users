@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-    @lang('laravelusers::laravelusers.showing-user', ['name' => $user->name])
+    {!! trans('laravelusers::laravelusers.showing-user', ['name' => $user->name]) !!}
 @endsection
 
 @section('template_linked_css')
@@ -29,13 +29,13 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            @lang('laravelusers::laravelusers.showing-user-title', ['name' => $user->name])
+                            {!! trans('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) !!}
                             <div class="float-right">
-                                <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="@lang('laravelusers::laravelusers.tooltips.back-users')">
+                                <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
                                         <i class="fas fa-fw fa-reply-all" aria-hidden="true"></i>
                                     @endif
-                                    @lang('laravelusers::laravelusers.buttons.back-to-users')
+                                    {!! trans('laravelusers::laravelusers.buttons.back-to-users') !!}
                                 </a>
                             </div>
                         </div>
@@ -45,14 +45,14 @@
                             {{ $user->name }}
                         </h4>
                         @if($user->email)
-                            <p class="text-center" data-toggle="tooltip" data-placement="top" title="@lang('laravelusers::laravelusers.tooltips.email-user', ['user' => $user->email])">
+                            <p class="text-center" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.email-user', ['user' => $user->email]) !!}">
                                 {{ Html::mailto($user->email, $user->email) }}
                             </p>
                         @endif
                         <div class="row mb-4">
                             <div class="col-3 offset-3 col-sm-4 offset-sm-2 col-md-4 offset-md-2 col-lg-3 offset-lg-3">
                                 <a href="/users/{{$user->id}}/edit" class="btn btn-block btn-md btn-warning">
-                                    @lang('laravelusers::laravelusers.buttons.edit-user')
+                                    {!! trans('laravelusers::laravelusers.buttons.edit-user') !!}
                                 </a>
                             </div>
                             <div class="col-3 col-sm-4 col-md-4 col-lg-3">
@@ -67,7 +67,7 @@
                                 <div class="row">
                                     <div class="col-4 col-sm-3">
                                         <strong>
-                                            @lang('laravelusers::laravelusers.show-user.id')
+                                            {!! trans('laravelusers::laravelusers.show-user.id') !!}
                                         </strong>
                                     </div>
                                     <div class="col-8 col-sm-9">
@@ -80,7 +80,7 @@
                                     <div class="row">
                                         <div class="col-4 col-sm-3">
                                             <strong>
-                                                @lang('laravelusers::laravelusers.show-user.name')
+                                                {!! trans('laravelusers::laravelusers.show-user.name') !!}
                                             </strong>
                                         </div>
                                         <div class="col-8 col-sm-9">
@@ -94,7 +94,7 @@
                                     <div class="row">
                                         <div class="col-12 col-sm-3">
                                             <strong>
-                                                @lang('laravelusers::laravelusers.show-user.email')
+                                                {!! trans('laravelusers::laravelusers.show-user.email') !!}
                                             </strong>
                                         </div>
                                         <div class="col-12 col-sm-9">
@@ -159,7 +159,7 @@
                                     <div class="row">
                                         <div class="col-4 col-sm-3">
                                             <strong>
-                                                @lang('laravelusers::laravelusers.show-user.created')
+                                                {!! trans('laravelusers::laravelusers.show-user.created') !!}
                                             </strong>
                                         </div>
                                         <div class="col-8 col-sm-9">
@@ -173,7 +173,7 @@
                                     <div class="row">
                                         <div class="col-4 col-sm-3">
                                             <strong>
-                                                @lang('laravelusers::laravelusers.show-user.updated')
+                                                {!! trans('laravelusers::laravelusers.show-user.updated') !!}
                                             </strong>
                                         </div>
                                         <div class="col-8 col-sm-9">

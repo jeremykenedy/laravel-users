@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-    @lang('laravelusers::laravelusers.create-new-user')
+    {!! trans('laravelusers::laravelusers.create-new-user') !!}
 @endsection
 
 @section('template_linked_css')
@@ -29,13 +29,13 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            @lang('laravelusers::laravelusers.create-new-user')
+                            {!! trans('laravelusers::laravelusers.create-new-user') !!}
                             <div class="pull-right">
-                                <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="@lang('laravelusers::laravelusers.tooltips.back-users')">
+                                <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
                                         <i class="fas fa-fw fa-reply-all" aria-hidden="true"></i>
                                     @endif
-                                    @lang('laravelusers::laravelusers.buttons.back-to-users')
+                                    {!! trans('laravelusers::laravelusers.buttons.back-to-users') !!}
                                 </a>
                             </div>
                         </div>
@@ -53,9 +53,9 @@
                                         <div class="input-group-append">
                                             <label for="email" class="input-group-text">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="fa fa-fw {{ trans('laravelusers::forms.create_user_icon_email') }}" aria-hidden="true"></i>
+                                                    <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_email') !!}" aria-hidden="true"></i>
                                                 @else
-                                                    @lang('laravelusers::forms.create_user_label_email')
+                                                    {!! trans('laravelusers::forms.create_user_label_email') !!}
                                                 @endif
                                             </label>
                                         </div>
@@ -77,9 +77,9 @@
                                         <div class="input-group-append">
                                             <label class="input-group-text" for="name">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="fa fa-fw {{ trans('laravelusers::forms.create_user_icon_username') }}" aria-hidden="true"></i>
+                                                    <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_username') !!}" aria-hidden="true"></i>
                                                 @else
-                                                    @lang('laravelusers::forms.create_user_label_username')
+                                                    {!! trans('laravelusers::forms.create_user_label_username') !!}
                                                 @endif
                                             </label>
                                         </div>
@@ -99,7 +99,7 @@
                                     <div class="col-md-9">
                                     <div class="input-group">
                                         <select class="custom-select form-control" name="role" id="role">
-                                            <option value="">{{ trans('laravelusers::forms.create_user_ph_role') }}</option>
+                                            <option value="">{!! trans('laravelusers::forms.create_user_ph_role') !!}</option>
                                             @if ($roles)
                                                 @foreach($roles as $role)
                                                     <option value="{{ $role->id }}">{{ $role->name }}</option>
@@ -109,9 +109,9 @@
                                         <div class="input-group-append">
                                             <label class="input-group-text" for="role">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="{{ trans('laravelusers::forms.create_user_icon_role') }}" aria-hidden="true"></i>
+                                                    <i class="{!! trans('laravelusers::forms.create_user_icon_role') !!}" aria-hidden="true"></i>
                                                 @else
-                                                    @lang('laravelusers::forms.create_user_label_username')
+                                                    {!! trans('laravelusers::forms.create_user_label_username') !!}
                                                 @endif
                                             </label>
                                         </div>
@@ -134,9 +134,9 @@
                                         <div class="input-group-append">
                                             <label class="input-group-text" for="password">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="fa fa-fw {{ trans('laravelusers::forms.create_user_icon_password') }}" aria-hidden="true"></i>
+                                                    <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_password') !!}" aria-hidden="true"></i>
                                                 @else
-                                                    @lang('laravelusers::forms.create_user_label_password')
+                                                    {!! trans('laravelusers::forms.create_user_label_password') !!}
                                                 @endif
                                             </label>
                                         </div>
@@ -158,9 +158,9 @@
                                         <div class="input-group-append">
                                             <label class="input-group-text" for="password_confirmation">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="fa fa-fw {{ trans('laravelusers::forms.create_user_icon_pw_confirmation') }}" aria-hidden="true"></i>
+                                                    <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_pw_confirmation') !!}" aria-hidden="true"></i>
                                                 @else
-                                                    @lang('laravelusers::forms.create_user_label_pw_confirmation')
+                                                    {!! trans('laravelusers::forms.create_user_label_pw_confirmation') !!}
                                                 @endif
                                             </label>
                                         </div>
