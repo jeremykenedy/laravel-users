@@ -102,7 +102,7 @@ In `config/app.php` section under `aliases` with the following:
         'Html' => Collective\Html\HtmlFacade::class,
     ```
 
-4. Publish the packages language files by running the following from your projects root folder:
+4. Publish the package config and language files by running the following from your projects root folder:
 
     ```
         php artisan vendor:publish --tag=laravelusers
@@ -303,7 +303,7 @@ Before opening an issue there are a couple of considerations:
 * **Check** to see if the issue you are *reporting is a duplicate* of a previous reported issue.
 * **Following these instructions show me that you have tried.**
 * If you have a questions send me an email to jeremykenedy@gmail.com
-* Please be considerate that this is an open source project that I provide to the community for FREE when openeing an issue. 
+* Please be considerate that this is an open source project that I provide to the community for FREE when opening an issue. 
 
 ### License
 Laravel-Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
