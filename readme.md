@@ -21,7 +21,7 @@
 ### About
 A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
-Built for Laravel 5.2, 5.3, 5.4, 5.5, and 5.6+. This package is easily configurable and customizable.
+Built for Laravel 5.2, 5.3, 5.4, 5.5, 5.6, and 5.7. This package is easily configurable and customizable.
 
 Laravel users can work out the box with or without the following roles packages:
 * [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
@@ -34,22 +34,22 @@ Laravel users can work out the box with or without the following roles packages:
 | Laravel Users Features  |
 | :------------ |
 |Full CRUD of Laravel Users|
-|Works with built in [auth scaffolding](https://laravel.com/docs/5.6/authentication)|
+|Works with built in [auth scaffolding](https://laravel.com/docs/5.7/authentication)|
 |Works with various [Roles/ACL Packages](https://github.com/jeremykenedy/laravel-roles)|
-|Uses [Language localization](https://laravel.com/docs/5.6/localization) File System|
+|Uses [Language localization](https://laravel.com/docs/5.7/localization) File System|
 |Uses [font awesome](https://fontawesome.com/icons), cdn can be optionally called in config|
-|Can use built in [pagination](https://laravel.com/docs/5.6/pagination) and/or [datatables.js](https://datatables.net/)|
+|Can use built in [pagination](https://laravel.com/docs/5.7/pagination) and/or [datatables.js](https://datatables.net/)|
 |Can search all users by name, id, or email|
 |Lots of [configuration](#configuration) options|
 
 
 ### Requirements
-* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6+](https://laravel.com/docs/installation)
+* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, and 5.7](https://laravel.com/docs/installation)
 
 ### Installation Instructions
 1. From your projects root folder in terminal run:
 
-    Laravel 5.6+ use:
+    Laravel 5.6 and 5.7+ use:
 
     ```
         composer require jeremykenedy/laravel-users
@@ -79,7 +79,7 @@ Laravel users can work out the box with or without the following roles packages:
     ```
 
 2. Register Package
-* Laravel 5.5 and up
+* Laravel 5.5, 5.6, and 5.7+
 Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
 * Laravel 5.4 and below
@@ -294,7 +294,7 @@ laravel-users/
 
 ### Opening an Issue
 Before opening an issue there are a couple of considerations:
-* If you did not **star this repo** *I will close your issue immediatly without consideration.* **My time is valuable**.
+* If you did not **star this repo** *I will close your issue immediatly without consideration.*
 * **Read the instructions** and make sure all steps were *followed correctly*.
 * **Check** that the issue is not *specific to your development environment* setup.
 * **Provide** *duplication steps*.
