@@ -25,10 +25,10 @@
         }
     },
     "require-dev": {
-        "illuminate/support": "^5.6",
+        "illuminate/support": "^5.7",
         "orchestra/testbench": "~3.0",
         "phpunit/phpunit": "^7.0",
-        "laravel/laravel": "dev-develop"
+        "laravel/laravel": "5.7.*"
     },
     "extra": {
         "laravel": {
