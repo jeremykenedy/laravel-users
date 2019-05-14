@@ -2,10 +2,10 @@
 
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
-use Illuminate\Routing\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controller;
 use Validator;
 
 class UsersManagementController extends Controller
