@@ -156,13 +156,13 @@ class UsersManagementController extends Controller
     {
         $user = config('laravelusers.defaultUserModel')::findOrFail($id);
         $roles = [];
-        $currentRole = '';
+        $currentRole = [];
 
         if ($this->_rolesEnabled) {
             $roles = config('laravelusers.roleModel')::all();
 
             foreach ($user->roles as $user_role) {
-                $currentRole = $user_role;
+                $currentRole[] = $user_role->id;
             }
         }
 
