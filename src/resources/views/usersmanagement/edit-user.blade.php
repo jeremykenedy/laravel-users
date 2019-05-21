@@ -104,12 +104,12 @@
                                     @endif
                                     <div class="col-md-9">
                                     <div class="input-group">
-                                        <select class="custom-select form-control" name="role" id="role">
+                                        <select class="custom-select form-control" name="role[]" id="role" multiple>
                                             <option value="">{!! trans('laravelusers::forms.create_user_ph_role') !!}</option>
                                             @if ($roles)
                                                 @foreach($roles as $role)
                                                     @if ($currentRole)
-                                                        <option value="{{ $role->id }}" {{ $currentRole->id == $role->id ? 'selected="selected"' : '' }}>{{ $role->name }}</option>
+                                                        <option value="{{ $role->id }}" {{ in_array($role->id ,$currentRole) ? 'selected="selected"' : '' }}>{{ $role->name }}</option>
                                                     @else
                                                         <option value="{{ $role->id }}">{{ $role->name }}</option>
                                                     @endif
