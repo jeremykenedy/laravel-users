@@ -29,7 +29,6 @@ Built for Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, and 5.8. This package is easily 
 
 Laravel users can work out the box with or without the following roles packages:
 * [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
-* [spatie/laravel-permission](https://github.com/spatie/laravel-permission)
 * [Zizaco/entrust](https://github.com/Zizaco/entrust)
 * [romanbican/roles](https://github.com/romanbican/roles)
 * [ultraware/roles](https://github.com/ultraware/roles)
