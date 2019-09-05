@@ -47,7 +47,7 @@ Laravel users can work out the box with or without the following roles packages:
 
 
 ### Requirements
-* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, and 5.8](https://laravel.com/docs/installation)
+* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, and 6.0](https://laravel.com/docs/installation)
 
 ### Installation Instructions
 1. From your projects root folder in terminal run:
