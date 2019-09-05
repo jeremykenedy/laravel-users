@@ -27,6 +27,5 @@ before_script:
   - php artisan key:generate
   - php artisan vendor:publish --tag=laravelusers
   - php artisan ui vue --auth
-  - php artisan make:auth
   - composer dump-autoload
   - php artisan clear-compiled
