@@ -44,6 +44,7 @@ return [
         'show'          => 'Show',
         'edit'          => 'Edit',
         'create-new'    => 'Create New User',
+        'back-user'     => 'Back to user',
         'back-users'    => 'Back to users',
         'email-user'    => 'Email :user',
         'submit-search' => 'Submit Users Search',
