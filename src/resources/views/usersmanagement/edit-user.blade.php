@@ -37,7 +37,7 @@
                                     @endif
                                     {!! trans('laravelusers::laravelusers.buttons.back-to-users') !!}
                                 </a>
-                                <a href="{{ url('/users/' . $user->id) }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
+                                <a href="{{ url('/users/' . $user->id) }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-user') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
                                         <i class="fas fa-fw fa-reply" aria-hidden="true"></i>
                                     @endif

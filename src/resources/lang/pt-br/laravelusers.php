@@ -44,6 +44,7 @@ return [
         'show'          => 'Mostrar',
         'edit'          => 'Editar',
         'create-new'    => 'Criar Novo Usuário',
+        'back-user'     => 'Voltar para Usuário',
         'back-users'    => 'Voltar para Usuários',
         'email-user'    => 'Email :user',
         'submit-search' => 'Buscar Usuários',
