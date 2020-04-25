@@ -17,7 +17,7 @@ return [
     'showing-user-title'    => 'بيانات المستخدم :name',
 
     'users-table' => [
-        'caption'   => '{1} :userscount اجمالي المستخدمين|[2,*] :userscount total users',
+        'caption'   => '{1} :userscount مستخدم وجد|[2,*] :userscount اجمالي المستخدمين',
         'id'        => 'الكود',
         'name'      => 'الاسم',
         'email'     => 'البريد الإليكتروني',
@@ -44,7 +44,8 @@ return [
         'show'          => 'عرض',
         'edit'          => 'تعديل',
         'create-new'    => 'اضافة مستخدم جديد',
-        'back-users'    => 'العودة',
+        'back-user'     => 'عرض المستخدم',
+        'back-users'    => 'عرض المستخدمين',
         'email-user'    => 'مراسلة :user',
         'submit-search' => 'القيام بالبحث',
         'clear-search'  => 'حذف نتائج البحث',
