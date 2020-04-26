@@ -25,7 +25,7 @@
 ### About
 A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
-Built for Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, and 6.0. This package is easily configurable and customizable.
+Built for Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 6.0, and 7.0. This package is easily configurable and customizable.
 
 Laravel users can work out the box with or without the following roles packages:
 * [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
