@@ -6,6 +6,7 @@ use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Hash;
 use Validator;
 
 class UsersManagementController extends Controller
@@ -120,7 +121,7 @@ class UsersManagementController extends Controller
         $user = config('laravelusers.defaultUserModel')::create([
             'name'             => $request->input('name'),
             'email'            => $request->input('email'),
-            'password'         => bcrypt($request->input('password')),
+            'password'         => Hash::make($request->input('password')),
         ]);
 
         if ($this->_rolesEnabled) {
@@ -223,7 +224,7 @@ class UsersManagementController extends Controller
         }
 
         if ($passwordCheck) {
-            $user->password = bcrypt($request->input('password'));
+            $user->password = Hash::make($request->input('password'));
         }
 
         if ($this->_rolesEnabled) {
