@@ -1,4 +1,8 @@
-# Laravel-Users | A Laravel Users CRUD Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users)
+![Laravel Users](https://github-project-images.s3-us-west-2.amazonaws.com/laravel-blocker/laravel-users-logo.png)
+
+# Laravel Users | A Laravel Users CRUD Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users)
+A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
+Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
 
 [![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
 [![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
@@ -14,6 +18,7 @@
 - [About](#about)
 - [Features](#features)
 - [Requirements](#requirements)
+- [Integrations](#integrations)
 - [Installation Instructions](#installation-instructions)
 - [Configuration](#configuration)
 - [Routes](#routes)
@@ -21,17 +26,6 @@
 - [File Tree](#file-tree)
 - [Opening an Issue](#opening-an-issue)
 - [License](#license)
-
-### About
-A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
-Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
-Built for Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 6.0, and 7.0. This package is easily configurable and customizable.
-
-Laravel users can work out the box with or without the following roles packages:
-* [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
-* [Zizaco/entrust](https://github.com/Zizaco/entrust)
-* [romanbican/roles](https://github.com/romanbican/roles)
-* [ultraware/roles](https://github.com/ultraware/roles)
 
 ### Features
 | Laravel Users Features  |
@@ -47,7 +41,14 @@ Laravel users can work out the box with or without the following roles packages:
 
 
 ### Requirements
-* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, and 6.0](https://laravel.com/docs/installation)
+* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 6, or 7+](https://laravel.com/docs/installation)
+
+### Integrations
+Laravel users can work out the box with or without the following roles packages:
+* [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
+* [Zizaco/entrust](https://github.com/Zizaco/entrust)
+* [romanbican/roles](https://github.com/romanbican/roles)
+* [ultraware/roles](https://github.com/ultraware/roles)
 
 ### Installation Instructions
 1. From your projects root folder in terminal run:
@@ -310,4 +311,4 @@ Before opening an issue there are a couple of considerations:
 * Please be considerate that this is an open source project that I provide to the community for FREE when opening an issue. 
 
 ### License
-Laravel-Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
+Laravel Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
