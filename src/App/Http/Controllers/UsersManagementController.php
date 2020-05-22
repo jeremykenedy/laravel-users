@@ -104,7 +104,7 @@ class UsersManagementController extends Controller
         $messages = [
             'name.unique'         => trans('laravelusers::laravelusers.messages.userNameTaken'),
             'name.required'       => trans('laravelusers::laravelusers.messages.userNameRequired'),
-            'name.name'           => trans('laravelusers::laravelusers.messages.userNameInvalid'),
+            'name'                => trans('laravelusers::laravelusers.messages.userNameInvalid'),
             'email.required'      => trans('laravelusers::laravelusers.messages.emailRequired'),
             'email.email'         => trans('laravelusers::laravelusers.messages.emailInvalid'),
             'password.required'   => trans('laravelusers::laravelusers.messages.passwordRequired'),
