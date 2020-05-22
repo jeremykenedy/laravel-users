@@ -15,7 +15,7 @@ class TestCase extends OrchestraTestCase
      *
      * @return jeremykenedy\laravelusers\LaravelUsersServiceProvider
      */
-    protected function getPackageProviders($app) : void
+    protected function getPackageProviders($app): void
     {
         return [LaravelUsersServiceProvider::class];
     }
@@ -27,7 +27,7 @@ class TestCase extends OrchestraTestCase
      *
      * @return array
      */
-    protected function getPackageAliases($app) : void
+    protected function getPackageAliases($app): void
     {
         return [
             'UsersManagementController' => LaravelUsersFacade::class,
