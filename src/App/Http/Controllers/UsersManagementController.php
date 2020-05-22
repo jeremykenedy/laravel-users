@@ -120,7 +120,7 @@ class UsersManagementController extends Controller
         }
 
         $user = config('laravelusers.defaultUserModel')::create([
-            'name'             => $request->input('name'),
+            'name'             => strip_tags($request->input('name')),
             'email'            => $request->input('email'),
             'password'         => Hash::make($request->input('password')),
         ]);
@@ -218,7 +218,7 @@ class UsersManagementController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $user->name = $request->input('name');
+        $user->name = strip_tags($request->input('name'));
 
         if ($emailCheck) {
             $user->email = $request->input('email');
