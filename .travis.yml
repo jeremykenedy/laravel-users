@@ -28,3 +28,5 @@ before_script:
   - php artisan ui vue --auth
   - composer dump-autoload
   - php artisan clear-compiled
+
+script: vendor/bin/phpunit
