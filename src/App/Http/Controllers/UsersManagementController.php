@@ -91,7 +91,7 @@ class UsersManagementController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name'                  => 'required|string|max:255|unique:users|alpha_num',
+            'name'                  => 'required|string|max:255|unique:users|alpha_dash',
             'email'                 => 'required|email|max:255|unique:users',
             'password'              => 'required|string|confirmed|min:6',
             'password_confirmation' => 'required|string|same:password',
@@ -200,7 +200,7 @@ class UsersManagementController extends Controller
         ];
 
         if ($emailCheck) {
-            $rules['email'] = 'required|email|max:255|unique:users|alpha_num';
+            $rules['email'] = 'required|email|max:255|unique:users|alpha_dash';
         }
 
         if ($passwordCheck) {
