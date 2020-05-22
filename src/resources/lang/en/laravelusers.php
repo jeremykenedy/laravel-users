@@ -54,6 +54,7 @@ return [
     'messages' => [
         'userNameTaken'          => 'Username is taken',
         'userNameRequired'       => 'Username is required',
+        'userNameInvalid'        => 'Username is invalid',
         'fNameRequired'          => 'First Name is required',
         'lNameRequired'          => 'Last Name is required',
         'emailRequired'          => 'Email is required',

@@ -91,7 +91,7 @@ class UsersManagementController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name'                  => 'required|string|max:255|unique:users',
+            'name'                  => 'required|string|max:255|unique:users|alpha_dash',
             'email'                 => 'required|email|max:255|unique:users',
             'password'              => 'required|string|confirmed|min:6',
             'password_confirmation' => 'required|string|same:password',
@@ -104,6 +104,7 @@ class UsersManagementController extends Controller
         $messages = [
             'name.unique'         => trans('laravelusers::laravelusers.messages.userNameTaken'),
             'name.required'       => trans('laravelusers::laravelusers.messages.userNameRequired'),
+            'name'                => trans('laravelusers::laravelusers.messages.userNameInvalid'),
             'email.required'      => trans('laravelusers::laravelusers.messages.emailRequired'),
             'email.email'         => trans('laravelusers::laravelusers.messages.emailInvalid'),
             'password.required'   => trans('laravelusers::laravelusers.messages.passwordRequired'),
@@ -199,7 +200,7 @@ class UsersManagementController extends Controller
         ];
 
         if ($emailCheck) {
-            $rules['email'] = 'required|email|max:255|unique:users';
+            $rules['email'] = 'required|email|max:255|unique:users|alpha_dash';
         }
 
         if ($passwordCheck) {
