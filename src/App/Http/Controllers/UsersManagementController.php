@@ -92,7 +92,7 @@ class UsersManagementController extends Controller
     {
         $rules = [
             'name'                  => 'required|string|max:255|unique:users|alpha_dash',
-            'email'                 => 'required|email|max:255|unique:users',
+            'email'                 => 'required|email|max:255|unique:users', 
             'password'              => 'required|string|confirmed|min:6',
             'password_confirmation' => 'required|string|same:password',
         ];
@@ -130,7 +130,7 @@ class UsersManagementController extends Controller
             $user->save();
         }
 
-        return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
+        return redirect()->route('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
     }
 
     /**
@@ -200,7 +200,7 @@ class UsersManagementController extends Controller
         ];
 
         if ($emailCheck) {
-            $rules['email'] = 'required|email|max:255|unique:users|alpha_dash';
+            $rules['email'] = 'required|email|max:255|unique:users';
         }
 
         if ($passwordCheck) {
@@ -253,7 +253,7 @@ class UsersManagementController extends Controller
         if ($currentUser->id != $user->id) {
             $user->delete();
 
-            return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
+            return redirect()->route('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
 
         return back()->with('error', trans('laravelusers::laravelusers.messages.cannot-delete-yourself'));
