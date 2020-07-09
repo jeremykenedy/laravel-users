@@ -200,7 +200,7 @@ class UsersManagementController extends Controller
         ];
 
         if ($emailCheck) {
-            $rules['email'] = 'required|email|max:255|unique:users|alpha_dash';
+            $rules['email'] = 'required|email|max:255|unique:users';
         }
 
         if ($passwordCheck) {
