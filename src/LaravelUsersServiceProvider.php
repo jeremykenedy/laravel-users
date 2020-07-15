@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 
 class LaravelUsersServiceProvider extends ServiceProvider
 {
-    private $_packageTag = 'laravelusers';
+    protected $_packageTag = 'laravelusers';
 
     /**
      * Indicates if loading of the provider is deferred.
@@ -32,7 +32,9 @@ class LaravelUsersServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        if( ! config('laravelusers.useCustomRoutes'))
+            $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        
         $this->loadViewsFrom(__DIR__.'/resources/views/', $this->_packageTag);
         $this->mergeConfigFrom(__DIR__.'/config/'.$this->_packageTag.'.php', $this->_packageTag);
         $this->publishFiles();
@@ -48,20 +50,20 @@ class LaravelUsersServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    private function publishFiles()
+    protected function publishFiles()
     {
         $publishTag = $this->_packageTag;
 
         $this->publishes([
             __DIR__.'/config/'.$this->_packageTag.'.php' => base_path('config/'.$this->_packageTag.'.php'),
-        ], $publishTag);
+        ], $publishTag.'-config');
 
         $this->publishes([
             __DIR__.'/resources/views' => resource_path('views/vendor/'.$this->_packageTag),
-        ], $publishTag);
+        ], $publishTag.'-views');
 
         $this->publishes([
             __DIR__.'/resources/lang' => resource_path('lang/vendor/'.$this->_packageTag),
-        ], $publishTag);
+        ], $publishTag.'-lang');
     }
 }

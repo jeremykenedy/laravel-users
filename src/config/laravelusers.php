@@ -20,6 +20,11 @@ return [
     // Set group route prefix
     'routePrefix'                   => '',
 
+    // set to true to load routes from routes/web.php instead of the package routes.
+    // Note: you have to manually navigate to the package directory and copy the 
+    // routes from routes/web.php and paste them in your routes/web.php file.
+    'useCustomRoutes'                   => false,
+
     /*
      | Enable Roles Middlware on the usability of this package.
      | This requires the middleware from the roles package to be registered in `App\Http\Kernel.php`
