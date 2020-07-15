@@ -1,5 +1,5 @@
 {
-    "name": "fhddev/laravel-users",
+    "name": "jeremykenedy/laravel-users",
     "description": "Laravel Users Management CRUD Package",
     "keywords": ["laravel", "users", "management", "CRUD"],
     "license": "MIT",
