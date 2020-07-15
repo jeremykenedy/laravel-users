@@ -56,30 +56,30 @@ Laravel users can work out the box with or without the following roles packages:
     Laravel 5.6, 5.7, and 5.8+ use:
 
     ```
-        composer require jeremykenedy/laravel-users
+        composer require fhddev/laravel-users
     ```
 
     Laravel 5.5 use:
 
     ```
-        composer require jeremykenedy/laravel-users:2.0.2
+        composer require fhddev/laravel-users:2.0.2
     ```
 
     Laravel 5.4 use:
 
     ```
-        composer require jeremykenedy/laravel-users:1.4.0
+        composer require fhddev/laravel-users:1.4.0
     ```
 
     Laravel 5.3 use:
 
     ```
-        composer require jeremykenedy/laravel-users:1.3.0
+        composer require fhddev/laravel-users:1.3.0
     ```
 
     Laravel 5.2 use:
     ```
-        composer require jeremykenedy/laravel-users:1.2.0
+        composer require fhddev/laravel-users:1.2.0
     ```
 
 2. Register Package
@@ -91,7 +91,7 @@ Register the package with laravel in `config/app.php` under `providers` with the
 
    ```
       Collective\Html\HtmlServiceProvider::class,
-      jeremykenedy\laravelusers\LaravelUsersServiceProvider::class,
+      fhddev\laravelusers\LaravelUsersServiceProvider::class,
    ```
 
 3. Register the dependencies aliases
@@ -106,14 +106,24 @@ In `config/app.php` section under `aliases` with the following:
         'Html' => Collective\Html\HtmlFacade::class,
     ```
 
-4. Publish the package config and language files by running the following from your projects root folder:
-
+4. Publish the package config, views and language files by running the following from your projects root folder:
+* config files
     ```
-        php artisan vendor:publish --tag=laravelusers
+        php artisan vendor:publish --tag=laravelusers-config
+    ```
+
+* view files
+    ```
+        php artisan vendor:publish --tag=laravelusers-views
+    ```
+
+* language files
+    ```
+        php artisan vendor:publish --tag=laravelusers-lang
     ```
 
 ### Configuration
-Laravel Users can be configured directly in [`/config/laravelusers.php`](https://github.com/jeremykenedy/laravel-users/blob/master/src/config/laravelusers.php) once you publish the assets.
+Laravel Users can be configured directly in [`/config/laravelusers.php`](https://github.com/fhddev/laravel-users/blob/master/src/config/laravelusers.php) once you publish the assets.
 
 ```php
     /*
@@ -130,6 +140,14 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 
     // Enable Optional Roles Middleware on the users assignments
     'rolesEnabled'                  => false,
+
+    // Set group route prefix
+    'routePrefix'                   => '',
+
+    // set to true to load routes from routes/web.php instead of the package routes.
+    // Note: you have to manually navigate to the package directory and copy the 
+    // routes from routes/web.php and paste them in your routes/web.php file.
+    'useCustomRoutes'                   => false,
 
     /*
      | Enable Roles Middlware on the usability of this package.
@@ -210,13 +228,13 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 ###### Routes In-depth
 | Method    | URI                    | Name             | Action                                                                            | Middleware  |
 | :-------- | :--------------------- | :--------------- | :-------------------------------------------------------------------------------- | :---------- |
-| GET/HEAD  | users                  | users            | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@index    | web,auth    |
-| POST      | users                  | users.store      | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@store    | web,auth    |
-| GET/HEAD  | users/create           | users.create     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@create   | web,auth    |
-| GET/HEAD  | users/{user}           | users.show       | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@show     | web,auth    |
-| DELETE    | users/{user}           | user.destroy     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@destroy  | web,auth    |
-| PUT/PATCH | users/{user}           | users.update     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
-| GET/HEAD  | users/{user}/edit      | users.edit       | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
+| GET/HEAD  | users                  | users            | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@index    | web,auth    |
+| POST      | users                  | users.store      | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@store    | web,auth    |
+| GET/HEAD  | users/create           | users.create     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@create   | web,auth    |
+| GET/HEAD  | users/{user}           | users.show       | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@show     | web,auth    |
+| DELETE    | users/{user}           | user.destroy     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@destroy  | web,auth    |
+| PUT/PATCH | users/{user}           | users.update     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
+| GET/HEAD  | users/{user}/edit      | users.edit       | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
 
 ### Required Packages
 (included in this package)
@@ -295,20 +313,6 @@ laravel-users/
 
 * Tree command can be installed using brew: `brew install tree`
 * File tree generated using command `tree -a -I '.git|node_modules|vendor|storage|tests'`
-
-### Opening an Issue
-Before opening an issue there are a couple of considerations:
-* A **star** on this project shows support and is way to say thank you to all the contributors. If you open an issue without a star, *your issue may be closed without consideration.* Thank you for understanding and the support. You are all awesome!
-* **Read the instructions** and make sure all steps were *followed correctly*.
-* **Check** that the issue is not *specific to your development environment* setup.
-* **Provide** *duplication steps*.
-* **Attempt to look into the issue**, and if you *have a solution, make a pull request*.
-* **Show that you have made an attempt** to *look into the issue*.
-* **Check** to see if the issue you are *reporting is a duplicate* of a previous reported issue.
-* **Following these instructions show me that you have tried.**
-* If you have a questions send me an email to jeremykenedy@gmail.com
-* Need some help, I can do my best on Slack: https://opensourcehelpgroup.slack.com
-* Please be considerate that this is an open source project that I provide to the community for FREE when opening an issue. 
 
 ### License
 Laravel Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
