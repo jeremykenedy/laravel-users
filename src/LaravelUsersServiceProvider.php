@@ -1,6 +1,6 @@
 <?php
 
-namespace jeremykenedy\laravelusers;
+namespace fhddev\laravelusers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -36,8 +36,8 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/resources/views/', $this->_packageTag);
         $this->mergeConfigFrom(__DIR__.'/config/'.$this->_packageTag.'.php', $this->_packageTag);
         $this->publishFiles();
-        $this->app->make('jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController');
-        $this->app->singleton(jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController\UsersManagementController::class, function () {
+        $this->app->make('fhddev\laravelusers\App\Http\Controllers\UsersManagementController');
+        $this->app->singleton(fhddev\laravelusers\App\Http\Controllers\UsersManagementController\UsersManagementController::class, function () {
             return new App\Http\Controllers\UsersManagementController();
         });
         $this->app->alias(UsersManagementController::class, 'laravelusers');

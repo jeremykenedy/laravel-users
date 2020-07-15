@@ -1,6 +1,6 @@
 <?php
 
-namespace jeremykenedy\laravelusers;
+namespace fhddev\laravelusers;
 
 use Illuminate\Support\Facades\Facade;
 
