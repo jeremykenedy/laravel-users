@@ -51,12 +51,12 @@
                         @endif
                         <div class="row mb-4">
                             <div class="col-3 offset-3 col-sm-4 offset-sm-2 col-md-4 offset-md-2 col-lg-3 offset-lg-3">
-                                <a href="/users/{{$user->id}}/edit" class="btn btn-block btn-md btn-warning">
+                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-block btn-md btn-warning">
                                     {!! trans('laravelusers::laravelusers.buttons.edit-user') !!}
                                 </a>
                             </div>
                             <div class="col-3 col-sm-4 col-md-4 col-lg-3">
-                                {!! Form::open(array('url' => 'users/' . $user->id, 'class' => 'form-inline')) !!}
+                                {!! Form::open(array('url' => route('user.destroy', $user->id), 'class' => 'form-inline')) !!}
                                     {!! Form::hidden('_method', 'DELETE') !!}
                                     {!! Form::button(trans('laravelusers::laravelusers.buttons.delete-user'), array('class' => 'btn btn-danger btn-md btn-block','type' => 'button', 'data-toggle' => 'modal', 'data-target' => '#confirmDelete', 'data-title' => 'Delete User', 'data-message' => 'Are you sure you want to delete this user?')) !!}
                                 {!! Form::close() !!}

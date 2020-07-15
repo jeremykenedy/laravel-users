@@ -17,6 +17,9 @@ return [
     // Enable Optional Roles Middleware on the users assignments
     'rolesEnabled'                  => false,
 
+    // Set group route prefix
+    'routePrefix'                   => '',
+
     /*
      | Enable Roles Middlware on the usability of this package.
      | This requires the middleware from the roles package to be registered in `App\Http\Kernel.php`
