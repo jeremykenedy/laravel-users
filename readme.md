@@ -205,14 +205,14 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 | PUT/PATCH | users/{user}           | users.update     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
 | GET/HEAD  | users/{user}/edit      | users.edit       | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
 
-###### Routes Prefix
+#### Routes Prefix
 To set routes prefix like: admin/users, do the following:
 * Make sure you published the config file.
 * Set 'routePrefix' in config file to the prefix you want.
 
 Note: _This will add prefix for all routes_
 
-###### Custom Routes
+#### Custom Routes
 To use custom routes from default application routes/web.php, do the following:
 * Make sure you published the config file.
 * In config file set useCustomRoutes to true.
