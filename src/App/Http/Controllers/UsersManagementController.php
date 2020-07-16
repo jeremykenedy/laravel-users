@@ -11,10 +11,10 @@ use Validator;
 
 class UsersManagementController extends Controller
 {
-    private $_authEnabled;
-    private $_rolesEnabled;
-    private $_rolesMiddlware;
-    private $_rolesMiddleWareEnabled;
+    protected $_authEnabled;
+    protected $_rolesEnabled;
+    protected $_rolesMiddlware;
+    protected $_rolesMiddleWareEnabled;
 
     /**
      * Create a new controller instance.
