@@ -59,35 +59,11 @@ Laravel users can work out the box with or without the following roles packages:
         composer require fhddev/laravel-users
     ```
 
-    Laravel 5.5 use:
-
-    ```
-        composer require fhddev/laravel-users:2.0.2
-    ```
-
-    Laravel 5.4 use:
-
-    ```
-        composer require fhddev/laravel-users:1.4.0
-    ```
-
-    Laravel 5.3 use:
-
-    ```
-        composer require fhddev/laravel-users:1.3.0
-    ```
-
-    Laravel 5.2 use:
-    ```
-        composer require fhddev/laravel-users:1.2.0
-    ```
-
 2. Register Package
 * Laravel 5.5, 5.6, and 5.7+
 Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
-* Laravel 5.4 and below
-Register the package with laravel in `config/app.php` under `providers` with the following:
+* To register the package with laravel in `config/app.php` under `providers` write the following:
 
    ```
       Collective\Html\HtmlServiceProvider::class,
@@ -98,8 +74,7 @@ Register the package with laravel in `config/app.php` under `providers` with the
 * Laravel 5.5 and up
 Uses package auto discovery feature, no need to edit the `config/app.php` file.
 
-* Laravel 5.4 and below
-In `config/app.php` section under `aliases` with the following:
+* To do it Manually in `config/app.php` section under `aliases` with the following:
 
     ```
         'Form' => Collective\Html\FormFacade::class,
@@ -235,6 +210,13 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 | DELETE    | users/{user}           | user.destroy     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@destroy  | web,auth    |
 | PUT/PATCH | users/{user}           | users.update     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
 | GET/HEAD  | users/{user}/edit      | users.edit       | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
+
+To use custom routes from default application routes/web.php, do the following:
+* Make sure you published the config file.
+* In config file set useCustomRoutes to true.
+* Navigate to [`/routes/web.php`](https://github.com/fhddev/laravel-users/blob/master/src/routes/web.php) and copy all the routes in it.
+* Paste the copied routes to your routes/web.php file.
+* Now you can edit routes as you like.
 
 ### Required Packages
 (included in this package)
