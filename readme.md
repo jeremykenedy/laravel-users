@@ -1,18 +1,12 @@
 ![Laravel Users](https://github-project-images.s3-us-west-2.amazonaws.com/laravel-blocker/laravel-users-logo.png)
 
-# Laravel Users | A Laravel Users CRUD Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users)
-A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
+# Laravel Users | A Laravel Users CRUD Management [Package](https://packagist.org/packages/fhddev/laravel-users)
+A Users Management CRUD [Package](https://packagist.org/packages/fhddev/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
 Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
 
-[![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
-[![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
-[![Travis-CI Build](https://travis-ci.org/jeremykenedy/laravel-users.svg?branch=master)](https://travis-ci.org/jeremykenedy/laravel-users)
-[![StyleCI](https://styleci.io/repos/83162309/shield?branch=master)](https://styleci.io/repos/83162309)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/fhddev/laravel-users/v/stable.svg)](https://packagist.org/packages/fhddev/laravel-users)
+[![Total Downloads](https://poser.pugx.org/fhddev/laravel-users/d/total.svg)](https://packagist.org/packages/fhddev/laravel-users)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<a href="https://www.patreon.com/bePatron?u=10119959" title="Become a Patreon">
-    <img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Become a Patreon" width="85px" > 
-</a>
 
 #### Table of contents
 - [About](#about)
@@ -211,6 +205,14 @@ Laravel Users can be configured directly in [`/config/laravelusers.php`](https:/
 | PUT/PATCH | users/{user}           | users.update     | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
 | GET/HEAD  | users/{user}/edit      | users.edit       | fhddev\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
 
+###### Routes Prefix
+To set routes prefix like: admin/users, do the following:
+* Make sure you published the config file.
+* Set 'routePrefix' in config file to the prefix you want.
+
+Note: _This will add prefix for all routes_
+
+###### Custom Routes
 To use custom routes from default application routes/web.php, do the following:
 * Make sure you published the config file.
 * In config file set useCustomRoutes to true.
