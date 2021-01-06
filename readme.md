@@ -298,6 +298,7 @@ laravel-users/
 
 ### Opening an Issue
 Before opening an issue there are a couple of considerations:
+* You are all awesome!
 * **Read the instructions** and make sure all steps were *followed correctly*.
 * **Check** that the issue is not *specific to your development environment* setup.
 * **Provide** *duplication steps*.
