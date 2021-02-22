@@ -36,7 +36,7 @@ return [
     'softDeletedEnabled'            => false,
 
     // Laravel Default User Model
-    'defaultUserModel'              => 'App\User',
+    'defaultUserModel'              => 'App\Models\User',
 
     // Use Package Bootstrap Flash Alerts
     'enablePackageBootstapAlerts'   => true,
