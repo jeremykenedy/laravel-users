@@ -91,7 +91,7 @@ class UsersManagementController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name'                  => 'required|string|max:255|unique:users|alpha_dash',
+            'name'                  => 'required|string|max:255|unique:users|not_regex:/^.*[<&].*$/',
             'email'                 => 'required|email|max:255|unique:users',
             'password'              => 'required|string|confirmed|min:6',
             'password_confirmation' => 'required|string|same:password',
