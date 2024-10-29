@@ -1,7 +1,12 @@
 {
     "name": "jeremykenedy/laravel-users",
     "description": "Laravel Users Management CRUD Package",
-    "keywords": ["laravel", "users", "management", "CRUD"],
+    "keywords": [
+        "laravel",
+        "users",
+        "management",
+        "CRUD"
+    ],
     "license": "MIT",
     "type": "package",
     "authors": [
@@ -11,8 +16,8 @@
         }
     ],
     "require": {
-        "php": ">=7.1.3|^8.0",
-        "laravellux/html": "^6.0|^7.0"
+        "php": "^7.2|^8.0|^8.1|^8.2|^8.3",
+        "laravellux/html": "^7.1"
     },
     "autoload": {
         "psr-4": {
@@ -23,12 +28,6 @@
         "psr-4": {
             "jeremykenedy\\laravelusers\\Test\\": "tests/"
         }
-    },
-    "require-dev": {
-        "orchestra/testbench": "^5.2",
-        "laravel/tinker": "^2.4",
-        "illuminate/support": "^7.12",
-        "laravel/laravel": "^7.12"
     },
     "extra": {
         "laravel": {
