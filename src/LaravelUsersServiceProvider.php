@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace jeremykenedy\laravelusers;
 
 use Illuminate\Support\ServiceProvider;
-use jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController;
 
 class LaravelUsersServiceProvider extends ServiceProvider
 {
@@ -50,22 +49,22 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $publishTag = $this->_packageTag;
 
         $this->publishes([
-            __DIR__.'/config/'.$this->_packageTag.'.php' => function_exists('config_path') 
-                ? config_path($this->_packageTag.'.php') 
+            __DIR__.'/config/'.$this->_packageTag.'.php' => function_exists('config_path')
+                ? config_path($this->_packageTag.'.php')
                 : base_path('config/'.$this->_packageTag.'.php'),
         ], $publishTag);
 
         $this->publishes([
-            __DIR__.'/resources/views' => function_exists('resource_path') 
-                ? resource_path('views/vendor/'.$this->_packageTag) 
+            __DIR__.'/resources/views' => function_exists('resource_path')
+                ? resource_path('views/vendor/'.$this->_packageTag)
                 : base_path('resources/views/vendor/'.$this->_packageTag),
         ], $publishTag);
 
         $this->publishes([
-            __DIR__.'/resources/lang' => function_exists('lang_path') 
-                ? lang_path('vendor/'.$this->_packageTag) 
-                : (function_exists('resource_path') 
-                    ? resource_path('lang/vendor/'.$this->_packageTag) 
+            __DIR__.'/resources/lang' => function_exists('lang_path')
+                ? lang_path('vendor/'.$this->_packageTag)
+                : (function_exists('resource_path')
+                    ? resource_path('lang/vendor/'.$this->_packageTag)
                     : base_path('lang/vendor/'.$this->_packageTag)),
         ], $publishTag);
     }
