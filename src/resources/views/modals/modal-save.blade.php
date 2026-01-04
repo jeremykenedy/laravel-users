@@ -16,8 +16,14 @@
                 </p>
             </div>
             <div class="modal-footer">
-                {!! Form::button('<i class="fa fa-fw '.trans('laravelusers::modals.confirm_modal_button_cancel_icon').'" aria-hidden="true"></i> ' . trans('laravelusers::modals.confirm_modal_button_cancel_text'), array('class' => 'btn btn-outline pull-left btn-flat', 'type' => 'button', 'data-dismiss' => 'modal' )) !!}
-                {!! Form::button('<i class="fa fa-fw '.trans('laravelusers::modals.confirm_modal_button_save_icon').'" aria-hidden="true"></i> ' . trans('laravelusers::modals.confirm_modal_button_save_text'), array('class' => 'btn btn-success pull-right btn-flat', 'type' => 'button', 'id' => 'confirm' )) !!}
+                <button type="button" class="btn btn-outline pull-left btn-flat" data-dismiss="modal">
+                    <i class="fa fa-fw {{ trans('laravelusers::modals.confirm_modal_button_cancel_icon') }}" aria-hidden="true"></i>
+                    {!! trans('laravelusers::modals.confirm_modal_button_cancel_text') !!}
+                </button>
+                <button type="button" class="btn btn-success pull-right btn-flat" id="confirm">
+                    <i class="fa fa-fw {{ trans('laravelusers::modals.confirm_modal_button_save_icon') }}" aria-hidden="true"></i>
+                    {!! trans('laravelusers::modals.confirm_modal_button_save_text') !!}
+                </button>
             </div>
         </div>
     </div>

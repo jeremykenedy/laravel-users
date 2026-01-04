@@ -46,7 +46,7 @@
                         </h4>
                         @if($user->email)
                             <p class="text-center" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.email-user', ['user' => $user->email]) !!}">
-                                {{ Html::mailto($user->email, $user->email) }}
+                                <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
                             </p>
                         @endif
                         <div class="row mb-4">
@@ -56,10 +56,13 @@
                                 </a>
                             </div>
                             <div class="col-3 col-sm-4 col-md-4 col-lg-3">
-                                {!! Form::open(array('url' => 'users/' . $user->id, 'class' => 'form-inline')) !!}
-                                    {!! Form::hidden('_method', 'DELETE') !!}
-                                    {!! Form::button(trans('laravelusers::laravelusers.buttons.delete-user'), array('class' => 'btn btn-danger btn-md btn-block','type' => 'button', 'data-toggle' => 'modal', 'data-target' => '#confirmDelete', 'data-title' => 'Delete User', 'data-message' => 'Are you sure you want to delete this user?')) !!}
-                                {!! Form::close() !!}
+                                <form method="POST" action="{{ url('users/' . $user->id) }}" class="form-inline">
+                                    @method('DELETE')
+                                    @csrf
+                                    <button type="button" class="btn btn-danger btn-md btn-block" data-toggle="modal" data-target="#confirmDelete" data-title="Delete User" data-message="Are you sure you want to delete this user?">
+                                        {!! trans('laravelusers::laravelusers.buttons.delete-user') !!}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                         <ul class="list-group list-group-flush">
