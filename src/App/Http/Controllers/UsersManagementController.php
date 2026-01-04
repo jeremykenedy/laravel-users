@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -44,7 +45,7 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(): \Illuminate\Contracts\View\View
     {
         $pagintaionEnabled = config('laravelusers.enablePagination', true);
         $userModel = config('laravelusers.defaultUserModel');
@@ -68,7 +69,7 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Contracts\View\View
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
         $roles = [];
 
@@ -90,9 +91,9 @@ class UsersManagementController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $rules = [
             'name'                  => 'required|string|max:255|unique:users|alpha_dash',
@@ -145,7 +146,7 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Contracts\View\View
      */
-    public function show(int $id)
+    public function show(int $id): \Illuminate\Contracts\View\View
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
@@ -160,7 +161,7 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Contracts\View\View
      */
-    public function edit(int $id)
+    public function edit(int $id): \Illuminate\Contracts\View\View
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
@@ -197,12 +198,12 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
-        $emailCheck = ($request->input('email') != '') && ($request->input('email') != $user->email);
-        $passwordCheck = $request->input('password') != null;
+        $emailCheck = ($request->input('email') !== '') && ($request->input('email') !== $user->email);
+        $passwordCheck = $request->input('password') !== null;
 
         $rules = [
             'name' => 'required|max:255',
@@ -254,13 +255,13 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $currentUser = Auth::user();
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        if ($currentUser->id != $user->id) {
+        if ($currentUser->id !== $user->id) {
             $user->delete();
 
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
@@ -276,7 +277,7 @@ class UsersManagementController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         $searchTerm = $request->input('user_search_box');
         $searchRules = [
@@ -293,7 +294,7 @@ class UsersManagementController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'errors' => $validator->errors(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            ], 422);
         }
 
         $userModel = config('laravelusers.defaultUserModel');
@@ -307,6 +308,6 @@ class UsersManagementController extends Controller
             $result->setAttribute('roles', $result->roles);
         });
 
-        return response()->json($results->toArray(), Response::HTTP_OK);
+        return response()->json($results->toArray(), 200);
     }
 }
