@@ -6,7 +6,6 @@ Easily start creating, updating, editing, and deleting users in minutes with min
 
 [![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
 [![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
-[![Travis-CI Build](https://travis-ci.org/jeremykenedy/laravel-users.svg?branch=master)](https://travis-ci.org/jeremykenedy/laravel-users)
 [![StyleCI](https://styleci.io/repos/83162309/shield?branch=master)](https://styleci.io/repos/83162309)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
