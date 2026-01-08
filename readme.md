@@ -13,6 +13,8 @@ Easily start creating, updating, editing, and deleting users in minutes with min
     <img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Become a Patreon" width="85px" > 
 </a>
 
+* If you want to sponsor this, please consider sponsoring a contributor and NOT me. Thank you to all who contribute!!
+
 #### Table of contents
 - [About](#about)
 - [Features](#features)
