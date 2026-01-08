@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
-use Auth;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class UsersManagementController extends Controller
 {
-    private $_authEnabled;
-    private $_rolesEnabled;
-    private $_rolesMiddlware;
-    private $_rolesMiddleWareEnabled;
+    private readonly bool $_authEnabled;
+    private readonly bool $_rolesEnabled;
+    private readonly string $_rolesMiddlware;
+    private readonly bool $_rolesMiddleWareEnabled;
 
     /**
      * Create a new controller instance.
@@ -23,10 +26,10 @@ class UsersManagementController extends Controller
      */
     public function __construct()
     {
-        $this->_authEnabled = config('laravelusers.authEnabled');
-        $this->_rolesEnabled = config('laravelusers.rolesEnabled');
-        $this->_rolesMiddlware = config('laravelusers.rolesMiddlware');
-        $this->_rolesMiddleWareEnabled = config('laravelusers.rolesMiddlwareEnabled');
+        $this->_authEnabled = config('laravelusers.authEnabled', true);
+        $this->_rolesEnabled = config('laravelusers.rolesEnabled', false);
+        $this->_rolesMiddlware = config('laravelusers.rolesMiddlware', 'role:admin');
+        $this->_rolesMiddleWareEnabled = config('laravelusers.rolesMiddlwareEnabled', true);
 
         if ($this->_authEnabled) {
             $this->middleware('auth');
@@ -40,16 +43,17 @@ class UsersManagementController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(): \Illuminate\Contracts\View\View
     {
-        $pagintaionEnabled = config('laravelusers.enablePagination');
+        $pagintaionEnabled = config('laravelusers.enablePagination', true);
+        $userModel = config('laravelusers.defaultUserModel');
 
         if ($pagintaionEnabled) {
-            $users = config('laravelusers.defaultUserModel')::paginate(config('laravelusers.paginateListSize'));
+            $users = $userModel::paginate(config('laravelusers.paginateListSize', 25));
         } else {
-            $users = config('laravelusers.defaultUserModel')::all();
+            $users = $userModel::all();
         }
 
         $data = [
@@ -63,14 +67,15 @@ class UsersManagementController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
         $roles = [];
 
         if ($this->_rolesEnabled) {
-            $roles = config('laravelusers.roleModel')::all();
+            $roleModel = config('laravelusers.roleModel');
+            $roles = $roleModel::all();
         }
 
         $data = [
@@ -78,7 +83,7 @@ class UsersManagementController extends Controller
             'roles'         => $roles,
         ];
 
-        return view(config('laravelusers.createUserBlade'))->with($data);
+        return view(config('laravelusers.createUserBlade'), $data);
     }
 
     /**
@@ -86,9 +91,9 @@ class UsersManagementController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $rules = [
             'name'                  => 'required|string|max:255|unique:users|alpha_dash',
@@ -119,7 +124,8 @@ class UsersManagementController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $user = config('laravelusers.defaultUserModel')::create([
+        $userModel = config('laravelusers.defaultUserModel');
+        $user = $userModel::create([
             'name'             => strip_tags($request->input('name')),
             'email'            => $request->input('email'),
             'password'         => Hash::make($request->input('password')),
@@ -138,13 +144,14 @@ class UsersManagementController extends Controller
      *
      * @param int $id
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
-    public function show($id)
+    public function show(int $id): \Illuminate\Contracts\View\View
     {
-        $user = config('laravelusers.defaultUserModel')::find($id);
+        $userModel = config('laravelusers.defaultUserModel');
+        $user = $userModel::findOrFail($id);
 
-        return view(config('laravelusers.showIndividualUserBlade'))->withUser($user);
+        return view(config('laravelusers.showIndividualUserBlade'), ['user' => $user]);
     }
 
     /**
@@ -152,16 +159,18 @@ class UsersManagementController extends Controller
      *
      * @param int $id
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
-    public function edit($id)
+    public function edit(int $id): \Illuminate\Contracts\View\View
     {
-        $user = config('laravelusers.defaultUserModel')::findOrFail($id);
+        $userModel = config('laravelusers.defaultUserModel');
+        $user = $userModel::findOrFail($id);
         $roles = [];
         $currentRole = [];
 
         if ($this->_rolesEnabled) {
-            $roles = config('laravelusers.roleModel')::all();
+            $roleModel = config('laravelusers.roleModel');
+            $roles = $roleModel::all();
 
             foreach ($user->roles as $user_role) {
                 $currentRole[] = $user_role->id;
@@ -178,7 +187,7 @@ class UsersManagementController extends Controller
             $data['currentRole'] = $currentRole;
         }
 
-        return view(config('laravelusers.editIndividualUserBlade'))->with($data);
+        return view(config('laravelusers.editIndividualUserBlade'), $data);
     }
 
     /**
@@ -187,13 +196,14 @@ class UsersManagementController extends Controller
      * @param \Illuminate\Http\Request $request
      * @param int                      $id
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
-        $user = config('laravelusers.defaultUserModel')::find($id);
-        $emailCheck = ($request->input('email') != '') && ($request->input('email') != $user->email);
-        $passwordCheck = $request->input('password') != null;
+        $userModel = config('laravelusers.defaultUserModel');
+        $user = $userModel::findOrFail($id);
+        $emailCheck = ($request->input('email') !== '') && ($request->input('email') !== $user->email);
+        $passwordCheck = $request->input('password') !== null;
 
         $rules = [
             'name' => 'required|max:255',
@@ -243,14 +253,15 @@ class UsersManagementController extends Controller
      *
      * @param int $id
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
         $currentUser = Auth::user();
-        $user = config('laravelusers.defaultUserModel')::findOrFail($id);
+        $userModel = config('laravelusers.defaultUserModel');
+        $user = $userModel::findOrFail($id);
 
-        if ($currentUser->id != $user->id) {
+        if ($currentUser->id !== $user->id) {
             $user->delete();
 
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
@@ -264,9 +275,9 @@ class UsersManagementController extends Controller
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         $searchTerm = $request->input('user_search_box');
         $searchRules = [
@@ -282,24 +293,21 @@ class UsersManagementController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                json_encode($validator),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
-        $results = config('laravelusers.defaultUserModel')::where('id', 'like', $searchTerm.'%')
+        $userModel = config('laravelusers.defaultUserModel');
+        $results = $userModel::where('id', 'like', $searchTerm.'%')
                             ->orWhere('name', 'like', $searchTerm.'%')
-                            ->orWhere('email', 'like', $searchTerm.'%')->get();
+                            ->orWhere('email', 'like', $searchTerm.'%')
+                            ->get();
 
         // Attach roles to results
-        foreach ($results as $result) {
-            $roles = [
-                'roles' => $result->roles,
-            ];
-            $result->push($roles);
-        }
+        $results->each(function ($result) {
+            $result->setAttribute('roles', $result->roles);
+        });
 
-        return response()->json([
-            json_encode($results),
-        ], Response::HTTP_OK);
+        return response()->json($results->toArray(), 200);
     }
 }

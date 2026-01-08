@@ -36,7 +36,7 @@ return [
     'softDeletedEnabled'            => false,
 
     // Laravel Default User Model
-    'defaultUserModel'              => 'App\User',
+    'defaultUserModel'              => 'App\Models\User',
 
     // Use the provided blade templates or extend to your own templates.
     'showUsersBlade'                => 'laravelusers::usersmanagement.show-users',
