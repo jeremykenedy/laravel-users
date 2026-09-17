@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-    {!! trans('laravelusers::laravelusers.showing-user', ['name' => $user->name]) !!}
+    {!! trans('laravelusers::laravelusers.showing-user', ['name' => e($user->name)]) !!}
 @endsection
 
 @section('template_linked_css')
@@ -29,7 +29,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            {!! trans('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) !!}
+                            {!! trans('laravelusers::laravelusers.showing-user-title', ['name' => e($user->name)]) !!}
                             <div class="float-right">
                                 <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
@@ -45,7 +45,7 @@
                             {{ $user->name }}
                         </h4>
                         @if($user->email)
-                            <p class="text-center" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.email-user', ['user' => $user->email]) !!}">
+                            <p class="text-center" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.email-user', ['user' => e($user->email)]) !!}">
                                 <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
                             </p>
                         @endif

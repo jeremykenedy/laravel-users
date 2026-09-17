@@ -1,315 +1,172 @@
-![Laravel Users](https://github-project-images.s3-us-west-2.amazonaws.com/laravel-blocker/laravel-users-logo.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/laravel-users-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/laravel-users-light.svg">
+  <img alt="Laravel Users: user management for Laravel" src="docs/images/laravel-users-light.svg" width="1200">
+</picture>
 
-# Laravel Users | A Laravel Users CRUD Management [Package](https://packagist.org/packages/jeremykenedy/laravel-users)
-A Users Management CRUD [Package](https://packagist.org/packages/jeremykenedy/laravel-users) that includes all necessary routes, views, models, and controllers for a user management dashboard and associated pages for managing Laravels built in user scaffolding.
-Easily start creating, updating, editing, and deleting users in minutes with minimal setup required; Easily search all users, helpful for large user bases.
+# Laravel Users
 
+User management for Laravel with configurable models, authentication, roles, search, and Blade views.
+
+[![CI](https://github.com/jeremykenedy/laravel-users/actions/workflows/ci.yml/badge.svg)](https://github.com/jeremykenedy/laravel-users/actions/workflows/ci.yml)
 [![Latest Stable Version](https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
 [![Total Downloads](https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg)](https://packagist.org/packages/jeremykenedy/laravel-users)
-[![StyleCI](https://styleci.io/repos/83162309/shield?branch=master)](https://styleci.io/repos/83162309)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/?branch=master)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<a href="https://www.patreon.com/bePatron?u=10119959" title="Become a Patreon">
-    <img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Become a Patreon" width="85px" > 
-</a>
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-* If you want to sponsor this, please consider sponsoring a contributor and NOT me. Thank you to all who contribute!!
+If you want to sponsor this project, please consider sponsoring a contributor. Thank you to everyone who contributes.
 
-#### Table of contents
-- [About](#about)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Integrations](#integrations)
-- [Installation Instructions](#installation-instructions)
-- [Configuration](#configuration)
-- [Routes](#routes)
-- [Screenshots](#screenshots)
-- [File Tree](#file-tree)
-- [Opening an Issue](#opening-an-issue)
-- [License](#license)
+## Compatibility
 
-### Features
-| Laravel Users Features  |
-| :------------ |
-|Full CRUD of Laravel Users|
-|Works with built in [auth scaffolding](https://laravel.com/docs/5.7/authentication)|
-|Works with various [Roles/ACL Packages](https://github.com/jeremykenedy/laravel-roles)|
-|Uses [Language localization](https://laravel.com/docs/5.7/localization) File System|
-|Uses [font awesome](https://fontawesome.com/icons), cdn can be optionally called in config|
-|Can use built in [pagination](https://laravel.com/docs/5.7/pagination) and/or [datatables.js](https://datatables.net/)|
-|Can search all users by name, id, or email|
-|Lots of [configuration](#configuration) options|
+**Bootstrap 4 remains the default.** Running `composer update` does not publish files, change your frontend, install optional packages, or modify your application configuration. Existing routes, configuration keys (including their historical spelling), view names, and the `laravelusers` publish tag remain available.
 
+This branch requires PHP 8.1 or newer, as before. CI covers Laravel 8 through 13 on compatible PHP versions. Older Laravel applications should retain their compatible package release; this update does not restore support for older PHP versions. Historical compatibility tests do not extend upstream framework security support.
 
-### Requirements
-* [Laravel 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 6, 7, or 8+](https://laravel.com/docs/installation)
+| Frontend | Views | Assets | Default |
+| --- | --- | --- | --- |
+| Bootstrap 4 | Existing Blade templates and scripts | Existing configurable Bootstrap, jQuery, Popper, and Font Awesome URLs | Yes |
+| Bootstrap 5 | Modern Blade templates | Bootstrap 5.3 CSS, optional host assets; plain JavaScript | No |
+| Tailwind CSS | Modern Blade templates | Bundled, compiled Tailwind 4 utilities; plain JavaScript | No |
 
-### Integrations
-Laravel users can work out the box with or without the following roles packages:
-* [jeremykenedy/laravel-roles](https://github.com/jeremykenedy/laravel-roles)
-* [Zizaco/entrust](https://github.com/Zizaco/entrust)
-* [romanbican/roles](https://github.com/romanbican/roles)
-* [ultraware/roles](https://github.com/ultraware/roles)
+Modern views provide accessible form labels and errors, responsive tables, server pagination, search, and deletion confirmation. They do not require jQuery or a Node build in the consuming application. DataTables and Bootstrap tooltips remain options for the Bootstrap 4 views. Modern views use their own search and pagination controls.
 
-### Installation Instructions
-1. From your projects root folder in terminal run:
+## Install
 
-    Laravel 5.6, 5.7, 5.8, 6, 7, and 8+ use:
+From an application with an existing users table, user model, and authentication setup:
 
-    ```
-        composer require jeremykenedy/laravel-users
-    ```
+```sh
+composer require jeremykenedy/laravel-users
+php artisan laravelusers:install
+```
 
-    Laravel 5.5 use:
+The interactive command asks for the framework, theme, and whether to publish views. Visit `/users` after signing in. Package discovery registers the provider automatically.
 
-    ```
-        composer require jeremykenedy/laravel-users:2.0.2
-    ```
+For unattended installation with the existing default:
 
-    Laravel 5.4 use:
+```sh
+php artisan laravelusers:install --no-interaction
+```
 
-    ```
-        composer require jeremykenedy/laravel-users:1.4.0
-    ```
+The package manages accounts; it does not install an authentication system, create administrator accounts, or change database schemas. Authentication is enabled by default. Configure your application's authorization middleware before exposing user management to ordinary signed-in users. Authentication alone is not an administrator permission check.
 
-    Laravel 5.3 use:
+The original publishing workflow remains available:
 
-    ```
-        composer require jeremykenedy/laravel-users:1.3.0
-    ```
+```sh
+php artisan vendor:publish --tag=laravelusers
+```
 
-    Laravel 5.2 use:
-    ```
-        composer require jeremykenedy/laravel-users:1.2.0
-    ```
+It publishes configuration, translations, and all views. Laravel Collective is not required by the bundled templates. Previously customized templates that use it still need their own dependency.
 
-2. Register Package
-* Laravel 5.5, 5.6, 5.7, 5.8, 6, 7, 8+
-Uses package auto discovery feature, no need to edit the `config/app.php` file.
+## Update or switch frameworks
 
-* Laravel 5.4 and below
-Register the package with laravel in `config/app.php` under `providers` with the following:
+```sh
+composer update jeremykenedy/laravel-users
+php artisan laravelusers:update
 
-   ```
-      Collective\Html\HtmlServiceProvider::class,
-      jeremykenedy\laravelusers\LaravelUsersServiceProvider::class,
-   ```
+php artisan laravelusers:update --framework=bootstrap5 --theme=system --no-interaction
+php artisan laravelusers:update --framework=tailwind --theme=dark --no-interaction
+php artisan laravelusers:update --framework=bootstrap4 --theme=light --no-interaction
+```
 
-3. Register the dependencies aliases
-* Laravel 5.5 and up
-Uses package auto discovery feature, no need to edit the `config/app.php` file.
+Framework and theme choices are saved in `config/laravelusers-ui.php`. The command leaves existing `config/laravelusers.php` contents intact. Explicitly configured custom view names and custom parent layouts continue to take precedence. Clear a cached configuration before running the command, then rebuild it as part of deployment:
 
-* Laravel 5.4 and below
-In `config/app.php` section under `aliases` with the following:
+```sh
+php artisan config:clear
+php artisan laravelusers:update --framework=bootstrap5 --no-interaction
+php artisan config:cache
+```
 
-    ```
-        'Form' => Collective\Html\FormFacade::class,
-        'Html' => Collective\Html\HtmlFacade::class,
-    ```
+| Option | Behavior |
+| --- | --- |
+| `--framework=bootstrap4\|bootstrap5\|tailwind` | Select a frontend. Omitted unattended updates retain the current selection. |
+| `--theme=light\|dark\|system` | Select the default color theme. |
+| `--views=package` | Use the view loader without publishing files. Existing overrides still take precedence. |
+| `--views=publish` | Copy missing views to `resources/views/vendor/laravelusers`. Preserve existing files. |
+| `--views=publish --force` | Back up the entire published view directory under `storage/app/laravelusers/backups`, then replace package-owned view files. |
+| `--with=ui-kit` | Print optional integration setup instructions. Repeat for other integrations. |
 
-4. Publish the package config and language files by running the following from your projects root folder:
+`--force` applies only to views. Neither command overwrites existing main configuration or translations. To stop using a customized view, rename or remove that specific override after reviewing it. `--views=package` deliberately does not delete files. See [upgrading and rollback](docs/upgrading.md).
 
-    ```
-        php artisan vendor:publish --tag=laravelusers
-    ```
+## Configuration and dark mode
 
-### Configuration
-Laravel Users can be configured directly in [`/config/laravelusers.php`](https://github.com/jeremykenedy/laravel-users/blob/master/src/config/laravelusers.php) once you publish the assets.
+The complete configuration is in [src/config/laravelusers.php](src/config/laravelusers.php). Applications may publish it or set the same keys in their configuration.
 
 ```php
-    /*
-    |--------------------------------------------------------------------------
-    | Laravel-users setting
-    |--------------------------------------------------------------------------
-    */
-
-    // The parent blade file
-    'laravelUsersBladeExtended'     => 'laravelusers::layouts.app', // 'layouts.app'
-
-    // Enable `auth` middleware
-    'authEnabled'                   => true,
-
-    // Enable Optional Roles Middleware on the users assignments
-    'rolesEnabled'                  => false,
-
-    /*
-     | Enable Roles Middlware on the usability of this package.
-     | This requires the middleware from the roles package to be registered in `App\Http\Kernel.php`
-     | An Example: of roles middleware entry in protected `$routeMiddleware` array would be:
-     | 'role' => \jeremykenedy\LaravelRoles\Middleware\VerifyRole::class,
-     */
-
-    'rolesMiddlwareEnabled'         => true,
-
-    // Optional Roles Middleware
-    'rolesMiddlware'                => 'role:admin',
-
-    // Optional Role Model
-    'roleModel'                     => 'jeremykenedy\LaravelRoles\Models\Role',
-
-    // Enable Soft Deletes - Not yet setup - on the roadmap.
-    'softDeletedEnabled'            => false,
-
-    // Laravel Default User Model
-    'defaultUserModel'              => 'App\User',
-
-    // Use the provided blade templates or extend to your own templates.
-    'showUsersBlade'                => 'laravelusers::usersmanagement.show-users',
-    'createUserBlade'               => 'laravelusers::usersmanagement.create-user',
-    'showIndividualUserBlade'       => 'laravelusers::usersmanagement.show-user',
-    'editIndividualUserBlade'       => 'laravelusers::usersmanagement.edit-user',
-
-    // Use Package Bootstrap Flash Alerts
-    'enablePackageBootstapAlerts'   => true,
-
-    // Users List Pagination
-    'enablePagination'              => true,
-    'paginateListSize'              => 25,
-
-    // Enable Search Users- Uses jQuery Ajax
-    'enableSearchUsers'             => true,
-
-    // Users List JS DataTables - not recommended use with pagination
-    'enabledDatatablesJs'           => false,
-    'datatablesJsStartCount'        => 25,
-    'datatablesCssCDN'              => 'https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css',
-    'datatablesJsCDN'               => 'https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js',
-    'datatablesJsPresetCDN'         => 'https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js',
-
-    // Bootstrap Tooltips
-    'tooltipsEnabled'               => true,
-    'enableBootstrapPopperJsCdn'    => true,
-    'bootstrapPopperJsCdn'          => 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js',
-
-    // Icons
-    'fontAwesomeEnabled'            => true,
-    'fontAwesomeCdn'                => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
-
-    // Extended blade options for packages app.blade.php
-    'enableBootstrapCssCdn'         => true,
-    'bootstrapCssCdn'               => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
-
-    'enableAppCss'                  => true,
-    'appCssPublicFile'              => 'css/app.css',
-
-    'enableBootstrapJsCdn'          => true,
-    'bootstrapJsCdn'                => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
-
-    'enableAppJs'                   => true,
-    'appJsPublicFile'               => 'js/app.js',
-
-    'enablejQueryCdn'               => true,
-    'jQueryCdn'                     => 'https://code.jquery.com/jquery-3.3.1.min.js',
+'frontend' => 'bootstrap4',
+'theme' => 'light',
+'themeToggle' => false,
+'defaultUserModel' => App\Models\User::class,
+'authEnabled' => true,
+'rolesEnabled' => false,
+'rolesMiddlwareEnabled' => true,
+'rolesMiddlware' => 'role:admin',
+'enablePagination' => true,
+'paginateListSize' => 25,
 ```
 
-### Routes
-* ```/users```
-* ```/users/{id}```
-* ```/users/create```
-* ```/users/{id}/edit```
+Set `themeToggle` to `true` to show a light, dark, and system selector. A user's selection is stored locally in their browser. System mode follows their device preference. No dark mode package is required. Dark styles are scoped to the package interface. Existing published layouts need the theme partials added or a reviewed update before they can display the new selector.
 
-###### Routes In-depth
-| Method    | URI                    | Name             | Action                                                                            | Middleware  |
-| :-------- | :--------------------- | :--------------- | :-------------------------------------------------------------------------------- | :---------- |
-| GET/HEAD  | users                  | users            | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@index    | web,auth    |
-| POST      | users                  | users.store      | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@store    | web,auth    |
-| GET/HEAD  | users/create           | users.create     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@create   | web,auth    |
-| GET/HEAD  | users/{user}           | users.show       | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@show     | web,auth    |
-| DELETE    | users/{user}           | user.destroy     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@destroy  | web,auth    |
-| PUT/PATCH | users/{user}           | users.update     | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@update   | web,auth    |
-| GET/HEAD  | users/{user}/edit      | users.edit       | jeremykenedy\laravelusers\app\Http\Controllers\UsersManagementController@edit     | web,auth    |
+If you use the setup commands, `laravelusers-ui.framework` and `laravelusers-ui.theme` take precedence over `laravelusers.frontend` and `laravelusers.theme`.
 
-### Required Packages
-(included in this package)
+`laravelUsersBladeExtended` selects your parent layout. Custom layouts should render `template_title`, `template_linked_css`, `content`, and `template_scripts` sections. Custom view settings (`showUsersBlade`, `createUserBlade`, `showIndividualUserBlade`, `editIndividualUserBlade`) are never remapped. Only the four exact bundled view names switch to the modern templates when a modern framework is selected.
 
-* [laravelcollective/html](https://packagist.org/packages/laravelcollective/html)
+Asset switches remain available. `enableBootstrapCssCdn` controls loading Bootstrap CSS in the package layout; `bootstrap5CssCdn` selects the Bootstrap 5 stylesheet. `enableAppCss` and `enableAppJs` control host assets. Disable them when your application does not provide the configured `css/app.css` or `js/app.js`. Tailwind utilities are compiled and bundled with the package, with an `lu:` prefix and no global preflight reset. Custom layouts should load one framework stylesheet appropriate to the selected view set.
 
-### Screenshots
+## Roles and optional integrations
 
-![Show Users](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-users.jpg)
-![Show User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-user.jpg)
-![Edit User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user.jpg)
-![Edit User Password](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user-pw.jpg)
-![Create User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/create-user.jpg)
-![Create User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/save-user-modal.jpg)
-![Delete User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/delete-user-modal.jpg)
-![Error Create](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-create.jpg)
-![Error Update](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-update.jpg)
-![Error Delete](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-delete.jpg)
+Role support stays disabled by default. To enable it, configure your role model and middleware. The role-enabled user model must provide `roles`, `attachRole()`, `detachAllRoles()`, and, for the legacy detail view, `level()`. Role assignment and user changes use a database transaction on the user model's connection; role tables should use that same connection.
 
-### File Tree
+Optional packages are not runtime dependencies:
 
-```bash
-laravel-users/
-├── .env.travis
-├── .gitignore
-├── .travis.yml
-├── LICENSE
-├── composer.json
-├── phpunit.xml
-├── readme.md
-└── src
-    ├── App
-    │   └── Http
-    │       └── Controllers
-    │           └── UsersManagementController.php
-    ├── LaravelUsersFacade.php
-    ├── LaravelUsersServiceProvider.php
-    ├── config
-    │   └── laravelusers.php
-    ├── resources
-    │   ├── lang
-    │   │   └── en
-    │   │       ├── app.php
-    │   │       ├── forms.php
-    │   │       ├── laravelusers.php
-    │   │       └── modals.php
-    │   └── views
-    │       ├── layouts
-    │       │   └── app.blade.php
-    │       ├── modals
-    │       │   ├── modal-delete.blade.php
-    │       │   └── modal-save.blade.php
-    │       ├── partials
-    │       │   ├── bs-visibility-css.blade.php
-    │       │   ├── form-status.blade.php
-    │       │   ├── search-users-form.blade.php
-    │       │   └── styles.blade.php
-    │       ├── scripts
-    │       │   ├── check-changed.blade.php
-    │       │   ├── datatables.blade.php
-    │       │   ├── delete-modal-script.blade.php
-    │       │   ├── save-modal-script.blade.php
-    │       │   ├── search-users.blade.php
-    │       │   ├── toggleText.blade.php
-    │       │   └── tooltips.blade.php
-    │       └── usersmanagement
-    │           ├── create-user.blade.php
-    │           ├── edit-user.blade.php
-    │           ├── show-user.blade.php
-    │           └── show-users.blade.php
-    └── routes
-        └── web.php
+- [Laravel UI Kit](https://github.com/jeremykenedy/laravel-ui-kit)
+- [Laravel Toast](https://github.com/jeremykenedy/laravel-toast)
+- [Laravel Darkmode Toggle](https://github.com/jeremykenedy/laravel-darkmode-toggle)
+- [Laravel IP Capture](https://github.com/jeremykenedy/laravel-ip-capture)
+- [Laravel Seedster](https://github.com/jeremykenedy/laravel-seedster)
 
+For setup instructions from either command:
 
+```sh
+php artisan laravelusers:install --with=ui-kit --with=toast
 ```
 
-* Tree command can be installed using brew: `brew install tree`
-* File tree generated using command `tree -a -I '.git|node_modules|vendor|storage|tests'`
+Also accepted: `--with=darkmode-toggle`, `--with=ip-capture`, and `--with=seedster`. These options print Composer and Artisan instructions; they do not install or configure another package. See [integration details](docs/integrations.md) before adding components, tracking, or seeds to your host application.
 
-### Opening an Issue
-Before opening an issue there are a couple of considerations:
-* You are all awesome!
-* **Read the instructions** and make sure all steps were *followed correctly*.
-* **Check** that the issue is not *specific to your development environment* setup.
-* **Provide** *duplication steps*.
-* **Attempt to look into the issue**, and if you *have a solution, make a pull request*.
-* **Show that you have made an attempt** to *look into the issue*.
-* **Check** to see if the issue you are *reporting is a duplicate* of a previous reported issue.
-* **Following these instructions show me that you have tried.**
-* If you have a questions send me an email to jeremykenedy@gmail.com
-* Need some help, I can do my best on Slack: https://opensourcehelpgroup.slack.com
-* Please be considerate that this is an open source project that I provide to the community for FREE when opening an issue. 
+## Routes
 
-### License
-Laravel Users | A Laravel Users Management Package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). Enjoy!
+| Method | URI | Name |
+| --- | --- | --- |
+| GET | `/users` | `users` |
+| GET | `/users/create` | `users.create` |
+| POST | `/users` | `users.store` |
+| GET | `/users/{user}` | `users.show` |
+| GET | `/users/{user}/edit` | `users.edit` |
+| PUT/PATCH | `/users/{user}` | `users.update` |
+| DELETE | `/users/{user}` | `user.destroy` |
+| POST | `/search-users` | `search-users` |
+
+Search accepts `user_search_box` and returns the existing JSON array of matching models, using the model's hidden attributes. Ensure sensitive attributes on custom user models are hidden. Search retains its existing `web` and `auth` middleware even when `authEnabled` is disabled for CRUD. Deleting the current authenticated user is blocked.
+
+The `softDeletedEnabled` option is retained for compatibility; a deleted-user management screen is not implemented.
+
+## Development and testing
+
+```sh
+composer update
+composer check
+npm ci
+npm run build
+npx playwright install chromium firefox webkit
+npm run test:browser
+```
+
+Tests cover CRUD, validation, password hashing and preservation, authentication, roles and transactional rollback, search, missing users, pagination, custom models, configuration caching, installers, backups, view overrides, themes, and framework rendering. Browser tests exercise real HTTP requests and rendered Blade templates. Modern views receive automated accessibility checks in both themes.
+
+See [testing](docs/testing.md) for the CI matrix and local fixture. The fixture is development-only and is never registered by the package service provider. Please include a reproducing test when submitting a bug fix.
+
+## Historical releases
+
+For applications still on older Laravel versions, the previous installation pins were Laravel 5.5: `2.0.2`, Laravel 5.4: `1.4.0`, Laravel 5.3: `1.3.0`, and Laravel 5.2: `1.2.0`. Review each release's Composer requirements before upgrading an older application.
+
+## License
+
+[MIT](LICENSE), copyright 2017-2026 Jeremy Kenedy.

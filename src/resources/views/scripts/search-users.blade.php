@@ -12,6 +12,9 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
+        function escapeHtml(value) {
+            return $('<div>').text(value == null ? '' : value).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
         searchform.submit(function(e) {
             e.preventDefault();
             resultsContainer.html('');
@@ -34,9 +37,16 @@
                 url: "{{ route('search-users') }}",
                 data: searchform.serialize(),
                 success: function (result) {
-                    let jsonData = JSON.parse(result);
+                    let jsonData = typeof result === 'string' ? JSON.parse(result) : result;
                     if (jsonData.length != 0) {
                         $.each(jsonData, function(index, val) {
+                            val = Object.assign({}, val, {
+                                id: encodeURIComponent(val.id),
+                                name: escapeHtml(val.name),
+                                email: escapeHtml(val.email),
+                                created_at: escapeHtml(val.created_at),
+                                updated_at: escapeHtml(val.updated_at)
+                            });
                             let rolesHtml = '';
                             let roleClass = '';
                             let showCellHtml = '<a class="btn btn-sm btn-success btn-block" href="users/' + val.id + '" data-toggle="tooltip" title="{{ trans("laravelusers::laravelusers.tooltips.show") }}">{!! trans("laravelusers::laravelusers.buttons.show") !!}</a>';
@@ -49,7 +59,7 @@
                                     '</button>' +
                                 '</form>';
 
-                            $.each(val.roles, function(roleIndex, role) {
+                            $.each(val.roles || [], function(roleIndex, role) {
                                 if (role.name == "User") {
                                     roleClass = 'primary';
                                 } else if (role.name == "Admin") {
@@ -59,7 +69,7 @@
                                 } else {
                                     roleClass = 'dark';
                                 };
-                                rolesHtml = '<span class="badge badge-' + roleClass + '">' + role.name + '</span> ';
+                                rolesHtml = '<span class="badge badge-' + roleClass + '">' + escapeHtml(role.name) + '</span> ';
                             });
                             resultsContainer.append('<tr>' +
                                 '<td>' + val.id + '</td>' +
