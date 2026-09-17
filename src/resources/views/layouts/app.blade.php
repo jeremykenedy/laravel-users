@@ -18,6 +18,9 @@
             <link rel="stylesheet" type="text/css" href="{{ asset(config('laravelusers.appCssPublicFile')) }}">
         @endif
 
+        @if(\jeremykenedy\laravelusers\Support\Frontend::theme() !== 'light' || config('laravelusers.themeToggle'))
+            @include('laravelusers::partials.legacy-theme')
+        @endif
         @yield('template_linked_css')
 
         {{-- Scripts --}}
@@ -27,7 +30,7 @@
             ]) !!};
         </script>
     </head>
-    <body>
+    <body id="laravelusers" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
         <div id="app">
             <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
                 <div class="container">
@@ -43,6 +46,10 @@
                         <ul class="navbar-nav mr-auto">
 
                         </ul>
+
+                        @if(config('laravelusers.themeToggle'))
+                            @include('laravelusers::partials.theme-toggle')
+                        @endif
 
                         <!-- Right Side Of Navbar -->
                         <ul class="navbar-nav ml-auto">
@@ -94,6 +101,9 @@
         @endif
         @include('laravelusers::scripts.toggleText')
 
+        @if(\jeremykenedy\laravelusers\Support\Frontend::theme() !== 'light' || config('laravelusers.themeToggle'))
+            @include('laravelusers::scripts.theme')
+        @endif
         @yield('template_scripts')
 
     </body>

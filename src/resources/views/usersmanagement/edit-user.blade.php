@@ -1,7 +1,7 @@
 @extends(config('laravelusers.laravelUsersBladeExtended'))
 
 @section('template_title')
-    {!! trans('laravelusers::laravelusers.editing-user', ['name' => $user->name]) !!}
+    {!! trans('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]) !!}
 @endsection
 
 @section('template_linked_css')
@@ -29,7 +29,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            {!! trans('laravelusers::laravelusers.editing-user', ['name' => $user->name]) !!}
+                            {!! trans('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]) !!}
                             <div class="pull-right">
                                 <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
