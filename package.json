@@ -1,0 +1,14 @@
+{
+  "name": "laravel-users-development",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i src/resources/css/tailwind.css -o src/resources/views/modern/tailwind.blade.php --minify",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

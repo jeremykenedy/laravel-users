@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-labelledby="title description">
+  <title id="title">Laravel Users</title>
+  <desc id="description">User management for Laravel. Bootstrap 4, Bootstrap 5, Tailwind CSS, and dark mode.</desc>
+  <defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="#0c0a09"/><stop offset="1" stop-color="#1c1917"/></linearGradient></defs>
+  <rect width="800" height="200" rx="16" fill="url(#background)"/>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+    <text x="40" y="80" font-size="40" font-weight="700" letter-spacing="-.5" fill="#fff">Laravel Users</text>
+    <text x="40" y="110" font-size="14" fill="#a8a29e">User management that fits your Laravel application.</text>
+    <rect x="40" y="133" width="90" height="22" rx="11" fill="#1a1a1a" stroke="#a78bfa" stroke-width=".8" opacity=".8"/>
+    <text x="85" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#a78bfa">Bootstrap 4</text>
+    <rect x="140" y="133" width="90" height="22" rx="11" fill="#1a1a1a" stroke="#60a5fa" stroke-width=".8" opacity=".8"/>
+    <text x="185" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#60a5fa">Bootstrap 5</text>
+    <rect x="240" y="133" width="95" height="22" rx="11" fill="#1a1a1a" stroke="#4ade80" stroke-width=".8" opacity=".8"/>
+    <text x="287.5" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#4ade80">Tailwind CSS</text>
+    <rect x="345" y="133" width="85" height="22" rx="11" fill="#1a1a1a" stroke="#fbbf24" stroke-width=".8" opacity=".8"/>
+    <text x="387.5" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#fbbf24">Dark mode</text>
+  </g>
+  <g transform="translate(570 40)">
+    <rect width="180" height="120" rx="16" fill="#292524"/>
+    <circle cx="44" cy="43" r="14" fill="#a78bfa"/>
+    <path d="M 22 97 Q 22 63 44 63 Q 66 63 66 97 Z" fill="#a78bfa"/>
+    <circle cx="136" cy="43" r="14" fill="#60a5fa"/>
+    <path d="M 114 97 Q 114 63 136 63 Q 158 63 158 97 Z" fill="#60a5fa"/>
+    <circle cx="90" cy="37" r="20" fill="#8b5cf6"/>
+    <path d="M 62 91 Q 62 57 90 57 Q 118 57 118 91 Z" fill="#8b5cf6"/>
+  </g>
+</svg>

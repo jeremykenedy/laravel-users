@@ -18,18 +18,18 @@ class LaravelUsersServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap the application services.
-     *
-     * @return void
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([Console\InstallCommand::class, Console\UpdateCommand::class]);
+        }
+
         $this->loadTranslationsFrom(__DIR__.'/resources/lang/', $this->_packageTag);
     }
 
     /**
      * Register the application services.
-     *
-     * @return void
      */
     public function register(): void
     {
@@ -41,8 +41,6 @@ class LaravelUsersServiceProvider extends ServiceProvider
 
     /**
      * Publish files for the package.
-     *
-     * @return void
      */
     private function publishFiles(): void
     {

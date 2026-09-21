@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / ${{ matrix.dependencies }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { php: '8.1', laravel: '8', testbench: '^6.0', dependencies: highest, legacy: true }
+          - { php: '8.1', laravel: '9', testbench: '^7.0', dependencies: highest, legacy: true }
+          - { php: '8.1', laravel: '10', testbench: '^8.0', dependencies: highest, legacy: true }
+          - { php: '8.2', laravel: '11', testbench: '^9.0', dependencies: highest, legacy: true }
+          - { php: '8.2', laravel: '12', testbench: '^10.0', dependencies: highest }
+          - { php: '8.3', laravel: '12', testbench: '^10.0', dependencies: highest }
+          - { php: '8.4', laravel: '12', testbench: '^10.0', dependencies: highest }
+          - { php: '8.3', laravel: '13', testbench: '^11.0', dependencies: highest }
+          - { php: '8.4', laravel: '13', testbench: '^11.0', dependencies: highest }
+          - { php: '8.5', laravel: '13', testbench: '^11.0', dependencies: highest }
+          - { php: '8.3', laravel: '13', testbench: '^11.0', dependencies: lowest }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+          tools: composer:v2
+      - run: composer validate --strict
+      - name: Select Testbench version
+        run: composer require --dev "orchestra/testbench:${{ matrix.testbench }}" --no-update --no-interaction
+      - name: Install supported dependencies
+        if: ${{ !matrix.legacy }}
+        run: composer update --prefer-dist --no-interaction ${{ matrix.dependencies == 'lowest' && '--prefer-lowest --prefer-stable' || '' }}
+      - name: Install historical compatibility dependencies
+        if: matrix.legacy
+        # Historical frameworks may have advisories. This exception is confined to compatibility testing.
+        run: composer update --prefer-dist --no-interaction --no-security-blocking
+      - run: composer test
+
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite
+          coverage: xdebug
+          tools: composer:v2
+      - run: composer update --prefer-dist --no-interaction
+      - run: composer lint
+      - run: composer audit
+      - run: vendor/bin/phpunit --coverage-filter src --coverage-clover coverage.xml
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: php-coverage
+          path: coverage.xml
+          retention-days: 7
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: composer update --prefer-dist --no-interaction
+      - run: npm ci
+      - run: npm audit
+      - run: npm run build
+      - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: browser-failures
+          path: test-results/
+          retention-days: 7

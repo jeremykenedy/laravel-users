@@ -51,3 +51,9 @@ packages/
 npm-debug.log
 yarn-error.log
 
+
+.phpunit.cache/
+.phpunit.result.cache
+/test-results/
+/playwright-report/
+/tests/browser/runtime/

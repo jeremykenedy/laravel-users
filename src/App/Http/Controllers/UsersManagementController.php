@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,12 +12,17 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use jeremykenedy\laravelusers\Support\Frontend;
 
 class UsersManagementController extends Controller
 {
     private readonly bool $_authEnabled;
+
     private readonly bool $_rolesEnabled;
+
     private readonly string $_rolesMiddlware;
+
     private readonly bool $_rolesMiddleWareEnabled;
 
     /**
@@ -42,10 +48,8 @@ class UsersManagementController extends Controller
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Contracts\View\View
      */
-    public function index(): \Illuminate\Contracts\View\View
+    public function index(): View
     {
         $pagintaionEnabled = config('laravelusers.enablePagination', true);
         $userModel = config('laravelusers.defaultUserModel');
@@ -61,15 +65,13 @@ class UsersManagementController extends Controller
             'pagintaionEnabled' => $pagintaionEnabled,
         ];
 
-        return view(config('laravelusers.showUsersBlade'), $data);
+        return view(Frontend::view(config('laravelusers.showUsersBlade')), $data);
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Contracts\View\View
      */
-    public function create(): \Illuminate\Contracts\View\View
+    public function create(): View
     {
         $roles = [];
 
@@ -79,25 +81,24 @@ class UsersManagementController extends Controller
         }
 
         $data = [
-            'rolesEnabled'  => $this->_rolesEnabled,
-            'roles'         => $roles,
+            'rolesEnabled' => $this->_rolesEnabled,
+            'roles'        => $roles,
         ];
 
-        return view(config('laravelusers.createUserBlade'), $data);
+        return view(Frontend::view(config('laravelusers.createUserBlade')), $data);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request): RedirectResponse
     {
+        $userModel = config('laravelusers.defaultUserModel');
+        $model = new $userModel();
+        $table = ($model->getConnectionName() ? $model->getConnectionName().'.' : '').$model->getTable();
         $rules = [
-            'name'                  => 'required|string|max:255|unique:users|alpha_dash',
-            'email'                 => 'required|email|max:255|unique:users',
+            'name'                  => ['required', 'string', 'max:255', Rule::unique($table), 'alpha_dash'],
+            'email'                 => ['required', 'email', 'max:255', Rule::unique($table)],
             'password'              => 'required|string|confirmed|min:6',
             'password_confirmation' => 'required|string|same:password',
         ];
@@ -107,61 +108,54 @@ class UsersManagementController extends Controller
         }
 
         $messages = [
-            'name.unique'         => trans('laravelusers::laravelusers.messages.userNameTaken'),
-            'name.required'       => trans('laravelusers::laravelusers.messages.userNameRequired'),
-            'name'                => trans('laravelusers::laravelusers.messages.userNameInvalid'),
-            'email.required'      => trans('laravelusers::laravelusers.messages.emailRequired'),
-            'email.email'         => trans('laravelusers::laravelusers.messages.emailInvalid'),
-            'password.required'   => trans('laravelusers::laravelusers.messages.passwordRequired'),
-            'password.min'        => trans('laravelusers::laravelusers.messages.PasswordMin'),
-            'password.max'        => trans('laravelusers::laravelusers.messages.PasswordMax'),
-            'role.required'       => trans('laravelusers::laravelusers.messages.roleRequired'),
+            'name.unique'       => trans('laravelusers::laravelusers.messages.userNameTaken'),
+            'name.required'     => trans('laravelusers::laravelusers.messages.userNameRequired'),
+            'name'              => trans('laravelusers::laravelusers.messages.userNameInvalid'),
+            'email.required'    => trans('laravelusers::laravelusers.messages.emailRequired'),
+            'email.email'       => trans('laravelusers::laravelusers.messages.emailInvalid'),
+            'password.required' => trans('laravelusers::laravelusers.messages.passwordRequired'),
+            'password.min'      => trans('laravelusers::laravelusers.messages.PasswordMin'),
+            'password.max'      => trans('laravelusers::laravelusers.messages.PasswordMax'),
+            'role.required'     => trans('laravelusers::laravelusers.messages.roleRequired'),
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput($request->except(['password', 'password_confirmation']));
         }
 
-        $userModel = config('laravelusers.defaultUserModel');
-        $user = $userModel::create([
-            'name'             => strip_tags($request->input('name')),
-            'email'            => $request->input('email'),
-            'password'         => Hash::make($request->input('password')),
-        ]);
+        $model->getConnection()->transaction(function () use ($userModel, $request) {
+            $user = $userModel::create([
+                'name'     => strip_tags($request->input('name')),
+                'email'    => $request->input('email'),
+                'password' => Hash::make($request->input('password')),
+            ]);
 
-        if ($this->_rolesEnabled) {
-            $user->attachRole($request->input('role'));
-            $user->save();
-        }
+            if ($this->_rolesEnabled) {
+                $user->attachRole($request->input('role'));
+                $user->save();
+            }
+        });
 
         return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
     }
 
     /**
      * Display the specified resource.
-     *
-     * @param int $id
-     *
-     * @return \Illuminate\Contracts\View\View
      */
-    public function show(int $id): \Illuminate\Contracts\View\View
+    public function show(int $id): View
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        return view(config('laravelusers.showIndividualUserBlade'), ['user' => $user]);
+        return view(Frontend::view(config('laravelusers.showIndividualUserBlade')), ['user' => $user]);
     }
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param int $id
-     *
-     * @return \Illuminate\Contracts\View\View
      */
-    public function edit(int $id): \Illuminate\Contracts\View\View
+    public function edit(int $id): View
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
@@ -178,8 +172,8 @@ class UsersManagementController extends Controller
         }
 
         $data = [
-            'user'          => $user,
-            'rolesEnabled'  => $this->_rolesEnabled,
+            'user'         => $user,
+            'rolesEnabled' => $this->_rolesEnabled,
         ];
 
         if ($this->_rolesEnabled) {
@@ -187,30 +181,26 @@ class UsersManagementController extends Controller
             $data['currentRole'] = $currentRole;
         }
 
-        return view(config('laravelusers.editIndividualUserBlade'), $data);
+        return view(Frontend::view(config('laravelusers.editIndividualUserBlade')), $data);
     }
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int                      $id
-     *
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, int $id): RedirectResponse
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
         $emailCheck = ($request->input('email') !== '') && ($request->input('email') !== $user->email);
-        $passwordCheck = $request->input('password') !== null;
+        $passwordCheck = $request->filled('password');
 
         $rules = [
-            'name' => 'required|max:255',
+            'name' => 'required|string|max:255',
         ];
 
         if ($emailCheck) {
-            $rules['email'] = 'required|email|max:255|unique:users';
+            $table = ($user->getConnectionName() ? $user->getConnectionName().'.' : '').$user->getTable();
+            $rules['email'] = ['required', 'email', 'max:255', Rule::unique($table)];
         }
 
         if ($passwordCheck) {
@@ -225,35 +215,33 @@ class UsersManagementController extends Controller
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput($request->except(['password', 'password_confirmation']));
         }
 
-        $user->name = strip_tags($request->input('name'));
+        $user->getConnection()->transaction(function () use ($user, $request, $emailCheck, $passwordCheck) {
+            $user->name = strip_tags($request->input('name'));
 
-        if ($emailCheck) {
-            $user->email = $request->input('email');
-        }
+            if ($emailCheck) {
+                $user->email = $request->input('email');
+            }
 
-        if ($passwordCheck) {
-            $user->password = Hash::make($request->input('password'));
-        }
+            if ($passwordCheck) {
+                $user->password = Hash::make($request->input('password'));
+            }
 
-        if ($this->_rolesEnabled) {
-            $user->detachAllRoles();
-            $user->attachRole($request->input('role'));
-        }
+            if ($this->_rolesEnabled) {
+                $user->detachAllRoles();
+                $user->attachRole($request->input('role'));
+            }
 
-        $user->save();
+            $user->save();
+        });
 
         return back()->with('success', trans('laravelusers::laravelusers.messages.update-user-success'));
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     *
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(int $id): RedirectResponse
     {
@@ -261,7 +249,7 @@ class UsersManagementController extends Controller
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        if ($currentUser->id !== $user->id) {
+        if (!$currentUser || (string) $currentUser->getAuthIdentifier() !== (string) $user->getKey()) {
             $user->delete();
 
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
@@ -272,10 +260,6 @@ class UsersManagementController extends Controller
 
     /**
      * Method to search the users.
-     *
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function search(Request $request): JsonResponse
     {
@@ -299,14 +283,15 @@ class UsersManagementController extends Controller
 
         $userModel = config('laravelusers.defaultUserModel');
         $results = $userModel::where('id', 'like', $searchTerm.'%')
-                            ->orWhere('name', 'like', $searchTerm.'%')
-                            ->orWhere('email', 'like', $searchTerm.'%')
-                            ->get();
+            ->orWhere('name', 'like', $searchTerm.'%')
+            ->orWhere('email', 'like', $searchTerm.'%')
+            ->get();
 
-        // Attach roles to results
-        $results->each(function ($result) {
-            $result->setAttribute('roles', $result->roles);
-        });
+        if ($this->_rolesEnabled) {
+            $results->each(function ($result) {
+                $result->setAttribute('roles', $result->roles);
+            });
+        }
 
         return response()->json($results->toArray(), 200);
     }
