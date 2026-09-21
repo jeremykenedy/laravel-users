@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-labelledby="title description">
+  <title id="title">Laravel Users</title>
+  <desc id="description">User management for Laravel. Bootstrap 4, Bootstrap 5, Tailwind CSS, and dark mode.</desc>
+  <rect width="800" height="200" rx="16" fill="#fff" stroke="#e5e7eb"/>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+    <text x="40" y="80" font-size="40" font-weight="700" letter-spacing="-.5" fill="#0f172a">Laravel Users</text>
+    <text x="40" y="110" font-size="14" fill="#64748b">User management that fits your Laravel application.</text>
+    <rect x="40" y="133" width="90" height="22" rx="11" fill="#f5f3ff" stroke="#6d28d9" stroke-width=".8"/>
+    <text x="85" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#6d28d9">Bootstrap 4</text>
+    <rect x="140" y="133" width="90" height="22" rx="11" fill="#eff6ff" stroke="#1e40af" stroke-width=".8"/>
+    <text x="185" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#1e40af">Bootstrap 5</text>
+    <rect x="240" y="133" width="95" height="22" rx="11" fill="#f0fdf4" stroke="#166534" stroke-width=".8"/>
+    <text x="287.5" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#166534">Tailwind CSS</text>
+    <rect x="345" y="133" width="85" height="22" rx="11" fill="#fffbeb" stroke="#b45309" stroke-width=".8"/>
+    <text x="387.5" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#b45309">Dark mode</text>
+  </g>
+  <g transform="translate(570 40)">
+    <rect width="180" height="120" rx="16" fill="#f5f3ff"/>
+    <circle cx="44" cy="43" r="14" fill="#a78bfa"/>
+    <path d="M 22 97 Q 22 63 44 63 Q 66 63 66 97 Z" fill="#a78bfa"/>
+    <circle cx="136" cy="43" r="14" fill="#60a5fa"/>
+    <path d="M 114 97 Q 114 63 136 63 Q 158 63 158 97 Z" fill="#60a5fa"/>
+    <circle cx="90" cy="37" r="20" fill="#8b5cf6"/>
+    <path d="M 62 91 Q 62 57 90 57 Q 118 57 118 91 Z" fill="#8b5cf6"/>
+  </g>
+</svg>
