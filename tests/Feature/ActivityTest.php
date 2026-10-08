@@ -265,6 +265,10 @@ class ActivityTest extends TestCase
             ->assertJsonPath('users.0.id', $other->id)->assertJsonPath('activity.'.$other->id.'.online', false)
             ->assertJsonPath('activity.'.$other->id.'.last_login_at', $records[$other->id]['last_login_at'])
             ->assertDontSee('192.0.2.10')->assertDontSee('Chrome');
+        $this->postJson('/search-users', ['user_search_box' => 'RemoteAccount', 'include_activity' => 1, 'include_login_details' => 1])->assertOk()
+            ->assertJsonPath('activity.'.$other->id.'.ip_address', '192.0.2.10')->assertSee('Chrome');
+        config(['laravelusers.showLastLoginDetailsColumn' => false]);
+        $this->postJson('/search-users', ['user_search_box' => 'RemoteAccount', 'include_activity' => 1, 'include_login_details' => 1])->assertOk()->assertDontSee('192.0.2.10')->assertDontSee('Chrome');
         DB::disableQueryLog();
     }
 

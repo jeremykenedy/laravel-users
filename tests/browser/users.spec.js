@@ -70,7 +70,11 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
 
     test(`${framework}: login details and online status`, async ({ page }) => {
         await page.goto(`/__browser/${framework}`);
+        const directory = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
+        await expect(directory.locator('.lu-login-details').first()).toContainText('127.0.0.1');
         await page.goto('/users/1');
+        await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
+        await expect(page.locator('.lu-profile-details dt svg')).toHaveCount(11);
         await expect(page.getByText('Last login', { exact: true })).toBeVisible();
         await expect(page.getByText('127.0.0.1', { exact: true })).toBeVisible();
         await expect(page.getByText('Online', { exact: true })).toBeVisible();
@@ -157,7 +161,7 @@ for (const framework of ['bootstrap5', 'tailwind']) {
         await expect(page.getByRole('dialog')).toBeVisible();
         await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).last().click();
         await expect(page.getByRole('dialog')).toBeHidden();
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${name}updated`);
+        await expect(page.getByRole('heading', { level: 2, name: `${name}updated`, exact: true })).toBeVisible();
 
         await page.getByRole('button', { name: 'Delete', exact: true }).click();
         await page.locator('#lu-confirm-submit').click();
@@ -214,12 +218,15 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.goto(`/__browser/${framework}`);
         const input = page.locator('#user_search_box');
         const results = page.locator(framework === 'bootstrap4' ? '#search_results' : '#lu-results');
+        const clear = framework === 'bootstrap4' ? page.locator('.clear-search') : page.getByRole('button', { name: 'Clear', exact: true });
+        await expect(clear).toBeHidden();
         let requests = 0;
         await page.route('**/search-users', route => {
             requests++;
             return route.fulfill({ contentType: 'application/json', body: JSON.stringify([{ id: 2, name: 'Alex Rivers', email: 'alex@example.com' }]) });
         });
         await input.fill('Al');
+        await expect(clear).toBeVisible();
         await page.waitForTimeout(1000);
         expect(requests).toBe(0);
         await input.fill('Alex');
@@ -237,7 +244,31 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         else await page.getByRole('button', { name: 'Clear', exact: true }).click();
         await page.waitForTimeout(2100);
         expect(requests).toBe(2);
+        await expect(clear).toBeHidden();
+        await input.fill('a');
+        await input.fill('');
+        await expect(clear).toBeHidden();
         await expect(page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users')).toBeVisible();
+    });
+
+    test(`${framework}: search delay can be changed or disabled`, async ({ page }) => {
+        await page.goto(`/__browser/${framework}?search-debounce=0&search-delay=100`);
+        let requests = 0;
+        await page.route('**/search-users', route => {
+            requests++;
+            return route.fulfill({ contentType: 'application/json', body: '[]' });
+        });
+        const input = page.locator('#user_search_box');
+        await input.fill('Alex');
+        await page.waitForTimeout(300);
+        expect(requests).toBe(0);
+        await input.press('Enter');
+        await expect.poll(() => requests).toBe(1);
+        await page.goto(`/__browser/${framework}?search-delay=100`);
+        await input.fill('Alex');
+        await expect.poll(() => requests).toBe(2);
+        await page.waitForTimeout(200);
+        expect(requests).toBe(2);
     });
 
     test(`${framework}: column sort, filter, mail links, and disabled controls`, async ({ page }) => {
@@ -309,23 +340,61 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
 }
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
+    test(`${framework}: icon-only actions and delete confirmation retain labels and cancel safely`, async ({ page }) => {
+        await page.goto(`/__browser/${framework}?icons-only=1`);
+        const body = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
+        const row = body.locator('tr').filter({ hasText: 'Alex Rivers' });
+        const buttons = row.locator(framework === 'bootstrap4' ? '.btn' : '.lu-button');
+        for (const button of await buttons.all()) {
+            await expect(button).toHaveAttribute('aria-label', /\S/);
+            expect(await button.evaluate(element => getComputedStyle(element).fontSize)).toBe('0px');
+            await expect(button.locator(framework === 'bootstrap4' ? 'i' : 'svg')).toBeVisible();
+            expect(await button.getAttribute('title') || await button.getAttribute('data-original-title')).toBeTruthy();
+        }
+        await row.getByRole('button', { name: /Delete/ }).click();
+        const modal = page.locator(framework === 'bootstrap4' ? '#confirmDelete' : '#lu-confirmation');
+        await expect(modal).toBeVisible();
+        const header = modal.locator(framework === 'bootstrap4' ? '.modal-header' : '.lu-card-heading');
+        expect(await header.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(180, 35, 50)');
+        expect(await header.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+        const confirm = modal.locator(framework === 'bootstrap4' ? '#confirm' : '#lu-confirm-submit');
+        await expect(confirm.locator('svg:visible')).toBeVisible();
+        expect(await confirm.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(180, 35, 50)');
+        await modal.getByRole('button', { name: /Cancel/ }).last().click();
+        await expect(modal).toBeHidden();
+        await expect(row).toBeVisible();
+        await page.goto(`/__browser/${framework}?icons-only=0`);
+        expect(await buttons.first().evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThan(0);
+    });
+
     test(`${framework}: readable local dates, persistent columns, and optional mobile entries`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: 'light' });
         await page.goto(`/__browser/${framework}`);
         const body = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
         const time = body.locator('time').first();
         const utc = await time.getAttribute('datetime');
-        const expected = await page.evaluate(value => new Intl.DateTimeFormat(document.documentElement.lang, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)), utc);
+        const expected = await page.evaluate(value => new Intl.DateTimeFormat(document.documentElement.lang, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)), utc);
         await expect(time).toHaveText(expected);
         expect(await time.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeLessThan(14);
         await expect(body).not.toContainText('Not recorded');
         const headers = await page.locator('[data-lu-table] thead tr').first().locator('th').allTextContents();
         expect(headers.findIndex(value => value.includes('Status'))).toBeLessThan(headers.findIndex(value => value.includes('Created')));
+        await expect(page.locator('[data-lu-select-all]').locator('..').locator('..')).toHaveAttribute('colspan', '2');
         await page.locator('.lu-columns summary').click();
+        await page.locator('.lu-column-options').getByLabel('Avatar', { exact: true }).uncheck();
+        await expect(body.locator('.lu-avatar').first()).toBeHidden();
+        await expect(page.locator('[data-lu-select-all]').locator('..').locator('..')).toHaveAttribute('colspan', '1');
+        await page.locator('.lu-column-options').getByLabel('Avatar', { exact: true }).check();
+        await expect(page.locator('[data-lu-select-all]').locator('..').locator('..')).toHaveAttribute('colspan', '2');
         await page.locator('.lu-column-options').getByLabel('Email', { exact: true }).uncheck();
         await expect(body.locator('a[href="mailto:user1@example.com"]')).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Sort by Email', exact: true })).toBeHidden();
         await page.reload();
         await expect(body.locator('a[href="mailto:user1@example.com"]')).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Sort by Email', exact: true })).toBeHidden();
+        const headerX = await page.locator('th[data-lu-label="Name"]').evaluate(element => element.getBoundingClientRect().x);
+        const cellX = await body.locator('td[data-lu-column="Name"]').first().evaluate(element => element.getBoundingClientRect().x);
+        expect(Math.abs(headerX - cellX)).toBeLessThan(1);
         await page.locator('.lu-columns summary').click();
         await page.locator('.lu-column-options').getByLabel('Email', { exact: true }).check();
         await page.setViewportSize({ width: 390, height: 844 });
@@ -342,6 +411,9 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         await page.goto(`/__browser/${framework}?responsive-table=0`);
         expect(await body.locator('tr').first().evaluate(row => getComputedStyle(row).display)).toBe('table-row');
+        await page.goto(`/__browser/${framework}?date-style=long`);
+        const longDate = await page.evaluate(value => new Intl.DateTimeFormat(document.documentElement.lang, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(value)), utc);
+        await expect(time).toHaveText(longDate);
     });
 
     test(`${framework}: avatar image failures fall back to the user icon`, async ({ page }) => {
@@ -372,8 +444,13 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
             await expect(page.locator(framework === 'bootstrap4' ? '#search_results' : '#lu-results')).toContainText(prefix + 'two');
         }
         async function apply(action) {
-            await page.locator('#lu-bulk-action').selectOption(action);
+            await expect(page.locator('#lu-bulk')).toBeHidden();
             await page.locator('[data-lu-select-all]').check();
+            await expect(page.locator('#lu-bulk')).toBeVisible();
+            await page.locator('[data-lu-select-all]').uncheck();
+            await expect(page.locator('#lu-bulk')).toBeHidden();
+            await page.locator('[data-lu-select-all]').check();
+            await page.locator('#lu-bulk-action').selectOption(action);
             await expect(page.locator('[data-lu-selected-count]')).toHaveText('2 selected');
             await page.locator('#lu-bulk-submit').click();
             const confirmed = page.waitForResponse(response => response.url().endsWith('/users/bulk') && response.request().method() === 'POST');

@@ -23,10 +23,11 @@ return [
     'fullWidth'    => env('LARAVEL_USERS_FULL_WIDTH', false),
     'iconsEnabled' => env('LARAVEL_USERS_ICONS_ENABLED', true),
 
-    'responsiveButtons' => env('LARAVEL_USERS_RESPONSIVE_BUTTONS', true),
+    'tableButtonsIconOnly' => env('LARAVEL_USERS_TABLE_BUTTONS_ICON_ONLY', false),
+    'responsiveButtons'    => env('LARAVEL_USERS_RESPONSIVE_BUTTONS', true),
 
     'localizeDates'   => env('LARAVEL_USERS_LOCALIZE_DATES', true),
-    'dateStyle'       => env('LARAVEL_USERS_DATE_STYLE', 'medium'),
+    'dateStyle'       => env('LARAVEL_USERS_DATE_STYLE', 'short'),
     'timeStyle'       => env('LARAVEL_USERS_TIME_STYLE', 'short'),
     'displayTimezone' => env('LARAVEL_USERS_DISPLAY_TIMEZONE', null),
 
@@ -111,17 +112,20 @@ return [
     'enableSearchUsers' => env('LARAVEL_USERS_ENABLE_SEARCH_USERS', true),
 
     // New table controls are optional and filter or sort the rows currently displayed.
-    'searchDebounce'      => env('LARAVEL_USERS_SEARCH_DEBOUNCE', 2000),
-    'tableSorting'        => env('LARAVEL_USERS_TABLE_SORTING', false),
-    'tableFiltering'      => env('LARAVEL_USERS_TABLE_FILTERING', false),
-    'emailLinks'          => env('LARAVEL_USERS_EMAIL_LINKS', true),
-    'showCreatedColumn'   => env('LARAVEL_USERS_SHOW_CREATED_COLUMN', true),
-    'showUpdatedColumn'   => env('LARAVEL_USERS_SHOW_UPDATED_COLUMN', true),
-    'showOnlineColumn'    => env('LARAVEL_USERS_SHOW_ONLINE_COLUMN', true),
-    'showLastLoginColumn' => env('LARAVEL_USERS_SHOW_LAST_LOGIN_COLUMN', true),
-    'showUserCount'       => env('LARAVEL_USERS_SHOW_USER_COUNT', true),
-    'confirmDelete'       => env('LARAVEL_USERS_CONFIRM_DELETE', true),
-    'confirmSave'         => env('LARAVEL_USERS_CONFIRM_SAVE', true),
+    'searchDebounceEnabled'      => env('LARAVEL_USERS_SEARCH_DEBOUNCE_ENABLED', true),
+    'searchDebounce'             => env('LARAVEL_USERS_SEARCH_DEBOUNCE', 2000),
+    'tableSorting'               => env('LARAVEL_USERS_TABLE_SORTING', false),
+    'tableFiltering'             => env('LARAVEL_USERS_TABLE_FILTERING', false),
+    'emailLinks'                 => env('LARAVEL_USERS_EMAIL_LINKS', true),
+    'showCreatedColumn'          => env('LARAVEL_USERS_SHOW_CREATED_COLUMN', true),
+    'showUpdatedColumn'          => env('LARAVEL_USERS_SHOW_UPDATED_COLUMN', true),
+    'showOnlineColumn'           => env('LARAVEL_USERS_SHOW_ONLINE_COLUMN', true),
+    'showLastLoginDetailsColumn' => env('LARAVEL_USERS_SHOW_LAST_LOGIN_DETAILS_COLUMN', true),
+    'showProfileAvatar'          => env('LARAVEL_USERS_SHOW_PROFILE_AVATAR', true),
+    'showLastLoginColumn'        => env('LARAVEL_USERS_SHOW_LAST_LOGIN_COLUMN', true),
+    'showUserCount'              => env('LARAVEL_USERS_SHOW_USER_COUNT', true),
+    'confirmDelete'              => env('LARAVEL_USERS_CONFIRM_DELETE', true),
+    'confirmSave'                => env('LARAVEL_USERS_CONFIRM_SAVE', true),
 
     // Users List JS DataTables - not recommended use with pagination
     'enabledDatatablesJs'    => env('LARAVEL_USERS_ENABLED_DATATABLES_JS', false),

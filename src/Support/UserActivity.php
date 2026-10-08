@@ -63,7 +63,7 @@ class UserActivity
         }
     }
 
-    public function listing(iterable $users): array
+    public function listing(iterable $users, bool $includeDetails = false): array
     {
         $records = [];
         $keys = [];
@@ -76,7 +76,8 @@ class UserActivity
         }
 
         try {
-            foreach ($this->logins()->whereIn('user_key', array_keys($keys))->get(['user_key', 'last_login_at']) as $login) {
+            foreach ($this->logins()->whereIn('user_key', array_keys($keys))->get(['user_key', 'last_login_at', 'ip_address', 'device', 'os', 'browser']) as $login) {
+                $records[$keys[$login->user_key]] += $this->loginDetails($login, $includeDetails);
                 $records[$keys[$login->user_key]]['last_login_at'] = $login->last_login_at?->format('Y-m-d H:i:s');
             }
         } catch (Throwable $exception) {
@@ -84,6 +85,11 @@ class UserActivity
         }
 
         return $records;
+    }
+
+    private function loginDetails(LoginActivity $login, bool $includeDetails): array
+    {
+        return $includeDetails ? $login->only(['ip_address', 'device', 'os', 'browser']) : [];
     }
 
     public function touch(Model $user, Request $request, bool $logout = false): void

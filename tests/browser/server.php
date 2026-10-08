@@ -53,6 +53,11 @@ config([
     'laravelusers.avatar.source'            => in_array($_COOKIE['lu-avatar'] ?? '', ['initials', 'gravatar', 'avatar'], true) ? $_COOKIE['lu-avatar'] : 'initials',
     'laravelusers.frontend'                 => in_array($_COOKIE['lu-framework'] ?? '', ['bootstrap4', 'bootstrap5', 'tailwind'], true) ? $_COOKIE['lu-framework'] : 'bootstrap4',
     'laravelusers.responsiveTable'          => ($_COOKIE['lu-responsive-table'] ?? '1') !== '0',
+    'laravelusers.tableButtonsIconOnly'     => ($_COOKIE['lu-icons-only'] ?? '0') === '1',
+    'laravelusers.searchDebounceEnabled'    => ($_COOKIE['lu-search-debounce-enabled'] ?? '1') !== '0',
+    'laravelusers.searchDebounce'           => max(0, (int) ($_COOKIE['lu-search-delay'] ?? 2000)),
+    'laravelusers.dateStyle'                => in_array($_COOKIE['lu-date-style'] ?? '', ['full', 'long', 'medium', 'short'], true) ? $_COOKIE['lu-date-style'] : 'short',
+    'laravelusers.fullWidth'                => $preview,
     'laravelusers.bulkActions'              => true,
     'laravelusers.columnVisibility'         => true,
     'laravelusers.theme'                    => 'system',
@@ -99,9 +104,13 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
         ->withCookie(cookie('lu-table-controls', request()->query('table-controls', '1'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-soft-deletes', request()->query('soft-deletes', (int) ($_SERVER['SERVER_PORT'] ?? 0) === 19849 ? '1' : '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-avatar', request()->query('avatar', 'initials'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-icons-only', request()->query('icons-only', '0'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-search-debounce-enabled', request()->query('search-debounce', '1'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-search-delay', request()->query('search-delay', '2000'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-date-style', request()->query('date-style', 'short'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-responsive-table', request()->query('responsive-table', '1'), 60, '/', null, false, false, false));
 });
-EncryptCookies::except(['lu-framework', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-responsive-table']);
+EncryptCookies::except(['lu-framework', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-responsive-table', 'lu-icons-only', 'lu-search-debounce-enabled', 'lu-search-delay', 'lu-date-style']);
 Route::post('/logout', function () {
     Auth::logout();
 

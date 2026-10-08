@@ -24,6 +24,11 @@
         previousFocus = document.activeElement;
         modal.querySelector('#lu-confirm-title').textContent = form.dataset.luConfirmTitle || @json(__('laravelusers::modals.delete_user_title'));
         modal.querySelector('#lu-confirm-message').textContent = form.dataset.luConfirm;
+        const action = form.querySelector('[name="action"]');
+        const deletion = form.querySelector('[name="_method"]')?.value === 'DELETE' || (action && ['delete', 'force_delete'].includes(action.value));
+        modal.dataset.luDelete = deletion ? 'true' : 'false';
+        modal.querySelector('[data-lu-delete-icon]').hidden = !deletion;
+        modal.querySelector('[data-lu-save-icon]').hidden = deletion;
         modal.showModal();
     });
     if (modal) {
@@ -43,6 +48,8 @@
     const form = root.querySelector('#lu-search');
     if (!form) return;
     const input = form.querySelector('#user_search_box');
+    const clear = form.querySelector('[type=reset]');
+    clear.hidden = !input.value.length;
     const original = root.querySelector('#lu-users');
     const results = root.querySelector('#lu-results');
     const status = root.querySelector('#lu-search-status');
@@ -54,6 +61,7 @@
     const updatedColumn = @json((bool) config('laravelusers.showUpdatedColumn', true));
     const onlineColumn = @json((bool) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true)));
     const loginColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true)));
+    const loginDetailsColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true)));
     const emailLinks = @json((bool) config('laravelusers.emailLinks', true));
     const currentUser = @json(Auth::id());
     const baseUrl = @json(url('users'));
@@ -63,6 +71,7 @@
     function reset() {
         clearTimeout(timer);
         if (request) request.abort();
+        clear.hidden = true;
         original.hidden = false;
         results.hidden = true;
         results.replaceChildren();
@@ -84,7 +93,9 @@
     input.addEventListener('input', function () {
         clearTimeout(timer);
         if (request) request.abort();
-        if (!input.value.trim()) return reset();
+        clear.hidden = !input.value.length;
+        if (!input.value.length) return reset();
+        if (!@json((bool) config('laravelusers.searchDebounceEnabled', true))) return;
         timer = setTimeout(() => form.requestSubmit(), delay);
     });
     form.addEventListener('submit', async function (event) {
@@ -167,6 +178,12 @@
                 if (createdColumn) dateCell(row, user.created_at);
                 if (updatedColumn) dateCell(row, user.updated_at);
                 if (loginColumn) dateCell(row, details.last_login_at);
+                if (loginDetailsColumn) {
+                    const summary = ['device', 'os', 'browser', 'ip_address'].map(field => details[field]).filter(Boolean).join(' / ');
+                    const detail = document.createElement('span');
+                    detail.className = 'lu-login-details'; detail.textContent = summary; detail.title = summary;
+                    cell(row, '').append(detail);
+                }
                 const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);
                 actions.querySelector('[data-lu-show]').href = link.href;
                 actions.querySelector('[data-lu-edit]').href = link.href + '/edit';
@@ -181,7 +198,7 @@
             });
             if (!users.length) {
                 const row = document.createElement('tr');
-                cell(row, @json(__('laravelusers::laravelusers.search.no-results'))).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn);
+                cell(row, @json(__('laravelusers::laravelusers.search.no-results'))).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn) + Number(loginDetailsColumn);
                 results.append(row);
             }
             original.hidden = true;

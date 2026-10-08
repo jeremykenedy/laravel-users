@@ -10,6 +10,7 @@
         var clearSearchTrigger = $('.clear-search');
         var searchform = $('#search_users');
         var searchformInput = $('#user_search_box');
+        clearSearchTrigger.toggle(searchformInput.val().length > 0);
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -24,8 +25,8 @@
             if (pendingRequest) pendingRequest.abort();
             resultsContainer.html('');
             usersTable.hide();
-            clearSearchTrigger.show();
-            let noResulsHtml = '<tr><td colspan="{{ 6 + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true)) + (int) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true)) }}">{{ __('laravelusers::laravelusers.search.no-results') }}</td></tr>';
+            clearSearchTrigger.toggle(searchformInput.val().length > 0);
+            let noResulsHtml = '<tr><td colspan="{{ 6 + (int) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true)) + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true)) + (int) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true)) }}">{{ __('laravelusers::laravelusers.search.no-results') }}</td></tr>';
 
             pendingRequest = $.ajax({
                 type:'POST',
@@ -39,6 +40,7 @@
                     if (jsonData.length != 0) {
                         $.each(jsonData, function(index, val) {
                             let details = activity[val.id] || {};
+                            let loginDetails = ['device', 'os', 'browser', 'ip_address'].map(field => escapeHtml(details[field])).filter(Boolean).join(' / ');
                             let avatar = avatars[val.id] || { initials: '?', size: 40, fallback: 'icon' };
                             let avatarHtml = '<span class="lu-avatar" style="width:' + Number(avatar.size) + 'px;height:' + Number(avatar.size) + 'px" aria-hidden="true">' +
                                 (avatar.fallback === 'initials' ? escapeHtml(avatar.initials) : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>') +
@@ -85,6 +87,7 @@
                                 '@if(config("laravelusers.showCreatedColumn", true))<td class="hidden-sm hidden-xs hidden-md" data-lu-date="' + val.created_at + '">' + val.created_at + '</td>@endif' +
                                 '@if(config("laravelusers.showUpdatedColumn", true))<td class="hidden-sm hidden-xs hidden-md" data-lu-date="' + val.updated_at + '">' + val.updated_at + '</td>@endif' +
                                 '@if(config("laravelusers.activity.login", false) && config("laravelusers.showLastLoginColumn", true))<td data-lu-date="' + escapeHtml(details.last_login_at || '') + '">' + escapeHtml(details.last_login_at || '') + '</td>@endif' +
+                                '@if(config("laravelusers.activity.login", false) && config("laravelusers.showLastLoginDetailsColumn", true))<td><span class="lu-login-details" title="' + loginDetails + '">' + loginDetails + '</span></td>@endif' +
                                 '<td>' + deleteCellHtml + '</td>' +
                                 '<td>' + showCellHtml + '</td>' +
                                 '<td>' + editCellHtml + '</td>' +
@@ -114,6 +117,7 @@
             if (pendingRequest) pendingRequest.abort();
             if ($('#user_search_box').val() != '') {
                 clearSearchTrigger.show();
+                if (!@json((bool) config('laravelusers.searchDebounceEnabled', true))) return;
                 timer = setTimeout(function () { searchform.trigger('submit'); }, delay);
             } else {
                 clearSearchTrigger.hide();

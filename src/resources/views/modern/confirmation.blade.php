@@ -7,7 +7,7 @@
         <div class="lu-pad"><p id="lu-confirm-message"></p></div>
         <div class="lu-actions lu-modal-footer">
             <button class="lu-button lu-secondary" type="button" data-lu-dismiss>@include('laravelusers::partials.icon', ['name' => 'close']) {{ __('laravelusers::forms.cancel') }}</button>
-            <button class="lu-button" type="button" id="lu-confirm-submit">@include('laravelusers::partials.icon', ['name' => 'save']) {{ __('laravelusers::ui.confirm') }}</button>
+            <button class="lu-button" type="button" id="lu-confirm-submit"><span data-lu-delete-icon hidden>@include('laravelusers::partials.icon', ['name' => 'delete'])</span><span data-lu-save-icon>@include('laravelusers::partials.icon', ['name' => 'save'])</span> {{ __('laravelusers::ui.confirm') }}</button>
         </div>
     </dialog>
 @endif

@@ -299,7 +299,7 @@ class UsersManagementController extends Controller
         if ($request->boolean('include_activity') || $request->boolean('include_avatar')) {
             $data = ['users' => $data];
             if ($request->boolean('include_activity')) {
-                $data['activity'] = $activity->listing($results);
+                $data['activity'] = $activity->listing($results, $request->boolean('include_login_details') && (bool) config('laravelusers.showLastLoginDetailsColumn', true));
             }
             if ($request->boolean('include_avatar')) {
                 $data['avatars'] = $avatar->listing($results);

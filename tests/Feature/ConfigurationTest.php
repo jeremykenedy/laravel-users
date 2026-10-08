@@ -22,7 +22,7 @@ class ConfigurationTest extends TestCase
 
     public function test_environment_values_override_boolean_number_string_and_nested_defaults(): void
     {
-        $values = ['LARAVEL_USERS_SHOW_LOGOUT' => 'false', 'LARAVEL_USERS_SEARCH_DEBOUNCE' => '3000', 'LARAVEL_USERS_HEADER_VIEW' => 'dashboard.header', 'LARAVEL_USERS_ACTIVITY_ONLINE' => 'true', 'LARAVEL_USERS_WELCOME_ENABLED' => 'false'];
+        $values = ['LARAVEL_USERS_SHOW_LOGOUT' => 'false', 'LARAVEL_USERS_SEARCH_DEBOUNCE_ENABLED' => 'false', 'LARAVEL_USERS_TABLE_BUTTONS_ICON_ONLY' => 'true', 'LARAVEL_USERS_SEARCH_DEBOUNCE' => '3000', 'LARAVEL_USERS_HEADER_VIEW' => 'dashboard.header', 'LARAVEL_USERS_ACTIVITY_ONLINE' => 'true', 'LARAVEL_USERS_WELCOME_ENABLED' => 'false'];
 
         try {
             foreach ($values as $name => $value) {
@@ -30,6 +30,8 @@ class ConfigurationTest extends TestCase
             }
             $config = require __DIR__.'/../../src/config/laravelusers.php';
             $this->assertFalse($config['showLogout']);
+            $this->assertFalse($config['searchDebounceEnabled']);
+            $this->assertTrue($config['tableButtonsIconOnly']);
             $this->assertSame('3000', $config['searchDebounce']);
             $this->assertSame('dashboard.header', $config['headerView']);
             $this->assertTrue($config['activity']['online']);

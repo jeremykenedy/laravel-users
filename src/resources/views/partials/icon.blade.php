@@ -1,6 +1,11 @@
 @if(config('laravelusers.iconsEnabled', true))
     <svg class="lu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
         @switch($name)
+            @case('clock')<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>@break
+            @case('device')<rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8m-4-5v5"/>@break
+            @case('browser')<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18"/>@break
+            @case('network')<rect x="8" y="2" width="8" height="6" rx="1"/><path d="M12 8v6M4 14h16M4 14v3m16-3v3"/><rect x="1" y="17" width="6" height="5" rx="1"/><rect x="17" y="17" width="6" height="5" rx="1"/>@break
+            @case('id')<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M5 16v-1a3 3 0 0 1 6 0v1m3-6h5m-5 4h5"/>@break
             @case('user')<path d="M20 21v-2a7 7 0 0 0-14 0v2"/><circle cx="13" cy="7" r="4"/>@break
             @case('add-user')<path d="M16 21v-2a6 6 0 0 0-12 0v2m15-14v6m-3-3h6"/><circle cx="10" cy="7" r="4"/>@break
             @case('mail')<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>@break

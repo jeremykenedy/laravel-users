@@ -1,4 +1,4 @@
-@if(config('laravelusers.avatar.enabled', false))
+@if(config('laravelusers.avatar.enabled', false) || config('laravelusers.showProfileAvatar', true))
 <style>
     #laravelusers .lu-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: #e8eef5; color: #354760; font: 600 14px/1 system-ui, sans-serif; }
     #laravelusers[data-lu-theme="dark"] .lu-avatar { background: #344259; color: #e8eef5; }

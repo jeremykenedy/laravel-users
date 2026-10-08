@@ -11,6 +11,7 @@
     function update() {
         const inputs = available();
         const selected = inputs.filter(input => input.checked);
+        form.hidden = selected.length === 0;
         const values = form.querySelector('[data-lu-selected-inputs]');
         values.replaceChildren();
         selected.forEach(function (checkbox) {

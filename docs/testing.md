@@ -21,7 +21,7 @@ Scrutinizer uses the Jammy build image with PHP 8.2 and a SQLite version support
 
 The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
 
-Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Bundled views request only listing metadata, excluding login IP and agent details. Listing tests check one query for login times rather than a query per row.
+Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Default listing metadata excludes login IP and agent details. Bundled tables request those fields explicitly when the login-details column is enabled. Listing tests check one query for login records rather than a query per row.
 
 ## Browser suite
 
@@ -47,6 +47,6 @@ The legacy Bootstrap 4 browser tests load its existing external CDN assets. Mode
 
 Review list, create, edit, and detail views on desktop and mobile. Check published overrides, custom parent layouts, host authentication and authorization, role models, translations, asset loading, and any custom JavaScript before upgrading a consuming application.
 
-The table tests cover debounce cancellation and immediate submission, column sorting and filtering, stored visibility choices, avatar image failures, timezone formatting, compact actions, mobile entries, and disabled options. Bulk tests use real requests to create users, soft-delete them, visit the separate deleted table, restore them, and permanently delete them. Server tests reject invalid or oversized selections and self-deletion before changing any selected account.
+The table tests cover debounce cancellation and immediate submission, column sorting and filtering, stored visibility choices with merged headers, avatar image failures, profile cards, configurable timezone formatting, compact actions, red delete confirmations, mobile entries, and disabled options. Bulk tests use real requests to create users, soft-delete them, visit the separate deleted table, restore them, and permanently delete them. Server tests reject invalid or oversized selections and self-deletion before changing any selected account.
 
 Welcome tests confirm that ordinary creation sends no mail, only validated fields are saved, passwords are not emailed, disabled choices cannot be submitted, and password setup tokens work once. A mail dispatch failure leaves the created account intact and reports a warning. Create and edit tests reject HTML usernames.

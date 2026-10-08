@@ -5,7 +5,9 @@ Every setting in `config/laravelusers.php` uses `env('NAME', default)`. An envir
 ```dotenv
 LARAVEL_USERS_THEME=system
 LARAVEL_USERS_THEME_TOGGLE=true
+LARAVEL_USERS_SEARCH_DEBOUNCE_ENABLED=true
 LARAVEL_USERS_SEARCH_DEBOUNCE=2000
+LARAVEL_USERS_TABLE_BUTTONS_ICON_ONLY=false
 LARAVEL_USERS_TABLE_SORTING=true
 LARAVEL_USERS_TABLE_FILTERING=true
 LARAVEL_USERS_COLUMN_VISIBILITY=true
@@ -21,15 +23,19 @@ Set `laravelUsersBladeExtended` to your dashboard layout. It should yield `templ
 
 ## Tables
 
+`searchDebounceEnabled` submits search after typing stops. `searchDebounce` sets the delay in milliseconds after the final keystroke. Disable automatic submission with `searchDebounceEnabled=false`; Search and Enter remain available. Clear appears only when the field has text.
+
 Sorting and column filters apply to displayed rows. Search finds users across the database. Keep server pagination for large user lists, or disable pagination when you want the whole directory available to table controls. `enabledDatatablesJs` and its original CDN settings remain available for Bootstrap 4. Choose one table-control integration in published views.
 
-`columnVisibility` saves column choices in local storage separately for active and deleted users. It does not change server configuration. `responsiveTable` shows labelled entries below 640px; otherwise tables retain horizontal scrolling. `responsiveButtons` uses icons on small screens when icons are enabled. Accessible labels stay available. Tooltips follow `tooltipsEnabled`.
+`columnVisibility` saves column choices in local storage separately for active and deleted users. It does not change server configuration. `responsiveTable` shows labelled entries below 640px; otherwise tables retain horizontal scrolling. `responsiveButtons` uses icons on small screens when icons are enabled. `tableButtonsIconOnly=true` uses icons for table actions at every screen size when icons are enabled. Accessible labels stay available. Tooltips follow `tooltipsEnabled`.
 
-Activity columns require their tracking setting and their column setting. Online badges appear only for users currently online. Dates use the browser's timezone by default, with optional `displayTimezone`, `dateStyle`, and `timeStyle` overrides. Missing dates remain blank. Dates retain UTC values in their `datetime` attribute.
+Activity columns require their tracking setting and their column setting. `showLastLoginDetailsColumn` combines the last device, operating system, browser, and IP in one column on both tables. Long details stay on one line with the full value available on hover. Search sends these details only when `include_login_details=1` is requested and the column is enabled. Online badges appear only for users currently online. Dates use the browser's timezone by default, with optional `displayTimezone`, `dateStyle`, and `timeStyle` overrides. `dateStyle` accepts `short` (the default), `medium`, `long`, or `full`; `timeStyle` accepts the same styles. For example, set `LARAVEL_USERS_DATE_STYLE=medium` to include a month name. Missing dates remain blank. Dates retain UTC values in their `datetime` attribute.
 
 ## Avatars
 
 The optional avatar column is first. `avatar.source=initials` renders initials locally. `avatar.source=avatar` reads `avatar.attribute` from the host model; use an accessor returning an HTTP, HTTPS, or root-relative image URL. `avatar.source=gravatar` loads images from Gravatar using its [documented SHA-256 email hash and 404 fallback](https://docs.gravatar.com/sdk/images/). Enable that service only when wanted. Unavailable images reveal the configured `icon` or `initials` fallback. No external avatar service is contacted for initials.
+
+`showProfileAvatar` controls the profile card avatar independently of the table column. It uses the same avatar source and fallback.
 
 ## Welcome emails
 
@@ -43,7 +49,7 @@ Notifications use Laravel's mail channel and queue configuration after the user 
 
 `softDeletedEnabled` requires Laravel's `SoftDeletes` trait and a `deleted_at` column on the configured user model. The package never adds that column automatically. The separate `/users/deleted` table supports restore and permanent deletion. Existing deletion follows the configured model's delete behavior; the opt-in flag controls deleted-user management.
 
-`bulkActions` enables multi-selection and delete on the active table, with restore and permanent delete on the deleted table. Select all selects visible rows only. Search refreshes clear selection. `bulkLimit` bounds a request, with an upper limit of 1000. Invalid, missing, duplicate, or self-selected records are rejected before changes. Bulk writes share a database transaction and keep model events.
+`bulkActions` enables multi-selection and delete on the active table, with restore and permanent delete on the deleted table. The header combines Select all across the avatar and selection columns. The original DataTables integration keeps separate headers for compatibility. Select all selects visible rows only. Bulk controls appear only while rows are selected. The deleted-user link appears only when deleted users exist. Search refreshes clear selection. `bulkLimit` bounds a request, with an upper limit of 1000. Invalid, missing, duplicate, or self-selected records are rejected before changes. Bulk writes share a database transaction and keep model events.
 
 ## Environment variables
 
@@ -59,9 +65,10 @@ Notifications use Laravel's mail channel and queue configuration after the user 
 | `footerView` | `LARAVEL_USERS_FOOTER_VIEW` | `null` |
 | `fullWidth` | `LARAVEL_USERS_FULL_WIDTH` | `false` |
 | `iconsEnabled` | `LARAVEL_USERS_ICONS_ENABLED` | `true` |
+| `tableButtonsIconOnly` | `LARAVEL_USERS_TABLE_BUTTONS_ICON_ONLY` | `false` |
 | `responsiveButtons` | `LARAVEL_USERS_RESPONSIVE_BUTTONS` | `true` |
 | `localizeDates` | `LARAVEL_USERS_LOCALIZE_DATES` | `true` |
-| `dateStyle` | `LARAVEL_USERS_DATE_STYLE` | `medium` |
+| `dateStyle` | `LARAVEL_USERS_DATE_STYLE` | `short` |
 | `timeStyle` | `LARAVEL_USERS_TIME_STYLE` | `short` |
 | `displayTimezone` | `LARAVEL_USERS_DISPLAY_TIMEZONE` | `null` |
 | `bulkActions` | `LARAVEL_USERS_BULK_ACTIONS` | `false` |
@@ -99,6 +106,7 @@ Notifications use Laravel's mail channel and queue configuration after the user 
 | `enablePagination` | `LARAVEL_USERS_ENABLE_PAGINATION` | `true` |
 | `paginateListSize` | `LARAVEL_USERS_PAGINATE_LIST_SIZE` | `25` |
 | `enableSearchUsers` | `LARAVEL_USERS_ENABLE_SEARCH_USERS` | `true` |
+| `searchDebounceEnabled` | `LARAVEL_USERS_SEARCH_DEBOUNCE_ENABLED` | `true` |
 | `searchDebounce` | `LARAVEL_USERS_SEARCH_DEBOUNCE` | `2000` |
 | `tableSorting` | `LARAVEL_USERS_TABLE_SORTING` | `false` |
 | `tableFiltering` | `LARAVEL_USERS_TABLE_FILTERING` | `false` |
@@ -106,6 +114,8 @@ Notifications use Laravel's mail channel and queue configuration after the user 
 | `showCreatedColumn` | `LARAVEL_USERS_SHOW_CREATED_COLUMN` | `true` |
 | `showUpdatedColumn` | `LARAVEL_USERS_SHOW_UPDATED_COLUMN` | `true` |
 | `showOnlineColumn` | `LARAVEL_USERS_SHOW_ONLINE_COLUMN` | `true` |
+| `showLastLoginDetailsColumn` | `LARAVEL_USERS_SHOW_LAST_LOGIN_DETAILS_COLUMN` | `true` |
+| `showProfileAvatar` | `LARAVEL_USERS_SHOW_PROFILE_AVATAR` | `true` |
 | `showLastLoginColumn` | `LARAVEL_USERS_SHOW_LAST_LOGIN_COLUMN` | `true` |
 | `showUserCount` | `LARAVEL_USERS_SHOW_USER_COUNT` | `true` |
 | `confirmDelete` | `LARAVEL_USERS_CONFIRM_DELETE` | `true` |

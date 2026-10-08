@@ -33,6 +33,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
         }
         $this->app['events']->listen('eloquent.deleted: *', [Listeners\TrackUserActivity::class, 'deleted']);
         $this->app['view']->composer([
+            'laravelusers::usersmanagement.deleted-users', 'laravelusers::modern.deleted-users',
             'laravelusers::usersmanagement.show-user', 'laravelusers::modern.show-user',
             'laravelusers::usersmanagement.show-users', 'laravelusers::modern.show-users',
         ], View\ActivityComposer::class);
@@ -40,6 +41,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->app['view']->composer([
             'laravelusers::usersmanagement.show-users', 'laravelusers::modern.show-users',
             'laravelusers::usersmanagement.deleted-users', 'laravelusers::modern.deleted-users',
+            'laravelusers::usersmanagement.show-user', 'laravelusers::modern.show-user',
         ], View\AvatarComposer::class);
 
         $this->publishes([

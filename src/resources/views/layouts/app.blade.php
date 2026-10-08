@@ -40,7 +40,7 @@
             ]) !!};
         </script>
     </head>
-    <body id="laravelusers" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
+    <body id="laravelusers" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
         <div id="app" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}">
             @if(config('laravelusers.showHeader', true))
             @if(config('laravelusers.headerView'))
@@ -130,6 +130,7 @@
     @include('laravelusers::scripts.dates')
     @include('laravelusers::scripts.bulk-actions')
     @include('laravelusers::scripts.columns')
+    @include('laravelusers::scripts.table-buttons')
 
     </body>
 </html>

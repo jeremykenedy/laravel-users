@@ -12,6 +12,8 @@ return [
     'selected'            => ':count selected',
     'select_user'         => 'Select :name',
     'select_all'          => 'Select all visible users',
+    'login_details'       => 'Login details',
+    'select_all_label'    => 'Select all',
     'confirm_bulk'        => 'Apply this action to the selected users? Permanent deletion cannot be undone.',
     'bulk_success'        => 'The selected users were updated.',
     'invalid_selection'   => 'Select existing users other than your own account.',

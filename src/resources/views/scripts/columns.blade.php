@@ -4,7 +4,7 @@
     const root = document.getElementById('laravelusers');
     const table = root && root.querySelector('[data-lu-table]');
     if (!table) return;
-    const headers = Array.from(table.tHead.rows[0].cells);
+    @include('laravelusers::scripts.table-headers')
     const labels = headers.map(header => header.dataset.luLabel || header.textContent.trim());
     const key = 'laravelusers.columns.' + (table.dataset.luView || 'users');
     let saved = {};
@@ -12,6 +12,9 @@
         try { saved = JSON.parse(localStorage.getItem(key)) || {}; } catch (error) {}
     }
     function apply() {
+        const merged = table.querySelector('[data-lu-avatar-label]');
+        headers.forEach(header => { header.hidden = !header.hasAttribute('data-lu-required') && saved[header.dataset.luLabel || header.textContent.trim()] === false; });
+        if (merged) merged.colSpan = saved[merged.dataset.luAvatarLabel] === false ? 1 : 2;
         Array.from(table.rows).forEach(function (row) {
             if (row.cells.length !== headers.length) return;
             Array.from(row.cells).forEach(function (cell, column) {

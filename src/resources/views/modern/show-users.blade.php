@@ -5,24 +5,25 @@
         $tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind';
         $onlineColumn = config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true);
         $loginColumn = config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true);
-        $columns = 4 + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) $onlineColumn + (int) $loginColumn;
+        $loginDetailsColumn = config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true);
+        $columns = 4 + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) $onlineColumn + (int) $loginColumn + (int) $loginDetailsColumn;
     @endphp
     <section class="lu-panel {{ $tailwind ? 'lu:rounded-xl lu:border lu:shadow-sm' : 'card' }}" aria-label="{{ __('laravelusers::app.nav.users') }}">
         <header class="lu-heading lu-card-heading">
             <h1>{{ __('laravelusers::laravelusers.showing-all-users') }}</h1>
             <div class="lu-actions">
-            @if(config('laravelusers.softDeletedEnabled', false))<a class="lu-button lu-secondary" href="{{ route('users.deleted') }}">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::laravelusers.show-deleted-users') }}</a>@endif
-            <a class="lu-button lu-success" href="{{ route('users.create') }}">@include('laravelusers::partials.icon', ['name' => 'add-user']) {{ __('laravelusers::laravelusers.create-new-user') }}</a>
+            @if($hasDeletedUsers ?? false)<a class="lu-button lu-secondary" href="{{ route('users.deleted') }}">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::laravelusers.show-deleted-users') }}</a>@endif
+            <a class="lu-button lu-secondary" href="{{ route('users.create') }}">@include('laravelusers::partials.icon', ['name' => 'add-user']) {{ __('laravelusers::laravelusers.create-new-user') }}</a>
             </div>
         </header>
         @if(config('laravelusers.enableSearchUsers'))
             <form class="lu-search" id="lu-search" action="{{ route('search-users') }}" method="POST">
                 @csrf
                 @if(config('laravelusers.avatar.enabled', false))<input type="hidden" name="include_avatar" value="1">@endif
-                @if($onlineColumn || $loginColumn)<input type="hidden" name="include_activity" value="1">@endif
+                @if($onlineColumn || $loginColumn || $loginDetailsColumn)<input type="hidden" name="include_activity" value="1">@if($loginDetailsColumn)<input type="hidden" name="include_login_details" value="1">@endif @endif
                 <div class="lu-search-field"><label for="user_search_box" class="lu-sr-only">{{ __('laravelusers::forms.search-users-ph') }}</label><div class="lu-input-group"><input class="lu-input {{ $tailwind ? 'lu:w-full lu:rounded-lg' : 'form-control' }}" type="search" id="user_search_box" name="user_search_box" placeholder="{{ __('laravelusers::forms.search-users-ph') }}" maxlength="255" required></div></div>
                 <button class="lu-button" type="submit">@include('laravelusers::partials.icon', ['name' => 'search']) {{ __('laravelusers::ui.search') }}</button>
-                <button class="lu-button lu-secondary" type="reset">@include('laravelusers::partials.icon', ['name' => 'close']) {{ __('laravelusers::ui.clear') }}</button>
+                <button class="lu-button lu-secondary" type="reset" hidden>@include('laravelusers::partials.icon', ['name' => 'close']) {{ __('laravelusers::ui.clear') }}</button>
             </form>
             <p id="lu-search-status" class="lu-pad lu-muted" role="status" hidden></p>
         @endif
@@ -31,7 +32,7 @@
             <table data-lu-view="users" class="{{ $tailwind ? 'lu:w-full lu:text-left' : 'table' }}" data-lu-table>
                 <caption>{{ __('laravelusers::ui.directory') }}</caption>
                 <thead><tr>
-                    @if(config('laravelusers.avatar.enabled', false))<th scope="col" data-lu-no-sort>{{ __('laravelusers::ui.avatar') }}</th>@endif
+                    @if(config('laravelusers.avatar.enabled', false) && (!config('laravelusers.bulkActions', false) || config('laravelusers.enabledDatatablesJs', false)))<th scope="col" data-lu-no-sort><span class="lu-sr-only sr-only">{{ __('laravelusers::ui.avatar') }}</span></th>@endif
                     @if(config('laravelusers.bulkActions', false))@include('laravelusers::partials.select-all')@endif
                     @foreach(['id', 'name', 'email'] as $column)<th scope="col">{{ __('laravelusers::laravelusers.users-table.'.$column) }}</th>@endforeach
                     @if(config('laravelusers.rolesEnabled'))<th scope="col">{{ __('laravelusers::laravelusers.users-table.role') }}</th>@endif
@@ -40,6 +41,7 @@
                         @if(config('laravelusers.'.$setting, true))<th scope="col">{{ __('laravelusers::laravelusers.users-table.'.$column) }}</th>@endif
                     @endforeach
                     @if($loginColumn)<th scope="col">{{ __('laravelusers::ui.last_login_at') }}</th>@endif
+                    @if($loginDetailsColumn)<th>{{ __('laravelusers::ui.login_details') }}</th>@endif
                     <th scope="col" data-lu-no-sort>{{ __('laravelusers::laravelusers.users-table.actions') }}</th>
                 </tr></thead>
                 <tbody id="lu-users">
@@ -55,10 +57,11 @@
                                 @if(config('laravelusers.'.$setting, true))<td>@include('laravelusers::partials.date', ['value' => $user->$column])</td>@endif
                             @endforeach
                             @if($loginColumn)<td>@include('laravelusers::partials.date', ['value' => $userActivity[$user->getKey()]['last_login_at'] ?? null])</td>@endif
+                            @if($loginDetailsColumn)<td>@include('laravelusers::partials.login-details', ['details' => $userActivity[$user->getKey()] ?? []])</td>@endif
                             <td><div class="lu-actions">
+                                @include('laravelusers::modern.delete')
                                 <a class="lu-button lu-success" href="{{ route('users.show', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a>
                                 <a class="lu-button" href="{{ route('users.edit', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>
-                                @include('laravelusers::modern.delete')
                             </div></td>
                         </tr>
                     @empty
@@ -80,5 +83,5 @@
         </div>
     </section>
     @if(config('laravelusers.avatar.enabled', false))<template id="lu-avatar-template"><span class="lu-avatar" aria-hidden="true"><span data-lu-initials></span><svg data-lu-avatar-icon width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span></template>@endif
-    <template id="lu-row-actions"><div class="lu-actions"><a class="lu-button lu-success" data-lu-show>@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a><a class="lu-button" data-lu-edit>@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a><form method="POST" @if(config('laravelusers.confirmDelete', true)) data-lu-confirm @endif>@csrf @method('DELETE')<button class="lu-button lu-danger" type="submit">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::ui.delete') }}</button></form></div></template>
+    <template id="lu-row-actions"><div class="lu-actions"><form method="POST" @if(config('laravelusers.confirmDelete', true)) data-lu-confirm @endif>@csrf @method('DELETE')<button class="lu-button lu-danger" type="submit">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::ui.delete') }}</button></form><a class="lu-button lu-success" data-lu-show>@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a><a class="lu-button" data-lu-edit>@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a></div></template>
 @endsection

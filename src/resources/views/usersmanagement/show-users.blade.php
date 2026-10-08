@@ -35,7 +35,7 @@
                             </span>
 
                             <div class="btn-group pull-right btn-group-xs">
-                                @if(config('laravelusers.softDeletedEnabled'))
+                                @if($hasDeletedUsers ?? false)
                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fa fa-ellipsis-v fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">
@@ -85,7 +85,7 @@
                                 </caption>
                                 <thead class="thead">
                                     <tr>
-                                        @if(config('laravelusers.avatar.enabled', false))<th class="no-sort">{{ __('laravelusers::ui.avatar') }}</th>@endif
+                                        @if(config('laravelusers.avatar.enabled', false) && (!config('laravelusers.bulkActions', false) || config('laravelusers.enabledDatatablesJs', false)))<th class="no-sort"><span class="lu-sr-only sr-only">{{ __('laravelusers::ui.avatar') }}</span></th>@endif
                                         @if(config('laravelusers.bulkActions', false))@include('laravelusers::partials.select-all')@endif
                                         <th>{!! trans('laravelusers::laravelusers.users-table.id') !!}</th>
                                         <th>{!! trans('laravelusers::laravelusers.users-table.name') !!}</th>
@@ -97,6 +97,7 @@
                                         @if(config('laravelusers.showCreatedColumn', true))<th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.created') !!}</th>@endif
                                         @if(config('laravelusers.showUpdatedColumn', true))<th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.updated') !!}</th>@endif
                                         @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true))<th>{{ __('laravelusers::ui.last_login_at') }}</th>@endif
+                                        @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true))<th>{{ __('laravelusers::ui.login_details') }}</th>@endif
                                         <th class="no-search no-sort">{!! trans('laravelusers::laravelusers.users-table.actions') !!}</th>
                                         <th class="no-search no-sort"></th>
                                         <th class="no-search no-sort"></th>
@@ -130,6 +131,7 @@
                                             @if(config('laravelusers.showCreatedColumn', true))<td class="hidden-sm hidden-xs hidden-md">@include('laravelusers::partials.date', ['value' => $user->created_at])</td>@endif
                                             @if(config('laravelusers.showUpdatedColumn', true))<td class="hidden-sm hidden-xs hidden-md">@include('laravelusers::partials.date', ['value' => $user->updated_at])</td>@endif
                                             @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true))<td>@include('laravelusers::partials.date', ['value' => $userActivity[$user->getKey()]['last_login_at'] ?? null])</td>@endif
+                                            @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true))<td>@include('laravelusers::partials.login-details', ['details' => $userActivity[$user->getKey()] ?? []])</td>@endif
                                             <td>
                                                 <form method="POST" action="{{ url('users/' . $user->id) }}" data-toggle="tooltip" title="{{ trans('laravelusers::laravelusers.tooltips.delete') }}">
                                                     @method('DELETE')

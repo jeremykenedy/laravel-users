@@ -1,4 +1,4 @@
-@if(config('laravelusers.avatar.enabled', false))
+@if(config('laravelusers.avatar.enabled', false) || config('laravelusers.showProfileAvatar', true))
 <script>
 (function () {
     const root = document.getElementById('laravelusers');

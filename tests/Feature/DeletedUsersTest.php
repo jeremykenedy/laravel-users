@@ -51,6 +51,20 @@ class DeletedUsersTest extends TestCase
         $this->post('/users/999/restore')->assertNotFound();
     }
 
+    public function test_deleted_navigation_only_appears_when_deleted_users_exist(): void
+    {
+        $this->enable();
+        $user = $this->user();
+        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $this->get('/users')->assertOk()->assertDontSee('href="http://localhost/users/deleted"', false);
+            $this->delete('/users/'.$user->id);
+            $this->get('/users')->assertOk()->assertSee('href="http://localhost/users/deleted"', false);
+            $this->post('/users/'.$user->id.'/restore');
+            $this->get('/users')->assertOk()->assertDontSee('href="http://localhost/users/deleted"', false);
+        }
+    }
+
     public function test_bulk_delete_restore_and_permanent_delete_are_atomic_and_protect_self(): void
     {
         $admin = $this->enable();

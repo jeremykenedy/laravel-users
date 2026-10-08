@@ -6,7 +6,7 @@
     if (!table) return;
     const sorting = @json((bool) config('laravelusers.tableSorting', false));
     const filtering = @json((bool) config('laravelusers.tableFiltering', false));
-    const headers = Array.from(table.tHead.rows[0].cells);
+    @include('laravelusers::scripts.table-headers')
     const filters = [];
     const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
     let sortColumn;
@@ -26,7 +26,7 @@
     }
     const filterRow = filtering ? table.tHead.insertRow() : null;
     headers.forEach(function (header, column) {
-        const label = header.textContent.trim();
+        const label = header.dataset.luLabel || header.textContent.trim();
         header.dataset.luLabel = label;
         const excluded = header.hasAttribute('data-lu-no-sort') || header.classList.contains('no-sort');
         if (sorting && !excluded) {

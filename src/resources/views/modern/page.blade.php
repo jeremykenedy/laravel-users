@@ -4,11 +4,12 @@
     @include('laravelusers::modern.styles')
     @include('laravelusers::partials.avatar-styles')
     @include('laravelusers::partials.table-styles')
+    @include('laravelusers::partials.profile-styles')
 @endsection
 
 @section('content')
     @php($tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind')
-    <main id="laravelusers" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}" class="lu-shell {{ $tailwind ? 'lu:mx-auto lu:max-w-6xl lu:px-6 lu:py-8' : 'container py-4' }}">
+    <main id="laravelusers" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}" class="lu-shell {{ $tailwind ? 'lu:mx-auto lu:max-w-6xl lu:px-6 lu:py-8' : 'container py-4' }}">
         @if(config('laravelusers.showHeader', true))
         @if(config('laravelusers.headerView'))
             @include(config('laravelusers.headerView'))

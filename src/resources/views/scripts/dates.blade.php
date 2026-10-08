@@ -6,12 +6,12 @@
     let formatter;
     try {
         formatter = new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
-            dateStyle: @json(config('laravelusers.dateStyle', 'medium')),
+            dateStyle: @json(config('laravelusers.dateStyle', 'short')),
             timeStyle: @json(config('laravelusers.timeStyle', 'short')),
             timeZone: @json(config('laravelusers.displayTimezone')) || undefined
         });
     } catch (error) {
-        formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+        formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' });
     }
     function format() {
         root.querySelectorAll('[data-lu-time], [data-lu-date]').forEach(function (element) {

@@ -42,4 +42,17 @@ class AvatarTest extends TestCase
         config(['laravelusers.avatar.enabled' => false]);
         $this->get('/users')->assertOk()->assertDontSee('class="lu-avatar"', false);
     }
+
+    public function test_profile_avatar_can_be_disabled_without_hiding_the_table_column(): void
+    {
+        $user = $this->user(['name' => 'Profile Person']);
+        $this->actingAs($user);
+        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+            config(['laravelusers.frontend' => $framework, 'laravelusers.avatar.enabled' => true, 'laravelusers.showProfileAvatar' => true]);
+            $this->get('/users/'.$user->id)->assertOk()->assertSee('class="lu-avatar"', false)->assertSee('PP');
+            config(['laravelusers.showProfileAvatar' => false]);
+            $this->get('/users/'.$user->id)->assertOk()->assertDontSee('class="lu-avatar"', false)->assertSee('Profile Person');
+            $this->get('/users')->assertOk()->assertSee('class="lu-avatar"', false);
+        }
+    }
 }

@@ -145,18 +145,22 @@ The complete configuration is in [src/config/laravelusers.php](src/config/larave
 | `activity.cache_store` | `null` | Presence cache store; null uses the default. |
 | `activity.online_seconds` | `300` | Inactivity window in seconds. |
 
+| `searchDebounceEnabled` | `true` | Enable automatic search after typing stops. |
 | `searchDebounce` | `2000` | Submit search after this many milliseconds without typing. Enter and Search submit immediately. |
 | `tableSorting`, `tableFiltering` | `false` | Sort and filter displayed rows. Search can find users across pages. |
 | `columnVisibility` | `false` | Show a Columns dropdown and save choices per table in the browser. |
 | `responsiveTable` | `false` | Show labelled user entries on small screens. |
+| `tableButtonsIconOnly` | `false` | Use icon-only table actions at every screen size. |
 | `responsiveButtons` | `true` | Use icons with accessible labels and tooltips for mobile table actions. |
 | `iconsEnabled` | `true` | Show icons in modern views. Legacy views retain `fontAwesomeEnabled`. |
 | `emailLinks` | `true` | Link email addresses with `mailto:`. |
 | `showCreatedColumn`, `showUpdatedColumn` | `true` | Show creation and update dates. |
 | `showOnlineColumn`, `showLastLoginColumn` | `true` | Show separate activity columns when tracking is enabled. |
+| `showLastLoginDetailsColumn` | `true` | Combine device, OS, browser, and IP when login tracking is enabled. |
+| `showProfileAvatar` | `true` | Show the configured avatar on the profile card. |
 | `showUserCount` | `true` | Show the displayed range and total in the footer. |
 | `localizeDates` | `true` | Format stored UTC timestamps in the browser's timezone. |
-| `dateStyle`, `timeStyle` | `medium`, `short` | Date and time styles for `Intl.DateTimeFormat`. |
+| `dateStyle`, `timeStyle` | `short`, `short` | Date and time styles for `Intl.DateTimeFormat`. |
 | `displayTimezone` | `null` | Optional IANA timezone override; null uses the browser's timezone. |
 | `showHeader`, `showLogout` | `true` | Show package navigation and the logout action. |
 | `headerView`, `footerView` | `null` | Optional host Blade includes. |
