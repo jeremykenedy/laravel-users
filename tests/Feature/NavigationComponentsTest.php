@@ -86,4 +86,15 @@ class NavigationComponentsTest extends TestCase
         $this->assertStringContainsString('javascript:alert(1)', $html);
         $this->assertStringNotContainsString('<a ', $html);
     }
+
+    public function test_impersonation_is_not_offered_or_available_without_a_roles_integration(): void
+    {
+        config(['laravelusers.impersonation.enabled' => true]);
+        $actor = $this->user(['name' => 'Admin Candidate']);
+        $target = $this->user(['name' => 'Target User']);
+        $this->actingAs($actor);
+
+        $this->assertStringNotContainsString('secret-agent', Blade::render('<x-laravelusers::user-menu />'));
+        $this->post('/users/'.$target->getKey().'/impersonate')->assertNotFound();
+    }
 }

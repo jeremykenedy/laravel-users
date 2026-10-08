@@ -57,6 +57,9 @@ class ManagedPackages
             $this->reject('Laravel Toast requires PHP 8.2 or newer and Laravel 10 or newer.');
         }
         if ($action === 'remove' && $package !== 'toast') {
+            if (config('laravelusers.impersonation.enabled', false)) {
+                $this->reject('Removal is blocked while user impersonation is enabled. Disable impersonation before removing the roles package.');
+            }
             $trait = $package === 'spatie' ? 'Spatie\\Permission\\Traits\\HasRoles' : 'jeremykenedy\\LaravelRoles\\Traits\\HasRoleAndPermission';
             foreach (config('auth.providers', []) as $provider) {
                 $model = $provider['model'] ?? null;

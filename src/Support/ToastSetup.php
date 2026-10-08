@@ -6,6 +6,7 @@ namespace jeremykenedy\laravelusers\Support;
 
 use Illuminate\Console\Command;
 use Jeremykenedy\LaravelToast\Providers\ToastServiceProvider;
+use jeremykenedy\laravelusers\Console\ConsolePrompts;
 
 class ToastSetup
 {
@@ -17,7 +18,8 @@ class ToastSetup
     {
         $choice = $command->option('toast');
         if ($choice === null && $interactive) {
-            $choice = $command->choice('Laravel Toast integration', ['keep', 'install', 'remove'], 'keep');
+            $choices = ['keep', 'install', 'remove'];
+            $choice = ConsolePrompts::select($command, 'Laravel Toast integration', array_combine($choices, $choices), 'keep', $interactive);
         }
         $driver = $command->option('notifications');
         if ($choice === 'remove') {

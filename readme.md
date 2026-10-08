@@ -89,7 +89,7 @@ The original publish command remains available:
 php artisan vendor:publish --tag=laravelusers
 ```
 
-It publishes configuration, translations, and views. The bundled templates do not depend on Laravel Collective HTML. If you have custom published views, check them for their own form-builder calls before removing a host application's dependency.
+The package also provides `php artisan laravelusers:publish` for the same package files, with `laravel-users:publish` as an alias. It publishes configuration, translations, and views while preserving existing host files. The bundled templates do not depend on Laravel Collective HTML. If you have custom published views, check them for their own form-builder calls before removing a host application's dependency.
 
 ## Quick Start
 
@@ -179,12 +179,13 @@ The package includes its modern CSS assets. Run `npm run build` only when changi
 | `laravelusers:install` | Configure the package and select optional integrations. |
 | `laravelusers:update` | Refresh view choices and optional integration setup while preserving config. |
 | `laravelusers:switch` | Apply explicit CSS, theme, view, avatar, role, or notification choices. |
+| `laravelusers:publish` | Publish package configuration, views, and translations; `laravel-users:publish` is an alias. |
 | `laravelusers:setup-accounts` | Publish optional account, avatar, and appearance migrations; `--migrate` runs them. |
 | `laravelusers:setup-package` | Configure an installed Toast or roles package. |
 | `laravelusers:prune-deleted` | Permanently remove soft-deleted users when scheduled cleanup is enabled. |
 | `laravelusers:prune-account-links` | Remove expired account-link records. |
 
-All setup commands share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. `--no-interaction` uses current settings and does not prompt. `--force` backs up published views before replacement. The full option list, package publishing tags, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
+All setup commands share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for install, update, and switch. `--no-interaction` uses current settings and does not prompt. `--force` backs up published views before replacement. The full option list, package publishing tags, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
 
 ## Routes
 

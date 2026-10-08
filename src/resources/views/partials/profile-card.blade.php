@@ -19,6 +19,7 @@
     </div>
     <footer class="lu-profile-actions">
         @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users'))<a class="{{ $modern ? 'lu-button' : 'btn btn-info' }}" href="{{ route('users.edit', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>@endif
+        @include('laravelusers::partials.impersonate-button', ['target' => $user, 'modern' => $modern])
         @if($modern)
             @include('laravelusers::modern.delete')
         @elseif(\jeremykenedy\laravelusers\Support\UserAccess::allows('delete_users') && (string) Auth::id() !== (string) $user->id)

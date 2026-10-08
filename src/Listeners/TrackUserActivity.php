@@ -33,6 +33,10 @@ class TrackUserActivity
 
     private function shouldTrack(Authenticated|Login|Logout $event, Model $user): bool
     {
+        if ($this->request->hasSession() && $this->request->session()->has('laravelusers.impersonation')) {
+            return false;
+        }
+
         return (config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))
             && $event->guard === config('laravelusers.activity.guard', 'web')
             && $this->matchesUserModel($user);

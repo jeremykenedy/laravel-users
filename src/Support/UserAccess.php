@@ -10,7 +10,19 @@ use Illuminate\Support\Facades\Gate;
 
 class UserAccess
 {
-    public const ACTIONS = ['view_users', 'create_users', 'edit_users', 'delete_users', 'view_deleted', 'edit_deleted', 'restore_users', 'force_delete', 'email_message', 'email_reset', 'email_welcome', 'email_goodbye', 'email_deleted', 'edit_settings', 'edit_appearance', 'edit_user_appearance', 'edit_notifications', 'edit_cleanup', 'edit_email_templates', 'edit_account_access'];
+    public const ACTIONS = ['view_users', 'create_users', 'edit_users', 'delete_users', 'view_deleted', 'edit_deleted', 'restore_users', 'force_delete', 'impersonate_users', 'email_message', 'email_reset', 'email_welcome', 'email_goodbye', 'email_deleted', 'edit_settings', 'edit_appearance', 'edit_user_appearance', 'edit_notifications', 'edit_cleanup', 'edit_email_templates', 'edit_account_access'];
+
+    public static function canImpersonate(?Model $target = null, ?Model $actor = null): bool
+    {
+        $user = $actor ?? Auth::user();
+
+        return config('laravelusers.impersonation.enabled', false)
+            && $user instanceof Model
+            && RoleAccess::available($user)
+            && self::canManageUsers($user)
+            && self::allows('impersonate_users', actor: $user)
+            && (!$target || ((string) $target->getKey() !== (string) $user->getKey() && $target::class === config('laravelusers.defaultUserModel')));
+    }
 
     public static function allows(string $action, ?array $rules = null, ?Model $actor = null): bool
     {

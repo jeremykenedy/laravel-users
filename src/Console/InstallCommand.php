@@ -15,6 +15,7 @@ use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Support\ToastSetup;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 class InstallCommand extends Command
 {
@@ -48,7 +49,25 @@ class InstallCommand extends Command
         'seedster'        => null,
     ];
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setAliases(['laravel-users:install']);
+    }
+
     public function handle(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer): int
+    {
+        try {
+            return $this->install($files, $roles, $avatars, $toast, $requirements, $composer);
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error('Laravel Users could not finish setup.');
+
+            return self::FAILURE;
+        }
+    }
+
+    protected function install(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer): int
     {
         $this->banner();
         if ($this->laravel->configurationIsCached()) {
@@ -65,6 +84,12 @@ class InstallCommand extends Command
         if (!$this->optionsValid($framework, $theme, $views)) {
             return self::FAILURE;
         }
+
+        ConsolePrompts::table($this, ['Area', 'Selected behavior'], [
+            ['CSS framework', $framework],
+            ['Color theme', $theme],
+            ['Views', $views],
+        ], $this->input->isInteractive());
 
         if ($this->option('setup-packages')) {
             $requirements->configure();
@@ -97,37 +122,43 @@ class InstallCommand extends Command
             }
         }
 
-        if ($views === 'publish' && !$this->publishViews($files)) {
+        if ($views === 'publish' && !ConsolePrompts::spin($this, fn () => $this->publishViews($files), 'Publishing package views...', $this->input->isInteractive())) {
             return self::FAILURE;
         }
 
-        $this->saveConfiguration($files, $framework, $theme);
-        $this->saveRoles($files, $roleSettings);
-        $this->saveAvatars($files, $avatarSettings);
-        if ($notificationDriver !== null) {
-            $settings = array_replace(config('laravelusers-notifications', []), ['driver' => $notificationDriver]);
-            $code = $this->exportSettings($settings, ['driver' => 'LARAVEL_USERS_NOTIFICATIONS_DRIVER', 'dismissible' => 'LARAVEL_USERS_NOTIFICATIONS_DISMISSIBLE']);
-            $files->replace(config_path('laravelusers-notifications.php'), "<?php\n\nreturn ".$code.";\n");
-        }
+        ConsolePrompts::spin($this, function () use ($files, $framework, $theme, $roleSettings, $avatarSettings, $notificationDriver): void {
+            $this->saveConfiguration($files, $framework, $theme);
+            $this->saveRoles($files, $roleSettings);
+            $this->saveAvatars($files, $avatarSettings);
+            if ($notificationDriver !== null) {
+                $settings = array_replace(config('laravelusers-notifications', []), ['driver' => $notificationDriver]);
+                $code = $this->exportSettings($settings, ['driver' => 'LARAVEL_USERS_NOTIFICATIONS_DRIVER', 'dismissible' => 'LARAVEL_USERS_NOTIFICATIONS_DISMISSIBLE']);
+                $files->replace(config_path('laravelusers-notifications.php'), "<?php\n\nreturn ".$code.";\n");
+            }
+        }, 'Updating Laravel Users configuration...', $this->input->isInteractive());
         if ($this->option('setup-accounts') && $this->call('laravelusers:setup-accounts') !== self::SUCCESS) {
             return self::FAILURE;
         }
         $this->call('view:clear');
-        $this->info('Laravel Users configured: '.$framework.', '.$theme.'. Existing custom view settings are preserved.');
+        ConsolePrompts::outro($this, 'Laravel Users configured: '.$framework.', '.$theme.'. Existing custom view settings are preserved.', $this->input->isInteractive());
         $this->line('Package views use installed overrides first. Remove or rename an override yourself to return to the bundled view.');
         $this->printIntegrationInstructions();
 
         return self::SUCCESS;
     }
 
-    private function banner(): void
+    protected function banner(): void
     {
         $style = new SymfonyStyle($this->input, $this->output);
-        $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
-        $this->line('<fg=blue;options=bold>|              LARAVEL USERS               |</>');
-        $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
-        $style->text('Set up user management and choose the integrations your application uses.');
-        $style->newLine();
+        if (ConsolePrompts::usesNativePrompts($this, $this->input->isInteractive()) && function_exists('Laravel\\Prompts\\intro')) {
+            ConsolePrompts::intro($this, 'LARAVEL-USERS INITIALIZER', 'Set up user management and select the integrations already supported by this package.');
+        } elseif ($this->input->isInteractive()) {
+            $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
+            $this->line('<fg=blue;options=bold>|        LARAVEL-USERS INITIALIZER         |</>');
+            $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
+            $style->text('Set up user management and select the integrations already supported by this package.');
+            $style->newLine();
+        }
     }
 
     private function saveRoles(Filesystem $files, array $settings): void
@@ -167,9 +198,11 @@ class InstallCommand extends Command
         $views = $this->option('views');
 
         if ($this->input->isInteractive()) {
-            $framework = $framework ?? $this->choice('CSS framework', Frontend::FRAMEWORKS, Frontend::framework());
-            $theme = $theme ?? $this->choice('Color theme', ['light', 'dark', 'system'], Frontend::theme());
-            $views = $views ?? $this->choice('Views (existing overrides always take precedence)', ['package', 'publish'], 'package');
+            $framework = $framework ?? ConsolePrompts::search($this, 'CSS framework', Frontend::FRAMEWORKS, Frontend::framework(), true);
+            $themes = ['light', 'dark', 'system'];
+            $theme = $theme ?? ConsolePrompts::select($this, 'Color theme', array_combine($themes, $themes), Frontend::theme(), true);
+            $viewChoices = ['package', 'publish'];
+            $views = $views ?? ConsolePrompts::select($this, 'Views (existing overrides always take precedence)', array_combine($viewChoices, $viewChoices), 'package', true);
         }
 
         $framework = $framework ?? Frontend::framework();
@@ -236,7 +269,7 @@ class InstallCommand extends Command
             $target = $destination.'/'.$file->getRelativePathname();
             if (!$files->exists($target) || $this->option('force')) {
                 $files->ensureDirectoryExists(dirname($target));
-                if (!$files->copy($file->getPathname(), $target)) {
+                if (!$this->copyAtomically($files, $file->getPathname(), $target)) {
                     $this->error('Unable to publish view: '.$target);
 
                     return false;
@@ -245,6 +278,15 @@ class InstallCommand extends Command
         }
 
         return true;
+    }
+
+    private function copyAtomically(Filesystem $files, string $source, string $target): bool
+    {
+        $contents = $files->get($source);
+        $mode = $files->exists($target) ? fileperms($target) & 0777 : null;
+        $files->replace($target, $contents, $mode);
+
+        return $files->exists($target) && $files->get($target) === $contents;
     }
 
     private function backupViews(Filesystem $files, string $destination): bool

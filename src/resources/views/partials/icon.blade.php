@@ -47,6 +47,9 @@
             @case('next')<path d="m15 5 7 7-7 7m7-7H2"/>@break
             @case('logout')<path d="M9 3H4v18h5m6-14 5 5-5 5m5-5H9"/>@break
             @case('role')<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m9 12 2 2 4-4"/>@break
+            @case('secret-agent')<circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17"/><path d="M8 9a4 4 0 0 1 8 0m-8 6a4 4 0 0 0 8 0"/><path d="m12 10 1 2-1 2-1-2Z"/>@break
+            @case('toggle-on')<rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="16" cy="12" r="4"/>@break
+            @case('toggle-off')<rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="4"/>@break
             @case('close')<path d="m6 6 12 12M6 18 18 6"/>@break
         @endswitch
     </svg>

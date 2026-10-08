@@ -726,6 +726,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.goto(`/__browser/${framework}`);
         const directory = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
         await expect(directory.locator('.lu-login-details').first()).toContainText('127.0.0.1');
+        await expect(directory.locator('form[action*="/impersonate"]')).toHaveCount(0);
         const tableIp = directory.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first();
         await expect(tableIp).toHaveAttribute('href', 'https://ipinfo.io/127.0.0.1');
         await expect(tableIp).toHaveAttribute('target', '_blank');
@@ -743,6 +744,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(results.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first()).toHaveAttribute('rel', 'noopener noreferrer');
         await expectStackedDetails(results.locator('.lu-login-details').first());
         await page.goto('/users/1');
+        await expect(page.locator('form[action*="/impersonate"]')).toHaveCount(0);
         await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
         await expect(page.locator('.lu-profile-details dt svg')).toHaveCount(11);
         await expect(page.locator('.lu-profile-details dt').filter({ hasText: 'Last login' })).toBeVisible();

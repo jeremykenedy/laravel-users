@@ -8,9 +8,11 @@ use jeremykenedy\laravelusers\App\Http\Controllers\AccountController;
 use jeremykenedy\laravelusers\App\Http\Controllers\AccountLinksController;
 use jeremykenedy\laravelusers\App\Http\Controllers\CleanupSettingsController;
 use jeremykenedy\laravelusers\App\Http\Controllers\EmailTemplatesController;
+use jeremykenedy\laravelusers\App\Http\Controllers\ImpersonationController;
 use jeremykenedy\laravelusers\App\Http\Controllers\PackageSettingsController;
 use jeremykenedy\laravelusers\App\Http\Controllers\UsersManagementController;
 use jeremykenedy\laravelusers\App\Http\Middleware\AccountMiddleware;
+use jeremykenedy\laravelusers\App\Http\Middleware\UserAccessMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +35,12 @@ Route::middleware(['web', 'auth', AccountMiddleware::class])->group(function () 
 });
 
 // APP Routes Below
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('users/{id}/impersonate', [ImpersonationController::class, 'start'])->where('id', '[0-9]+')->middleware('throttle:10,1,laravelusers-impersonate')->name('users.impersonate');
+    Route::post('users/impersonation/stop', [ImpersonationController::class, 'stop'])->middleware('throttle:10,1,laravelusers-impersonate-stop')->name('users.impersonation.stop');
+    Route::post('users/settings/impersonation', [ImpersonationController::class, 'update'])->middleware([UserAccessMiddleware::class, 'throttle:5,1,laravelusers-settings-impersonation'])->name('users.settings.impersonation');
+});
+
 Route::middleware('web')->group(function () {
     Route::put('users/settings/accounts', [AccountAccessController::class, 'save'])->middleware(['auth', 'throttle:10,1,laravelusers-settings-accounts'])->name('users.settings.accounts');
     Route::get('users/settings', [UsersManagementController::class, 'settings'])->middleware('auth')->name('users.settings');

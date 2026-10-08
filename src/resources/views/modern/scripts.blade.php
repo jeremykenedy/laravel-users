@@ -217,8 +217,13 @@
                 actions.querySelector('[data-lu-show]').href = link.href;
                 const edit = actions.querySelector('[data-lu-edit]');
                 if (edit) edit.href = link.href + '/edit';
+                const impersonate = actions.querySelector('[data-lu-impersonate]');
+                if (impersonate) {
+                    impersonate.action = @json(route('users.impersonate', ['id' => '__USER_ID__'])).replace('__USER_ID__', encodeURIComponent(user.id));
+                    if (String(user.id) === String(@json(Auth::id()))) impersonate.remove();
+                }
                 actions.querySelectorAll('[data-lu-email-action]').forEach(button => { button.dataset.luEmailUser = user.id; button.dataset.luEmailName = user.name; });
-                const deletion = actions.querySelector('form');
+                const deletion = actions.querySelector('[data-lu-delete-action]');
                 if (deletion && String(user.id) === String(currentUser)) deletion.remove();
                 else if (deletion) {
                     deletion.action = link.href;

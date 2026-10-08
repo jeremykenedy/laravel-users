@@ -63,6 +63,7 @@
                                 @include('laravelusers::modern.delete')
                                 <a class="lu-button lu-success" href="{{ route('users.show', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a>
                                 @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users'))<a class="lu-button" href="{{ route('users.edit', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>@endif
+                                @include('laravelusers::partials.impersonate-button', ['target' => $user, 'modern' => true])
                                 <x-laravelusers::email-actions :user="$user" :compact="true" />
                             </div></td>
                         </tr>
@@ -85,5 +86,23 @@
         </div>
     </section>
     @if(config('laravelusers.avatar.enabled', false))<template id="lu-avatar-template"><span class="lu-avatar" aria-hidden="true"><span data-lu-initials></span><svg data-lu-avatar-icon width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span></template>@endif
-    <template id="lu-row-actions"><div class="lu-actions">@if(\jeremykenedy\laravelusers\Support\UserAccess::allows('delete_users'))<form method="POST" @if(config('laravelusers.confirmDelete', true)) data-lu-confirm @endif>@csrf @method('DELETE')<button class="lu-button lu-danger" type="submit">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::ui.delete') }}</button></form>@endif<a class="lu-button lu-success" data-lu-show>@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a>@if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users'))<a class="lu-button" data-lu-edit>@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>@endif<x-laravelusers::email-actions :compact="true" /></div></template>
+    <template id="lu-row-actions"><div class="lu-actions">
+        @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('delete_users'))
+            <form method="POST" data-lu-delete-action @if(config('laravelusers.confirmDelete', true)) data-lu-confirm @endif>
+                @csrf @method('DELETE')
+                <button class="lu-button lu-danger" type="submit">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::ui.delete') }}</button>
+            </form>
+        @endif
+        <a class="lu-button lu-success" data-lu-show>@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.show') }}</a>
+        @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users'))
+            <a class="lu-button" data-lu-edit>@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>
+        @endif
+        @if($canImpersonateUsers ?? false)
+            <form method="POST" data-lu-impersonate>
+                @csrf
+                <button class="lu-button lu-secondary" type="submit">@include('laravelusers::partials.icon', ['name' => 'secret-agent']) {{ __('laravelusers::ui.impersonation_target') }}</button>
+            </form>
+        @endif
+        <x-laravelusers::email-actions :compact="true" />
+    </div></template>
 @endsection

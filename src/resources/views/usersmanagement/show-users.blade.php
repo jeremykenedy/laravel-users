@@ -137,6 +137,7 @@
                                                     {!! trans('laravelusers::laravelusers.buttons.edit') !!}
                                                 </a>@endif
                                                 <x-laravelusers::email-actions :user="$user" :compact="true" />
+                                                @include('laravelusers::partials.impersonate-button', ['target' => $user, 'modern' => false])
                                                 </div>
                                             </td>
                                         </tr>

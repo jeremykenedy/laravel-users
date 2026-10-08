@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use jeremykenedy\LaravelRoles\Middleware\VerifyRole;
 use jeremykenedy\LaravelRoles\RolesServiceProvider;
+use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
@@ -170,6 +171,7 @@ class RoleIntegrationsTest extends TestCase
         $legacy ? $actor->attachRole($role) : $actor->assignRole($role);
         $this->actingAs($actor->fresh())->get('/users/create')->assertOk();
         $this->get('/users/settings')->assertOk()->assertSee('Administrator');
+        $this->exerciseImpersonation($actor->fresh(), $role);
         $this->from('/users/settings')->put('/users/settings', ['avatar_source' => 'initials', 'profile_color' => '#2458b7', 'edit_color' => '#705000', 'access' => ['edit_settings' => ['mode' => 'deny']]])->assertSessionHasErrors('access');
         $this->assertDatabaseCount('laravelusers_settings', 0);
         $permissionModel = $legacy ? \jeremykenedy\LaravelRoles\Models\Permission::class : Permission::class;
@@ -205,6 +207,27 @@ class RoleIntegrationsTest extends TestCase
         Schema::drop('laravelusers_settings');
         config(['laravelusers.settings.enabled' => false, 'laravelusers.access' => []]);
         $this->actingAs($actor);
+    }
+
+    private function exerciseImpersonation($actor, $role): void
+    {
+        (require dirname(__DIR__, 2).'/src/database/migrations/2026_10_07_000000_create_laravelusers_login_activity_table.php')->up();
+        config(['laravelusers.impersonation.enabled' => true, 'laravelusers.access.impersonate_users' => ['mode' => 'restricted', 'roles' => [$role->getKey()]], 'laravelusers.activity.login' => true]);
+        $target = $actor->newInstance(['name' => 'Temporary Account', 'email' => 'temporary@example.com', 'password' => bcrypt('password')]);
+        $target->save();
+        $unprivileged = $actor->newInstance(['name' => 'Unprivileged Account', 'email' => 'unprivileged@example.com', 'password' => bcrypt('password')]);
+        $unprivileged->save();
+
+        $this->actingAs($unprivileged)->post('/users/'.$target->getKey().'/impersonate')->assertNotFound();
+        $this->actingAs($actor)->post('/users/'.$actor->getKey().'/impersonate')->assertForbidden();
+        $this->withHeader('referer', 'http://localhost/users?page=2')->actingAs($actor)->post('/users/'.$target->getKey().'/impersonate')->assertRedirect('/');
+        $this->assertAuthenticatedAs($target);
+        $this->get('/users/'.$target->getKey())->assertOk()->assertSee('Impersonating Temporary Account')->assertSee('Exit impersonation');
+        $this->assertNull($this->app->make(UserActivity::class)->lastLogin($target));
+        $this->post('/users/'.$target->getKey().'/impersonate')->assertStatus(409);
+        $this->post('/users/impersonation/stop')->assertRedirect('/users?page=2')->assertSessionHas('success');
+        $this->assertAuthenticatedAs($actor);
+        $this->assertNull($this->app->make(UserActivity::class)->lastLogin($target));
     }
 
     private function exercisePermissions(string $userModel, $user, $role, bool $legacy): void

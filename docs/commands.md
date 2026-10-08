@@ -1,11 +1,12 @@
 # Artisan setup commands
 
-All setup commands print the Laravel Users ASCII banner. They work with the existing Blade frontend, retaining Bootstrap 4 unless another CSS framework is selected. They reject cached configuration before changing files.
+Install and update use Laravel Prompts for interactive screens when it is available in the host Laravel version. Older supported applications retain a Symfony Console prompt fallback. Both paths work with the existing Blade frontend and retain Bootstrap 4 unless another supported CSS framework is selected. They reject cached configuration before changing files.
 
 ## Install
 
 ```sh
 php artisan laravelusers:install
+# Alias: php artisan laravel-users:install
 ```
 
 Choose CSS framework, theme, view publishing, avatar source, optional Toast integration, and an optional role package. Existing choices are defaults, not a reason to reset an installed application. Main configuration is copied only when absent. Existing custom view names, parent layouts, translations, and published views are preserved.
@@ -16,6 +17,7 @@ Choose CSS framework, theme, view publishing, avatar source, optional Toast inte
 composer update jeremykenedy/laravel-users
 php artisan config:clear
 php artisan laravelusers:update
+# Alias: php artisan laravel-users:update
 ```
 
 Update uses the same selections and publication safeguards. Without interaction or flags, it retains the current framework, theme, and role configuration. Composer does not run this command automatically.
@@ -26,6 +28,7 @@ Update uses the same selections and publication safeguards. Without interaction 
 php artisan laravelusers:switch --css=bootstrap5
 php artisan laravelusers:switch --css=tailwind --theme=system
 php artisan laravelusers:switch --roles=none
+# Alias: php artisan laravel-users:switch
 ```
 
 Switch is flag-based and never asks questions. Supply a framework, theme, views, roles, avatar, Toast, or notification option. It uses the same configuration and view-preservation rules as install and update.
@@ -65,8 +68,11 @@ Framework and theme selections live in `config/laravelusers-ui.php`. Role select
 
 ## Publishing
 
+The standalone package publisher is available as `laravelusers:publish` or `laravel-users:publish`. It uses Laravel's `laravelusers` publish group for configuration, views, and translations. Existing host files are retained by default.
+
 | Command | Files |
 | --- | --- |
+| `php artisan laravelusers:publish` | Main config, all views, and translations. |
 | `php artisan vendor:publish --tag=laravelusers` | Main config, all views, and translations. |
 | `php artisan vendor:publish --tag=laravelusers-settings-migrations` | Optional global settings storage. |
 | `php artisan vendor:publish --tag=laravelusers-appearance-migrations` | Optional individual card colors, gradients and gradient strength. |

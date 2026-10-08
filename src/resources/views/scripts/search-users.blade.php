@@ -59,6 +59,11 @@
                             let showCellHtml = '<a class="btn btn-sm btn-success btn-block" href="users/' + val.id + '" data-toggle="tooltip" title="{{ trans("laravelusers::laravelusers.tooltips.show") }}">{!! trans("laravelusers::laravelusers.buttons.show") !!}</a>';
                             let editCellHtml = !@json(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users')) ? '' : '<a class="btn btn-sm btn-info btn-block" href="users/' + val.id + '/edit" data-toggle="tooltip" title="{{ trans("laravelusers::laravelusers.tooltips.edit") }}">{!! trans("laravelusers::laravelusers.buttons.edit") !!}</a>';
                             let isCurrentUser = String(val.id) === String(@json(Auth::id()));
+                            if (@json($canImpersonateUsers ?? false)) {
+                                const impersonationUrl = @json(route('users.impersonate', ['id' => '__USER_ID__'])).replace('__USER_ID__', val.id);
+                                const impersonationIcon = @json(view('laravelusers::partials.icon', ['name' => 'secret-agent'])->render());
+                                editCellHtml += (editCellHtml ? ' ' : '') + (isCurrentUser ? '' : '<form method="POST" action="' + impersonationUrl + '" class="lu-impersonate-form"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-outline-warning btn-sm" title="{{ __('laravelusers::ui.impersonation_target') }}" aria-label="{{ __('laravelusers::ui.impersonation_target') }}">' + impersonationIcon + ' {{ __('laravelusers::ui.impersonation_target') }}</button></form>');
+                            }
                             let deleteCellHtml = (isCurrentUser || !@json(\jeremykenedy\laravelusers\Support\UserAccess::allows('delete_users'))) ? '' : '<form method="POST" action="users/'+ val.id +'" accept-charset="UTF-8" data-toggle="tooltip" title="Delete">' +
                                     '<input type="hidden" name="_method" value="DELETE">' +
                                     '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +

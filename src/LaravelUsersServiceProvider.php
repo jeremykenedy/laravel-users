@@ -37,7 +37,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
         });
 
         if ($this->app->runningInConsole()) {
-            $this->commands([Console\InstallCommand::class, Console\UpdateCommand::class, Console\SwitchCommand::class, Console\PruneAccountLinksCommand::class, Console\SetupPackageCommand::class, Console\CleanupDeletedUsersCommand::class, Console\SetupAccountsCommand::class]);
+            $this->commands([Console\InstallCommand::class, Console\UpdateCommand::class, Console\SwitchCommand::class, Console\PublishCommand::class, Console\PruneAccountLinksCommand::class, Console\SetupPackageCommand::class, Console\CleanupDeletedUsersCommand::class, Console\SetupAccountsCommand::class]);
         }
 
         foreach ([Login::class, Authenticated::class, Logout::class] as $event) {

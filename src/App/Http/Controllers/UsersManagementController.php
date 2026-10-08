@@ -37,6 +37,7 @@ use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PasswordRules;
 use jeremykenedy\laravelusers\Support\RoleAccess;
+use jeremykenedy\laravelusers\Support\UserAccess;
 use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Support\UserPermissions;
 use jeremykenedy\laravelusers\Support\UserRoles;
@@ -87,7 +88,7 @@ class UsersManagementController extends Controller
         $roles = $accessAvailable ? RoleAccess::query($user, 'role')->get() : collect();
         $permissions = $accessAvailable ? RoleAccess::query($user, 'permission')->get() : collect();
 
-        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $user instanceof Model && $packages->allowed($user), 'managedPackages' => $packages->listing(), 'packageQueueReady' => $requirements->verify($packages)]);
+        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $user instanceof Model && $packages->allowed($user), 'managedPackages' => $packages->listing(), 'packageQueueReady' => $requirements->verify($packages), 'impersonationEnabled' => config('laravelusers.impersonation.enabled', false)]);
     }
 
     public function updateSettings(UpdateSettingsRequest $request, UpdateUserSettings $update): RedirectResponse
@@ -112,8 +113,9 @@ class UsersManagementController extends Controller
         }
 
         $data = [
-            'users'             => $users,
-            'pagintaionEnabled' => $pagintaionEnabled,
+            'users'               => $users,
+            'pagintaionEnabled'   => $pagintaionEnabled,
+            'canImpersonateUsers' => UserAccess::canImpersonate(),
         ];
 
         return view(Frontend::view(config('laravelusers.showUsersBlade')), $data);
@@ -209,7 +211,7 @@ class UsersManagementController extends Controller
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        return view(Frontend::view(config('laravelusers.showIndividualUserBlade')), array_merge(['user' => $user], UserRoles::viewData($user), UserPermissions::displayData($user)));
+        return view(Frontend::view(config('laravelusers.showIndividualUserBlade')), array_merge(['user' => $user, 'canImpersonateUsers' => UserAccess::canImpersonate($user)], UserRoles::viewData($user), UserPermissions::displayData($user)));
     }
 
     /**

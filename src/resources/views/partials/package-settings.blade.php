@@ -37,6 +37,19 @@
             @endif
         </div>
         @endforeach
+        @if($accessAvailable ?? false)
+        <div class="lu-settings-choice" data-lu-impersonation-package>
+            <h3>@include('laravelusers::partials.icon', ['name' => 'secret-agent']) {{ __('laravelusers::ui.impersonation') }}</h3>
+            <p class="lu-package-state"><span class="lu-package-badge {{ $impersonationEnabled ? 'lu-package-badge-installed' : 'lu-package-badge-available' }}">{{ __($impersonationEnabled ? 'laravelusers::ui.package_enabled' : 'laravelusers::ui.package_disabled') }}</span></p>
+            <p class="lu-muted text-muted">{{ __('laravelusers::ui.impersonation_description') }}</p>
+            <form method="POST" action="{{ route('users.settings.impersonation') }}">@csrf
+                @unless($settingsAvailable)<p class="lu-muted text-muted">{{ __('laravelusers::ui.settings_migration_required') }}</p>@endunless
+                <button type="submit" name="enabled" value="{{ $impersonationEnabled ? '0' : '1' }}" class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-outline-secondary btn-sm' }}" @unless($settingsAvailable) disabled @endunless>
+                    @include('laravelusers::partials.icon', ['name' => $impersonationEnabled ? 'toggle-off' : 'toggle-on']) {{ __($impersonationEnabled ? 'laravelusers::ui.impersonation_disable' : 'laravelusers::ui.impersonation_enable') }}
+                </button>
+            </form>
+        </div>
+        @endif
     </div>
 </section>
 <dialog id="lu-package-dialog" class="lu-email-dialog" aria-labelledby="lu-package-title">

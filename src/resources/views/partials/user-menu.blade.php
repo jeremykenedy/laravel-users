@@ -1,4 +1,5 @@
 @auth
+    @include('laravelusers::partials.impersonation-banner')
     @if(($canManageUsers ?? false) || ($accountPageEnabled ?? false) || (($showLogout ?? config('laravelusers.showLogout', true)) && Route::has($logoutRoute ?? 'logout')))
         <details class="lu-user-menu">
             <summary class="lu-user-menu-toggle">@if($navigationAvatar)@include('laravelusers::partials.avatar', ['avatar' => $navigationAvatar, 'navigation' => true])@else@include('laravelusers::partials.icon', ['name' => 'user'])@endif <span>{{ Auth::user()->name }}</span><span aria-hidden="true" class="lu-user-menu-caret"></span></summary>

@@ -3,6 +3,8 @@
 namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\ServiceProvider;
+use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\LocalAvatars;
@@ -86,6 +88,32 @@ class CommandsTest extends TestCase
         $this->assertSame(['framework' => 'bootstrap4', 'theme' => 'light'], require config_path('laravelusers-ui.php'));
         $this->assertDirectoryDoesNotExist(resource_path('views/vendor/laravelusers'));
         $this->assertDirectoryDoesNotExist(database_path('migrations'));
+    }
+
+    public function test_hyphenated_command_aliases_preserve_the_existing_command_names(): void
+    {
+        $this->artisan('laravel-users:install', ['--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('bootstrap4', (require config_path('laravelusers-ui.php'))['framework']);
+
+        $this->artisan('laravel-users:update', ['--theme' => 'dark', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('dark', (require config_path('laravelusers-ui.php'))['theme']);
+
+        $this->artisan('laravel-users:switch', ['--framework' => 'tailwind', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('tailwind', (require config_path('laravelusers-ui.php'))['framework']);
+    }
+
+    public function test_standalone_publish_alias_exports_package_files_without_replacing_host_configuration(): void
+    {
+        $files = new Filesystem();
+        $files->ensureDirectoryExists(config_path());
+        $files->put(config_path('laravelusers.php'), '<?php return ["host" => true];');
+
+        $this->artisan('laravel-users:publish', ['--no-interaction' => true])->assertExitCode(0);
+
+        $this->assertSame('<?php return ["host" => true];', $files->get(config_path('laravelusers.php')));
+        $publishPaths = ServiceProvider::pathsToPublish(LaravelUsersServiceProvider::class, 'laravelusers');
+        $this->assertCount(3, $publishPaths);
+        $this->assertContains(dirname(__DIR__, 2).'/src/resources/views', array_keys($publishPaths));
     }
 
     public function test_switch_preserves_custom_config_and_existing_view_files(): void

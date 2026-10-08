@@ -27,4 +27,26 @@ class UpdateCommand extends InstallCommand
         {--force : Back up and replace published package views}';
 
     protected $description = 'Update Laravel Users views or switch frontend while preserving configuration';
+
+    protected function banner(): void
+    {
+        if (ConsolePrompts::usesNativePrompts($this, $this->input->isInteractive()) && function_exists('Laravel\\Prompts\\intro')) {
+            ConsolePrompts::intro($this, 'LARAVEL-USERS UPDATE', 'Reviewing the current package configuration and applying selected updates.');
+
+            return;
+        }
+
+        if ($this->input->isInteractive()) {
+            $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
+            $this->line('<fg=blue;options=bold>|            LARAVEL-USERS UPDATE          |</>');
+            $this->line('<fg=blue;options=bold>+------------------------------------------+</>');
+            $this->line('Reviewing the current package configuration and applying selected updates.');
+        }
+    }
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setAliases(['laravel-users:update']);
+    }
 }

@@ -70,8 +70,8 @@ class UserSettings
             }
         }
         foreach ($settings->value ?? [] as $key => $value) {
-            if (in_array($key, array_merge(self::APPEARANCE, ['notifications.driver', 'notifications.dismissible', 'access']), true)) {
-                config(['laravelusers.'.$key => $value !== null && in_array($key, ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'notifications.dismissible'], true) ? (bool) $value : $value]);
+            if (in_array($key, array_merge(self::APPEARANCE, ['notifications.driver', 'notifications.dismissible', 'access', 'impersonation.enabled']), true)) {
+                config(['laravelusers.'.$key => $value !== null && in_array($key, ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'notifications.dismissible', 'impersonation.enabled'], true) ? (bool) $value : $value]);
             }
         }
     }

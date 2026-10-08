@@ -95,6 +95,10 @@ return [
         ],
     ],
     'access'        => is_array($access) ? $access : [],
+    'impersonation' => [
+        'enabled'    => env('LARAVEL_USERS_IMPERSONATION_ENABLED', false),
+        'middleware' => array_filter(array_map('trim', explode(',', env('LARAVEL_USERS_IMPERSONATION_MIDDLEWARE', '')))),
+    ],
     'notifications' => [
         'driver'      => env('LARAVEL_USERS_NOTIFICATIONS_DRIVER', 'alert'),
         'dismissible' => env('LARAVEL_USERS_NOTIFICATIONS_DISMISSIBLE', true),

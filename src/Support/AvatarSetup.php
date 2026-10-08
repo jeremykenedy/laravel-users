@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace jeremykenedy\laravelusers\Support;
 
 use Illuminate\Console\Command;
+use jeremykenedy\laravelusers\Console\ConsolePrompts;
 
 class AvatarSetup
 {
@@ -16,7 +17,8 @@ class AvatarSetup
     {
         $source = $command->option('avatar');
         if ($source === null && $interactive) {
-            $source = $command->choice('Avatar source (keep preserves current settings)', array_merge(['keep'], Avatar::SOURCES), 'keep');
+            $choices = array_merge(['keep'], Avatar::SOURCES);
+            $source = ConsolePrompts::select($command, 'Avatar source (keep preserves current settings)', array_combine($choices, $choices), 'keep', $interactive);
         }
         if ($source === null || $source === 'keep') {
             return [];
@@ -24,7 +26,7 @@ class AvatarSetup
         if ($source === 'dicebear' && !LocalAvatars::diceBearInstalled()) {
             $install = $command->option('install-avatars');
             if (!$install && $interactive) {
-                $install = $command->confirm('Install the local DiceBear libraries with Composer now? Requires PHP 8.2 or newer.', false);
+                $install = ConsolePrompts::confirm($command, 'Install the local DiceBear libraries with Composer now? Requires PHP 8.2 or newer.', $interactive, false);
             }
             if (!$install) {
                 $command->line('Local DiceBear: composer require dicebear/core:^10.7 dicebear/styles:^10.6');

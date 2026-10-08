@@ -6,6 +6,7 @@ namespace jeremykenedy\laravelusers\Support;
 
 use Illuminate\Console\Command;
 use Illuminate\Routing\Router;
+use jeremykenedy\laravelusers\Console\ConsolePrompts;
 
 class RolesSetup
 {
@@ -25,7 +26,7 @@ class RolesSetup
         $choice = $command->option('roles');
         if ($choice === null && $interactive) {
             $command->line('Laravel Roles is the preferred package for new integrations. Keep preserves existing or custom integrations.');
-            $choice = $command->choice('Roles package (keep preserves existing or custom integrations)', self::CHOICES, 'keep');
+            $choice = ConsolePrompts::select($command, 'Roles package (keep preserves existing or custom integrations)', array_combine(self::CHOICES, self::CHOICES), 'keep', $interactive);
         }
         if ($choice === null || $choice === 'keep') {
             return [];
@@ -43,7 +44,7 @@ class RolesSetup
             }
             $install = $command->option('install-roles');
             if (!$install && $interactive) {
-                $install = $command->confirm('Install '.$package['package'].' with Composer now?', false);
+                $install = ConsolePrompts::confirm($command, 'Install '.$package['package'].' with Composer now?', $interactive, false);
             }
             if ($install && !$this->composer->install($package['package'], fn ($text) => $command->getOutput()->write($text))) {
                 $command->error('Roles installation failed. Laravel Users configuration was not changed. Review Composer output and the host lock file.');
@@ -76,7 +77,7 @@ class RolesSetup
         $middleware = $command->option('role-middleware');
         if ($middleware === null && $interactive) {
             $default = config('laravelusers.rolesMiddlware', 'role:admin');
-            $middleware = $command->ask('Role middleware (register the alias in your host application)', is_array($default) ? implode(';', $default) : $default);
+            $middleware = ConsolePrompts::text($command, 'Role middleware (register the alias in your host application)', is_array($default) ? implode(';', $default) : $default, $interactive);
         }
         $middleware = $middleware ?? config('laravelusers.rolesMiddlware', 'role:admin');
         if (is_string($middleware) && str_contains($middleware, ';')) {

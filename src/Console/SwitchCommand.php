@@ -35,6 +35,12 @@ class SwitchCommand extends InstallCommand
 
     protected $description = 'Switch Laravel Users frontend choices using explicit options';
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setAliases(['laravel-users:switch']);
+    }
+
     public function handle(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer): int
     {
         if (!$this->option('framework') && !$this->option('css') && !$this->option('theme') && !$this->option('views') && !$this->option('roles') && !$this->option('avatar') && !$this->option('toast') && !$this->option('notifications') && !$this->option('setup-packages')) {
