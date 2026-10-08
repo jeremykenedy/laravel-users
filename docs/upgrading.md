@@ -41,6 +41,10 @@ Login capture and online status are opt-in. Missing `activity` settings retain d
 
 Search now handles Laravel's JSON response correctly and escapes user values before inserting them into legacy search results. With roles disabled, it no longer reads an undeclared roles relationship. With roles enabled, the existing `roles` result field remains available.
 
+For the search failure reported in [issue #90](https://github.com/jeremykenedy/laravel-users/issues/90), the bundled search script accepts both an already-decoded array and legacy JSON text. `enableSearchUsers=false` hides the bundled search form. Published overrides still take precedence: merge changes from `scripts/search-users.blade.php` and `usersmanagement/show-users.blade.php`, or review the backed-up publication option above. Clear the host view and configuration caches after updating overrides or configuration.
+
+The `css/app.css` and `js/app.js` URLs are host assets, not package files. Disable `enableAppCss` and `enableAppJs` when those public paths do not exist. Applications using Vite can load `@vite` assets in their own parent layout; the package does not assume that every host uses Vite or change existing asset defaults.
+
 Validation uses the configured user model's table and connection for uniqueness checks. Blank edit-password fields preserve the existing password. User changes and role assignments share a database transaction. Failure of a role assignment restores previous database state on that connection; external side effects in application model observers are outside that transaction.
 
 Authenticated self-deletion compares normalized model identifiers. Applications that deliberately disable CRUD authentication can delete users without dereferencing a missing authenticated user. Existing route names and redirects remain unchanged.

@@ -60,9 +60,24 @@ class FrontendTest extends TestCase
 
     public function test_disabled_search_alerts_and_theme_toggle_remain_disabled(): void
     {
-        config(['laravelusers.frontend' => 'tailwind', 'laravelusers.enableSearchUsers' => false, 'laravelusers.enablePackageBootstapAlerts' => false]);
+        config(['laravelusers.enableSearchUsers' => false, 'laravelusers.enablePackageBootstapAlerts' => false]);
         $this->actingAs($this->user());
-        $this->withSession(['success' => 'Hidden success'])->get('/users')->assertOk()->assertDontSee('id="lu-search"', false)->assertDontSee('Hidden success')->assertDontSee('id="lu-theme"', false);
+        foreach (Frontend::FRAMEWORKS as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $this->withSession(['success' => 'Hidden success'])->get('/users')->assertOk()->assertDontSee('id="lu-search"', false)->assertDontSee('id="search_users"', false)->assertDontSee('id="user_search_box"', false)->assertDontSee('Hidden success')->assertDontSee('id="lu-theme"', false);
+        }
+    }
+
+    public function test_host_asset_switches_work_in_all_frameworks(): void
+    {
+        $this->actingAs($this->user());
+        config(['laravelusers.appCssPublicFile' => 'host/styles.css', 'laravelusers.appJsPublicFile' => 'host/scripts.js']);
+        foreach (Frontend::FRAMEWORKS as $framework) {
+            config(['laravelusers.frontend' => $framework, 'laravelusers.enableAppCss' => true, 'laravelusers.enableAppJs' => true]);
+            $this->get('/users')->assertOk()->assertSee('host/styles.css')->assertSee('host/scripts.js');
+            config(['laravelusers.enableAppCss' => false, 'laravelusers.enableAppJs' => false]);
+            $this->get('/users')->assertOk()->assertDontSee('host/styles.css')->assertDontSee('host/scripts.js')->assertDontSee('css/app.css')->assertDontSee('js/app.js');
+        }
     }
 
     public function test_modern_validation_repopulates_non_secret_fields(): void

@@ -1,6 +1,27 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
+for (const contentType of ['application/json', 'text/html']) {
+    test(`bootstrap4: search accepts ${contentType} responses`, async ({ page }) => {
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto('/__browser/bootstrap4');
+        await page.route('**/search-users', route => route.fulfill({
+            contentType,
+            body: JSON.stringify([{ id: 2, name: 'Search result', email: 'result@example.com', created_at: null, updated_at: null }])
+        }));
+        await page.locator('#user_search_box').fill('Search');
+        await page.locator('#user_search_box').press('Enter');
+        await expect(page.locator('#search_results')).toContainText('Search result');
+        await expect(page.locator('#search_results a[href="users/2/edit"]')).toBeVisible();
+        await page.route('**/search-users', route => route.fulfill({ contentType, body: '[]' }));
+        await page.locator('#user_search_box').fill('Missing');
+        await page.locator('#user_search_box').press('Enter');
+        await expect(page.locator('#search_results')).toContainText('No Results');
+        expect(errors).toEqual([]);
+    });
+}
+
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
     test(`${framework}: login details and online status`, async ({ page }) => {
         await page.goto(`/__browser/${framework}`);

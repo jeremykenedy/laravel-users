@@ -4,7 +4,7 @@
 
 - Add opt-in latest-login details and session-aware online status without changing the users table.
 - Add a quick switch command and CSS selection aliases while retaining existing command options.
-
+- Add regression coverage for decoded and text search responses, disabled search, and host asset switches from issue #90.
 - Keep Bootstrap 4, existing routes, config keys, and publish behavior as the default.
 - Add optional Bootstrap 5 and Tailwind Blade views with responsive forms, tables, search, and pagination.
 - Add light, dark, and system themes with an optional persistent selector.

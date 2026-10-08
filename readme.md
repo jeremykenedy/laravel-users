@@ -148,6 +148,8 @@ If you use the setup commands, `laravelusers-ui.framework` and `laravelusers-ui.
 
 Asset switches remain available. `enableBootstrapCssCdn` controls loading Bootstrap CSS in the package layout; `bootstrap5CssCdn` selects the Bootstrap 5 stylesheet. `enableAppCss` and `enableAppJs` control host assets. Disable them when your application does not provide the configured `css/app.css` or `js/app.js`. Tailwind utilities are compiled and bundled with the package, with an `lu:` prefix and no global preflight reset. Custom layouts should load one framework stylesheet appropriate to the selected view set.
 
+`enableSearchUsers=false` hides the search form in every bundled framework. Search accepts both JSON responses decoded by jQuery and legacy JSON text. If you published views before updating, merge the search fixes into your overrides or review the backed-up publication workflow in [the upgrade guide](docs/upgrading.md). Vite applications can use their own parent layout to load assets through `@vite`; disable the package's host asset switches when those files are not served from the configured public paths.
+
 ## Login Details and Online Status
 
 Both features are disabled by default. Enable online status in `config/laravelusers.php`:

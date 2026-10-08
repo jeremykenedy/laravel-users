@@ -37,12 +37,42 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        if (!$this->frontendOptionsValid()) {
+            return self::FAILURE;
+        }
+
+        [$framework, $theme, $views] = $this->frontendChoices();
+        if (!$this->optionsValid($framework, $theme, $views)) {
+            return self::FAILURE;
+        }
+
+        if ($views === 'publish' && !$this->publishViews($files)) {
+            return self::FAILURE;
+        }
+
+        $this->saveConfiguration($files, $framework, $theme);
+        $this->call('view:clear');
+        $this->info('Laravel Users configured: '.$framework.', '.$theme.'. Existing custom view settings are preserved.');
+        $this->line('Package views use installed overrides first. Remove or rename an override yourself to return to the bundled view.');
+        $this->printIntegrationInstructions();
+
+        return self::SUCCESS;
+    }
+
+    private function frontendOptionsValid(): bool
+    {
         if (($this->option('framework') && $this->option('css') && $this->option('framework') !== $this->option('css'))
             || ($this->option('frontend') && $this->option('frontend') !== 'blade')) {
             $this->error('Use one CSS framework. The supported frontend is blade.');
 
-            return self::FAILURE;
+            return false;
         }
+
+        return true;
+    }
+
+    private function frontendChoices(): array
+    {
         $framework = $this->option('framework') ?? $this->option('css');
         $theme = $this->option('theme');
         $views = $this->option('views');
@@ -57,59 +87,84 @@ class InstallCommand extends Command
         $theme = $theme ?? Frontend::theme();
         $views = $views ?? 'package';
 
+        return [$framework, $theme, $views];
+    }
+
+    private function optionsValid(string $framework, string $theme, string $views): bool
+    {
         if (!in_array($framework, Frontend::FRAMEWORKS, true)
             || !in_array($theme, ['light', 'dark', 'system'], true)
             || !in_array($views, ['package', 'publish'], true)
             || array_diff($this->option('with'), array_keys(self::INTEGRATIONS))) {
             $this->error('Invalid option. Use --help for supported frameworks, themes and views. Integrations: '.implode(', ', array_keys(self::INTEGRATIONS)).'.');
 
-            return self::FAILURE;
+            return false;
         }
 
         if ($this->option('force') && $views !== 'publish') {
             $this->error('--force requires --views=publish.');
 
-            return self::FAILURE;
+            return false;
         }
 
-        $source = dirname(__DIR__);
-        if ($views === 'publish') {
-            $destination = resource_path('views/vendor/laravelusers');
-            if ($this->option('force') && $files->isDirectory($destination)) {
-                $backup = storage_path('app/laravelusers/backups/'.date('Ymd-His').'-'.bin2hex(random_bytes(4)));
-                $files->ensureDirectoryExists(dirname($backup));
-                if (!$files->copyDirectory($destination, $backup)) {
-                    $this->error('Unable to back up views. No views were replaced.');
+        return true;
+    }
 
-                    return self::FAILURE;
-                }
-                $this->info('View backup: '.$backup);
-            }
-            foreach ($files->allFiles($source.'/resources/views') as $file) {
-                $target = $destination.'/'.$file->getRelativePathname();
-                if (!$files->exists($target) || $this->option('force')) {
-                    $files->ensureDirectoryExists(dirname($target));
-                    if (!$files->copy($file->getPathname(), $target)) {
-                        $this->error('Unable to publish view: '.$target);
+    private function publishViews(Filesystem $files): bool
+    {
+        $destination = resource_path('views/vendor/laravelusers');
+        if (!$this->backupViews($files, $destination)) {
+            return false;
+        }
 
-                        return self::FAILURE;
-                    }
+        foreach ($files->allFiles(dirname(__DIR__).'/resources/views') as $file) {
+            $target = $destination.'/'.$file->getRelativePathname();
+            if (!$files->exists($target) || $this->option('force')) {
+                $files->ensureDirectoryExists(dirname($target));
+                if (!$files->copy($file->getPathname(), $target)) {
+                    $this->error('Unable to publish view: '.$target);
+
+                    return false;
                 }
             }
         }
 
+        return true;
+    }
+
+    private function backupViews(Filesystem $files, string $destination): bool
+    {
+        if (!$this->option('force') || !$files->isDirectory($destination)) {
+            return true;
+        }
+
+        $backup = storage_path('app/laravelusers/backups/'.date('Ymd-His').'-'.bin2hex(random_bytes(4)));
+        $files->ensureDirectoryExists(dirname($backup));
+        if (!$files->copyDirectory($destination, $backup)) {
+            $this->error('Unable to back up views. No views were replaced.');
+
+            return false;
+        }
+        $this->info('View backup: '.$backup);
+
+        return true;
+    }
+
+    private function saveConfiguration(Filesystem $files, string $framework, string $theme): void
+    {
         $files->ensureDirectoryExists(config_path());
         $config = config_path('laravelusers.php');
         if (!$files->exists($config)) {
-            $files->copy($source.'/config/laravelusers.php', $config);
+            $files->copy(dirname(__DIR__).'/config/laravelusers.php', $config);
         }
 
         $settings = array_merge(config('laravelusers-ui', []), ['framework' => $framework, 'theme' => $theme]);
         $files->replace(config_path('laravelusers-ui.php'), "<?php\n\nreturn ".var_export($settings, true).";\n");
 
-        $this->call('view:clear');
-        $this->info('Laravel Users configured: '.$framework.', '.$theme.'. Existing custom view settings are preserved.');
-        $this->line('Package views use installed overrides first. Remove or rename an override yourself to return to the bundled view.');
+    }
+
+    private function printIntegrationInstructions(): void
+    {
         foreach ($this->option('with') as $integration) {
             $this->line('Optional setup: composer require jeremykenedy/laravel-'.$integration);
             if (self::INTEGRATIONS[$integration]) {
@@ -117,7 +172,5 @@ class InstallCommand extends Command
             }
             $this->line('Follow https://github.com/jeremykenedy/laravel-'.$integration.' for host application configuration.');
         }
-
-        return self::SUCCESS;
     }
 }
