@@ -197,7 +197,18 @@
                         if (!details[field]) return;
                         const item = document.createElement('span');
                         item.dataset.luLoginField = field;
-                        item.textContent = details[field];
+                        if (field === 'ip_address') {
+                            const link = document.createElement('a');
+                            link.href = 'https://ipinfo.io/' + encodeURIComponent(details[field]);
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.title = @json(__('laravelusers::ui.lookup_ip'));
+                            link.setAttribute('aria-label', @json(__('laravelusers::ui.lookup_ip')) + ': ' + details[field]);
+                            link.textContent = details[field];
+                            item.append(link);
+                        } else {
+                            item.textContent = details[field];
+                        }
                         detail.append(item);
                     });
                     cell(row, '').append(detail);

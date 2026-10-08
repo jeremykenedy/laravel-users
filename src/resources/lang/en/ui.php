@@ -397,6 +397,7 @@ return [
     'email_no_recipients'        => 'No recipients selected',
     'email_recipient_id'         => 'User :id',
     'ip_address'                 => 'Login IP address',
+    'lookup_ip'                  => 'Look up IP address',
     'device'                     => 'Device',
     'os'                         => 'Operating system',
     'browser'                    => 'Browser',

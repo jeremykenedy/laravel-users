@@ -6,6 +6,7 @@
 @endonce
 @once
 @push('laravelusers-components-scripts')
+    @include('laravelusers::scripts.dates')
     @include('laravelusers::scripts.user-menu')
     @include('laravelusers::scripts.avatars')
 @endpush

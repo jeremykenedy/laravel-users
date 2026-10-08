@@ -2,7 +2,6 @@
 <script>
 (function () {
     const root = document.getElementById('laravelusers');
-    if (!root) return;
     let formatter;
     try {
         formatter = new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
@@ -14,7 +13,7 @@
         formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' });
     }
     function format() {
-        root.querySelectorAll('[data-lu-time], [data-lu-date]').forEach(function (element) {
+        document.querySelectorAll('#laravelusers [data-lu-time], #laravelusers [data-lu-date], .lu-user-menu-component [data-lu-time], .lu-user-menu-component [data-lu-date]').forEach(function (element) {
             let value = element.getAttribute('datetime') || element.dataset.luDate;
             if (!value) return;
             if (/^\d{4}-\d\d-\d\d[ T]\d\d:\d\d:\d\d$/.test(value)) value = value.replace(' ', 'T') + 'Z';
@@ -30,7 +29,7 @@
         });
     }
     format();
-    root.addEventListener('lu:rows', format);
+    if (root) root.addEventListener('lu:rows', format);
 })();
 </script>
 @endif

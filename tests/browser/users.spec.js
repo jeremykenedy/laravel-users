@@ -726,6 +726,9 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.goto(`/__browser/${framework}`);
         const directory = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
         await expect(directory.locator('.lu-login-details').first()).toContainText('127.0.0.1');
+        const tableIp = directory.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first();
+        await expect(tableIp).toHaveAttribute('href', 'https://ipinfo.io/127.0.0.1');
+        await expect(tableIp).toHaveAttribute('target', '_blank');
         async function expectStackedDetails(details) {
             const positions = await details.locator(':scope > span').evaluateAll(items => items.map(item => item.getBoundingClientRect().top));
             expect(positions.length).toBeGreaterThan(1);
@@ -737,14 +740,21 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.locator(framework === 'bootstrap4' ? '#search_users' : '#lu-search').locator('button[type="submit"]').click();
         const results = page.locator(framework === 'bootstrap4' ? '#search_results' : '#lu-results');
         await expect(results.locator('.lu-login-details').first()).toContainText('127.0.0.1');
+        await expect(results.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first()).toHaveAttribute('rel', 'noopener noreferrer');
         await expectStackedDetails(results.locator('.lu-login-details').first());
         await page.goto('/users/1');
         await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
         await expect(page.locator('.lu-profile-details dt svg')).toHaveCount(11);
-        await expect(page.getByText('Last login', { exact: true })).toBeVisible();
-        await expect(page.getByText('127.0.0.1', { exact: true })).toBeVisible();
+        await expect(page.locator('.lu-profile-details dt').filter({ hasText: 'Last login' })).toBeVisible();
+        const profileIp = page.locator('.lu-profile-details dt[data-lu-activity-icon="ip_address"] + dd a');
+        await expect(profileIp).toHaveAttribute('href', 'https://ipinfo.io/127.0.0.1');
         await expect(page.getByText('Online', { exact: true })).toBeVisible();
-        await expect(page.getByText('Operating system', { exact: true })).toBeVisible();
+        await expect(page.locator('.lu-profile-details dt').filter({ hasText: 'Operating system' })).toBeVisible();
+        await page.locator('.lu-user-menu summary').click();
+        const menuLogin = page.locator('.lu-user-menu-login');
+        await expect(menuLogin).toContainText('127.0.0.1');
+        await expect(menuLogin.locator('a')).toHaveCount(0);
+        await expect(menuLogin.locator('svg')).toHaveCount(5);
         for (const theme of ['light', 'dark']) {
             await setTheme(page, theme);
             await page.setViewportSize({ width: 390, height: 844 });

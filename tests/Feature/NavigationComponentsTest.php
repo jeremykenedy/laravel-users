@@ -2,8 +2,10 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use jeremykenedy\laravelusers\Support\AccountPreferences;
+use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\TestCase;
 
 class NavigationComponentsTest extends TestCase
@@ -53,5 +55,35 @@ class NavigationComponentsTest extends TestCase
         AccountPreferences::save($user, ['account_enabled' => 'off']);
         $this->assertStringNotContainsString('href="'.route('users.account').'"', Blade::render('<x-laravelusers::user-menu />'));
         $this->get('/users/account')->assertNotFound();
+    }
+
+    public function test_user_menu_shows_sign_in_details_without_linking_its_ip_address(): void
+    {
+        (require dirname(__DIR__, 2).'/src/database/migrations/2026_10_07_000000_create_laravelusers_login_activity_table.php')->up();
+        config(['laravelusers.activity.login' => true]);
+        $user = $this->user(['name' => 'Recent Login']);
+        $this->actingAs($user);
+        $request = Request::create('/', 'GET', [], [], [], [
+            'REMOTE_ADDR'     => '192.0.2.40',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36',
+        ]);
+        $this->app->make(UserActivity::class)->recordLogin($user, $request);
+
+        $html = Blade::render('<x-laravelusers::user-menu />');
+
+        $this->assertStringContainsString('lu-user-menu-login', $html);
+        $this->assertStringContainsString('192.0.2.40', $html);
+        $this->assertStringContainsString('Windows 10', $html);
+        $this->assertStringContainsString('Chrome 130.0.0', $html);
+        $this->assertStringNotContainsString('ipinfo.io', $html);
+        $this->assertStringContainsString('data-lu-time', $html);
+    }
+
+    public function test_invalid_ip_addresses_are_not_linked_to_the_lookup_service(): void
+    {
+        $html = Blade::render('@include("laravelusers::partials.ip-address", ["ip" => "javascript:alert(1)"])');
+
+        $this->assertStringContainsString('javascript:alert(1)', $html);
+        $this->assertStringNotContainsString('<a ', $html);
     }
 }
