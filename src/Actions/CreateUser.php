@@ -29,25 +29,31 @@ class CreateUser
         $model = new $userModel();
         $reset = (bool) ($data['force_password_reset'] ?? false);
         $broker = $reset ? $this->resetBroker($model) : null;
-        $resetUrl = null;
-        $model->getConnection()->transaction(function () use ($userModel, $data, $reset, $broker, &$resetUrl, &$user) {
-            $user = $userModel::create([
+        [$user, $resetUrl] = $this->createAccount($model, $data, $broker);
+
+        return empty($data['send_welcome_email']) || $this->sendWelcome($user, $resetUrl);
+    }
+
+    private function createAccount(Model $model, array $data, ?PasswordBroker $broker): array
+    {
+        return $model->getConnection()->transaction(function () use ($model, $data, $broker) {
+            $user = $model::create([
                 'name'     => strip_tags($data['name']),
                 'email'    => $data['email'],
-                'password' => Hash::make($reset ? Str::random(64) : $data['password']),
+                'password' => Hash::make($broker ? Str::random(64) : $data['password']),
             ]);
             if (config('laravelusers.rolesEnabled', false)) {
                 $user->attachRole($data['role']);
                 $user->save();
             }
-            if ($broker) {
-                $resetUrl = route('password.reset', ['token' => $broker->createToken($user), 'email' => $user->getEmailForPasswordReset()]);
-            }
-        });
-        if (empty($data['send_welcome_email'])) {
-            return true;
-        }
+            $resetUrl = $broker ? route('password.reset', ['token' => $broker->createToken($user), 'email' => $user->getEmailForPasswordReset()]) : null;
 
+            return [$user, $resetUrl];
+        });
+    }
+
+    private function sendWelcome(Model $user, ?string $resetUrl): bool
+    {
         try {
             $recipient = (new AnonymousNotifiable())->route('mail', $user->email);
             $this->notifications->send($recipient, new WelcomeUser($user->name, $resetUrl));

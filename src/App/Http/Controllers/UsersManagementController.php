@@ -25,13 +25,13 @@ use jeremykenedy\laravelusers\Support\UserActivity;
 
 class UsersManagementController extends Controller
 {
-    private readonly bool $_authEnabled;
+    private bool $_authEnabled;
 
-    private readonly bool $_rolesEnabled;
+    private bool $_rolesEnabled;
 
-    private readonly string $_rolesMiddlware;
+    private string $_rolesMiddlware;
 
-    private readonly bool $_rolesMiddleWareEnabled;
+    private bool $_rolesMiddleWareEnabled;
 
     /**
      * Create a new controller instance.

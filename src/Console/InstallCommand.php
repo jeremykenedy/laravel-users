@@ -87,14 +87,12 @@ class InstallCommand extends Command
         $theme = $theme ?? Frontend::theme();
         $views = $views ?? 'package';
 
-        return [$framework, $theme, $views];
+        return [(string) $framework, (string) $theme, (string) $views];
     }
 
     private function optionsValid(string $framework, string $theme, string $views): bool
     {
-        if (!in_array($framework, Frontend::FRAMEWORKS, true)
-            || !in_array($theme, ['light', 'dark', 'system'], true)
-            || !in_array($views, ['package', 'publish'], true)
+        if (!$this->frontendChoicesValid($framework, $theme, $views)
             || array_diff($this->option('with'), array_keys(self::INTEGRATIONS))) {
             $this->error('Invalid option. Use --help for supported frameworks, themes and views. Integrations: '.implode(', ', array_keys(self::INTEGRATIONS)).'.');
 
@@ -108,6 +106,13 @@ class InstallCommand extends Command
         }
 
         return true;
+    }
+
+    private function frontendChoicesValid(string $framework, string $theme, string $views): bool
+    {
+        return in_array($framework, Frontend::FRAMEWORKS, true)
+            && in_array($theme, ['light', 'dark', 'system'], true)
+            && in_array($views, ['package', 'publish'], true);
     }
 
     private function publishViews(Filesystem $files): bool

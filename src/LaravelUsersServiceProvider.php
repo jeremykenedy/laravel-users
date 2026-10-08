@@ -11,7 +11,7 @@ use Illuminate\Support\ServiceProvider;
 
 class LaravelUsersServiceProvider extends ServiceProvider
 {
-    private readonly string $_packageTag;
+    private string $_packageTag;
 
     public function __construct($app)
     {

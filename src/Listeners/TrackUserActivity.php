@@ -23,11 +23,8 @@ class TrackUserActivity
         if (!config('laravelusers.activity.login', false) && !config('laravelusers.activity.online', false)) {
             return;
         }
-        $model = config('laravelusers.defaultUserModel');
         if ($event->guard !== config('laravelusers.activity.guard', 'web')
-            || !$event->user instanceof Model || !$event->user instanceof $model
-            || $event->user->getTable() !== (new $model())->getTable()
-            || ($event->user->getConnectionName() ?? config('database.default')) !== ((new $model())->getConnectionName() ?? config('database.default'))) {
+            || !$event->user instanceof Model || !$this->matchesUserModel($event->user)) {
             return;
         }
 
@@ -35,6 +32,18 @@ class TrackUserActivity
             $this->activity->recordLogin($event->user, $this->request);
         }
         $this->activity->touch($event->user, $this->request, $event instanceof Logout);
+    }
+
+    private function matchesUserModel(Model $user): bool
+    {
+        $model = config('laravelusers.defaultUserModel');
+        if (!$user instanceof $model) {
+            return false;
+        }
+        $expected = new $model();
+
+        return $user->getTable() === $expected->getTable()
+            && ($user->getConnectionName() ?? config('database.default')) === ($expected->getConnectionName() ?? config('database.default'));
     }
 
     public function deleted(string $event, array $data): void

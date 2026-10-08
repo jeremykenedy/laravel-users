@@ -28,15 +28,22 @@ class CreateUserRequest extends FormRequest
             'email'                 => ['required', 'email', 'max:255', Rule::unique($table)],
             'password'              => [$reset ? 'nullable' : 'required', 'string', 'confirmed', 'min:6'],
             'password_confirmation' => [$reset ? 'nullable' : 'required', 'string', 'same:password'],
-            'send_welcome_email'    => [$this->boolean('force_password_reset') ? 'required' : 'sometimes', 'boolean', Rule::in(config('laravelusers.welcome.enabled', true) ? [0, 1] : [0])],
-            'force_password_reset'  => ['sometimes', 'boolean', Rule::in(config('laravelusers.welcome.force_password_reset', true) ? [0, 1] : [0])],
         ];
-        if ($this->boolean('force_password_reset')) {
-            $rules['send_welcome_email'][] = 'required';
-            $rules['send_welcome_email'][] = Rule::in([1]);
-        }
         if (config('laravelusers.rolesEnabled', false)) {
             $rules['role'] = ['required'];
+        }
+
+        return array_merge($rules, $this->welcomeRules());
+    }
+
+    private function welcomeRules(): array
+    {
+        $rules = [
+            'send_welcome_email'   => [$this->boolean('force_password_reset') ? 'required' : 'sometimes', 'boolean', Rule::in(config('laravelusers.welcome.enabled', true) ? [0, 1] : [0])],
+            'force_password_reset' => ['sometimes', 'boolean', Rule::in(config('laravelusers.welcome.force_password_reset', true) ? [0, 1] : [0])],
+        ];
+        if ($this->boolean('force_password_reset')) {
+            $rules['send_welcome_email'][] = Rule::in([1]);
         }
 
         return $rules;

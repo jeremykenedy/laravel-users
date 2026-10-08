@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace jeremykenedy\laravelusers\Support;
 
 use Illuminate\Cache\CacheManager;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -94,30 +95,40 @@ class UserActivity
         try {
             $store = $this->cache->store(config('laravelusers.activity.cache_store'));
             $key = 'laravelusers:online:'.$this->key($user);
-            $session = $request->session()->get('laravelusers.presence_token');
+            $session = $this->presenceToken($request, $logout);
             if (!$session) {
-                if ($logout) {
-                    return;
-                }
-                $session = bin2hex(random_bytes(32));
-                $request->session()->put('laravelusers.presence_token', $session);
+                return;
             }
             $ttl = max(1, (int) config('laravelusers.activity.online_seconds', 300));
-            $store->lock($key.':lock', 5)->block(1, function () use ($store, $key, $session, $ttl, $logout) {
-                $sessions = array_filter($store->get($key, []), fn ($seen) => $seen > Carbon::now()->timestamp - $ttl);
-                if ($logout) {
-                    unset($sessions[$session]);
-                } else {
-                    $sessions[$session] = Carbon::now()->timestamp;
-                }
-                if ($sessions) {
-                    $store->put($key, $sessions, $ttl);
-                } else {
-                    $store->forget($key);
-                }
-            });
+            $store->lock($key.':lock', 5)->block(1, fn () => $this->updatePresence($store, $key, $session, $ttl, $logout));
         } catch (Throwable $exception) {
             report($exception);
+        }
+    }
+
+    private function presenceToken(Request $request, bool $logout): ?string
+    {
+        $session = $request->session()->get('laravelusers.presence_token');
+        if (!$session && !$logout) {
+            $session = bin2hex(random_bytes(32));
+            $request->session()->put('laravelusers.presence_token', $session);
+        }
+
+        return $session ?: null;
+    }
+
+    private function updatePresence(Repository $store, string $key, string $session, int $ttl, bool $logout): void
+    {
+        $sessions = array_filter($store->get($key, []), fn ($seen) => $seen > Carbon::now()->timestamp - $ttl);
+        if ($logout) {
+            unset($sessions[$session]);
+        } else {
+            $sessions[$session] = Carbon::now()->timestamp;
+        }
+        if ($sessions) {
+            $store->put($key, $sessions, $ttl);
+        } else {
+            $store->forget($key);
         }
     }
 
