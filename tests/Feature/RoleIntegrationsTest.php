@@ -214,6 +214,11 @@ class RoleIntegrationsTest extends TestCase
         config(['laravelusers.impersonation.enabled' => true, 'laravelusers.access.impersonate_users' => ['mode' => 'restricted', 'roles' => [$role->getKey()]], 'laravelusers.activity.login' => true]);
         $target = $actor->newInstance(['name' => 'Temporary Account', 'email' => 'temporary@example.com', 'password' => bcrypt('password')]);
         $target->save();
+        if (method_exists($target, 'assignRole')) {
+            $target->assignRole($role);
+        } else {
+            $target->attachRole($role);
+        }
         $unprivileged = $actor->newInstance(['name' => 'Unprivileged Account', 'email' => 'unprivileged@example.com', 'password' => bcrypt('password')]);
         $unprivileged->save();
 
