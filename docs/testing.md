@@ -17,7 +17,7 @@ CI tests these combinations:
 
 Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. Package users do not inherit CI-only Composer flags.
 
-Scrutinizer runs PHPUnit coverage, static analysis, and the existing website coding-style checks in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite.
+Scrutinizer runs PHPUnit coverage, static analysis, and the existing website coding-style checks in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite. PHP_CodeSniffer is a development dependency so the style wrapper uses the patched version instead of its outdated fallback installer.
 
 The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
 
