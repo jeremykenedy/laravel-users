@@ -5,9 +5,14 @@ build:
   dependencies:
     override:
       - composer update --prefer-dist --no-interaction
-  tests:
-    override:
-      - command: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-filter src --coverage-clover coverage.xml
-        coverage:
-          file: coverage.xml
-          format: clover
+  nodes:
+    analysis:
+      tests:
+        override:
+          - command: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-filter src --coverage-clover coverage.xml
+            coverage:
+              file: coverage.xml
+              format: clover
+          - php-scrutinizer-run
+          - command: phpcs-run
+            use_website_config: true

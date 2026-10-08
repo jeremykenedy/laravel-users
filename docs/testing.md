@@ -17,6 +17,8 @@ CI tests these combinations:
 
 Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. Package users do not inherit CI-only Composer flags.
 
+Scrutinizer runs PHPUnit coverage, static analysis, and the existing website coding-style checks in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite.
+
 The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
 
 Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Bundled views request only listing metadata, excluding login IP and agent details. Listing tests check one query for login times rather than a query per row.
