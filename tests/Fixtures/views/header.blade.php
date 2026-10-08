@@ -1,0 +1,1 @@
+<header>Dashboard header</header>

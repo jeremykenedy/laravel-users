@@ -20,20 +20,20 @@
     #laravelusers .lu-muted { color: var(--lu-muted); }
     #laravelusers .lu-panel { background: var(--lu-bg); border: 1px solid var(--lu-border); border-radius: 12px; overflow: hidden; box-shadow: 0 3px 12px #00000006; }
     #laravelusers .lu-pad { padding: 24px; }
-    #laravelusers .lu-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 8px 16px; border: 1px solid transparent; border-radius: 7px; background: #2456c2; color: #fff; font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+    #laravelusers .lu-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: 7px; background: #286090; color: #fff; font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; text-decoration: none; }
     #laravelusers .lu-secondary { color: var(--lu-text); background: var(--lu-bg); border-color: var(--lu-border); }
     #laravelusers .lu-danger { color: #fff; background: #b42332; }
     #laravelusers :focus-visible { outline: 3px solid var(--lu-accent); outline-offset: 3px; }
     #laravelusers .lu-scroll { overflow-x: auto; }
     #laravelusers table { width: 100%; border-collapse: collapse; color: var(--lu-text); margin: 0; }
-    #laravelusers th, #laravelusers td { padding: 16px 20px; text-align: start; border-bottom: 1px solid var(--lu-border); background: var(--lu-bg); color: var(--lu-text); }
+    #laravelusers th, #laravelusers td { padding: 12px; text-align: start; border-bottom: 1px solid var(--lu-border); background: var(--lu-bg); color: var(--lu-text); }
     #laravelusers th { font-size: .8rem; font-weight: 600; background: var(--lu-soft); color: var(--lu-muted); }
     #laravelusers caption { text-align: start; padding: 16px 20px; color: var(--lu-muted); caption-side: bottom; }
-    #laravelusers .lu-input { display: block; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--lu-border); border-radius: 7px; background: var(--lu-bg); color: var(--lu-text); font: inherit; }
+    #laravelusers .lu-input { display: block; width: 100%; min-height: 44px; height: 44px; padding: 8px 12px; border: 1px solid var(--lu-border); border-radius: 7px; background: var(--lu-bg); color: var(--lu-text); font: inherit; }
     #laravelusers .lu-input[aria-invalid="true"] { border-color: #b42332; }
     #laravelusers label { display: block; margin-bottom: 6px; font-size: .875rem; font-weight: 600; }
     #laravelusers .lu-field { margin-bottom: 20px; }
-    #laravelusers .lu-form { max-width: 720px; }
+    #laravelusers .lu-form { width: 100%; }
     #laravelusers .lu-search { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; padding: 20px; }
     #laravelusers .lu-search-field { flex: 1; min-width: 180px; }
     #laravelusers .lu-alert { padding: 16px 20px; margin-bottom: 24px; background: var(--lu-bg); border: 1px solid var(--lu-border); border-inline-start: 4px solid var(--lu-accent); border-radius: 7px; }
@@ -47,4 +47,36 @@
     #laravelusers .lu-pagination { padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     #laravelusers [hidden] { display: none !important; }
     @media (max-width: 640px) { #laravelusers { padding: 20px 14px; } #laravelusers .lu-pad { padding: 20px; } #laravelusers .lu-toolbar { align-items: start; } #laravelusers .lu-pagination { flex-wrap: wrap; } }
+    #laravelusers[data-lu-full-width="true"] { max-width: none; }
+    #laravelusers .lu-card-heading { padding: 16px 24px; margin: 0; border-bottom: 1px solid var(--lu-border); background: var(--lu-soft); }
+    #laravelusers .lu-card-heading h1 { font-size: 1.25rem; font-weight: 500; letter-spacing: normal; margin: 0; }
+    #laravelusers .lu-button:hover, #laravelusers .lu-button:focus { text-decoration: none; filter: brightness(.95); }
+    #laravelusers .lu-scroll .lu-actions { flex-wrap: nowrap; gap: 6px; }
+    #laravelusers .lu-scroll .lu-button { min-height: 34px; padding: 6px 8px; font-size: .8rem; line-height: 1.3; }
+    #laravelusers .lu-success { background: #087748; color: #fff; }
+    #laravelusers .lu-icon { width: 18px; height: 18px; flex-shrink: 0; }
+    #laravelusers .lu-field { display: grid; grid-template-columns: minmax(120px, 1fr) 3fr; gap: 24px; align-items: start; }
+    #laravelusers .lu-field > label { padding-top: 10px; text-align: end; }
+    #laravelusers .lu-input-group { display: flex; }
+    #laravelusers .lu-input-group .lu-input { min-width: 0; border-radius: 6px 0 0 6px; }
+    #laravelusers .lu-input-group .lu-input:last-child { border-radius: 6px; }
+    #laravelusers .lu-input-icon { display: flex; align-items: center; justify-content: center; width: 44px; flex: 0 0 44px; border: 1px solid var(--lu-border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--lu-soft); color: var(--lu-muted); }
+    #laravelusers .lu-form-actions { justify-content: flex-end; }
+    #laravelusers .lu-search { align-items: center; }
+    #laravelusers .lu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    #laravelusers .lu-badge { display: inline-block; padding: 2px 10px; border-radius: 5px; font-size: .8rem; font-weight: 600; }
+    #laravelusers .lu-online { color: #fff; background: #087748; }
+    #laravelusers .lu-modal { width: min(520px, calc(100% - 32px)); padding: 0; border: 1px solid var(--lu-border); border-radius: 8px; background: var(--lu-bg); color: var(--lu-text); }
+    #laravelusers .lu-modal::backdrop { background: #0008; }
+    #laravelusers .lu-modal-footer { padding: 16px 24px; border-top: 1px solid var(--lu-border); justify-content: flex-end; }
+    #laravelusers .lu-modal p { margin: 0; }
+    #laravelusers .lu-sort { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+    #laravelusers .lu-column-filter { width: 100%; min-width: 40px; padding: 4px 8px; border: 1px solid var(--lu-border); border-radius: 4px; background: var(--lu-bg); color: var(--lu-text); }
+    @media (max-width: 640px) { #laravelusers .lu-field { display: block; } #laravelusers .lu-field > label { text-align: start; padding: 0; } #laravelusers .lu-card-heading { padding: 16px; } }
+    @media (max-width: 640px) { #laravelusers[data-lu-responsive-buttons="true"] .lu-button { font-size: 0; width: 40px; min-height: 40px; padding: 10px; } }
+    @media (max-width: 640px) { #laravelusers .lu-card-heading { flex-wrap: nowrap; } #laravelusers .lu-card-heading h1 { flex: 1; min-width: 0; } #laravelusers .lu-card-heading .lu-actions { flex-wrap: nowrap; } #laravelusers .lu-search-field { min-width: 120px; } }
 </style>
+
+@if(config('laravelusers.themeToggle'))
+    @include('laravelusers::partials.theme-toggle-styles')
+@endif

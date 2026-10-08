@@ -62,6 +62,29 @@ class UserActivity
         }
     }
 
+    public function listing(iterable $users): array
+    {
+        $records = [];
+        $keys = [];
+        foreach ($users as $user) {
+            $keys[$this->key($user)] = $user->getKey();
+            $records[$user->getKey()] = ['online' => $this->isOnline($user), 'last_login_at' => null];
+        }
+        if (!$keys || !config('laravelusers.activity.login', false)) {
+            return $records;
+        }
+
+        try {
+            foreach ($this->logins()->whereIn('user_key', array_keys($keys))->get(['user_key', 'last_login_at']) as $login) {
+                $records[$keys[$login->user_key]]['last_login_at'] = $login->last_login_at?->format('Y-m-d H:i:s');
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $records;
+    }
+
     public function touch(Model $user, Request $request, bool $logout = false): void
     {
         if (!config('laravelusers.activity.online', false) || !$request->hasSession()) {
@@ -122,9 +145,9 @@ class UserActivity
         return hash('sha256', implode('|', [get_class($user), $user->getConnectionName() ?? config('database.default'), $user->getTable(), $user->getKey()]));
     }
 
-    public function forget(Model $user): void
+    public function forget(Model $user, bool $forgetLogin = true): void
     {
-        if (config('laravelusers.activity.login', false)) {
+        if ($forgetLogin && config('laravelusers.activity.login', false)) {
             try {
                 $this->logins()->where('user_key', $this->key($user))->delete();
             } catch (Throwable $exception) {

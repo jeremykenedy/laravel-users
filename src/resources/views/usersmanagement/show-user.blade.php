@@ -59,7 +59,7 @@
                                 <form method="POST" action="{{ url('users/' . $user->id) }}" class="form-inline">
                                     @method('DELETE')
                                     @csrf
-                                    <button type="button" class="btn btn-danger btn-md btn-block" data-toggle="modal" data-target="#confirmDelete" data-title="Delete User" data-message="Are you sure you want to delete this user?">
+                                    <button type="{{ config('laravelusers.confirmDelete', true) ? 'button' : 'submit' }}" class="btn btn-danger btn-md btn-block" @if(config('laravelusers.confirmDelete', true)) data-toggle="modal" data-target="#confirmDelete" @endif data-title="Delete User" data-message="Are you sure you want to delete this user?">
                                         {!! trans('laravelusers::laravelusers.buttons.delete-user') !!}
                                     </button>
                                 </form>
@@ -166,7 +166,7 @@
                                             </strong>
                                         </div>
                                         <div class="col-8 col-sm-9">
-                                            {{ $user->created_at }}
+                                            @include('laravelusers::partials.date', ['value' => $user->created_at])
                                         </div>
                                     </div>
                                 </li>
@@ -180,7 +180,7 @@
                                             </strong>
                                         </div>
                                         <div class="col-8 col-sm-9">
-                                            {{ $user->updated_at }}
+                                            @include('laravelusers::partials.date', ['value' => $user->updated_at])
                                         </div>
                                     </div>
                                 </li>

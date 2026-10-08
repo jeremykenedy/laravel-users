@@ -13,7 +13,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use jeremykenedy\laravelusers\Actions\BulkUsers;
+use jeremykenedy\laravelusers\Actions\CreateUser;
+use jeremykenedy\laravelusers\App\Http\Requests\BulkUsersRequest;
+use jeremykenedy\laravelusers\App\Http\Requests\CreateUserRequest;
+use jeremykenedy\laravelusers\Rules\PlainTextName;
+use jeremykenedy\laravelusers\Support\Avatar;
+use jeremykenedy\laravelusers\Support\DeletedUsers;
 use jeremykenedy\laravelusers\Support\Frontend;
+use jeremykenedy\laravelusers\Support\UserActivity;
 
 class UsersManagementController extends Controller
 {
@@ -68,6 +76,42 @@ class UsersManagementController extends Controller
         return view(Frontend::view(config('laravelusers.showUsersBlade')), $data);
     }
 
+    public function bulk(BulkUsersRequest $request, BulkUsers $bulk): RedirectResponse
+    {
+        $data = $request->validated();
+        $bulk->handle($data);
+
+        return redirect()->route($data['action'] === 'delete' ? 'users' : 'users.deleted')->with('success', trans('laravelusers::ui.bulk_success'));
+    }
+
+    public function deleted(DeletedUsers $deleted): View
+    {
+        $query = $deleted->query();
+        $query->orderBy('deleted_at', 'desc')->orderBy($query->getModel()->getKeyName(), 'desc');
+        $pagintaionEnabled = config('laravelusers.enablePagination', true);
+        $users = $pagintaionEnabled ? $query->paginate(config('laravelusers.paginateListSize', 25)) : $query->get();
+
+        return view(Frontend::view(config('laravelusers.showDeletedUsersBlade', 'laravelusers::usersmanagement.deleted-users')), compact('users', 'pagintaionEnabled'));
+    }
+
+    public function restore(int $id, DeletedUsers $deleted): RedirectResponse
+    {
+        $deleted->query()->findOrFail($id)->restore();
+
+        return redirect()->route('users.deleted')->with('success', trans('laravelusers::ui.restored'));
+    }
+
+    public function forceDestroy(int $id, DeletedUsers $deleted): RedirectResponse
+    {
+        $user = $deleted->query()->findOrFail($id);
+        if (Auth::check() && (string) Auth::id() === (string) $user->getKey()) {
+            return back()->with('error', trans('laravelusers::laravelusers.messages.cannot-delete-yourself'));
+        }
+        $user->forceDelete();
+
+        return redirect()->route('users.deleted')->with('success', trans('laravelusers::ui.permanently_deleted'));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -91,54 +135,12 @@ class UsersManagementController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(CreateUserRequest $request, CreateUser $create): RedirectResponse
     {
-        $userModel = config('laravelusers.defaultUserModel');
-        $model = new $userModel();
-        $table = ($model->getConnectionName() ? $model->getConnectionName().'.' : '').$model->getTable();
-        $rules = [
-            'name'                  => ['required', 'string', 'max:255', Rule::unique($table), 'alpha_dash'],
-            'email'                 => ['required', 'email', 'max:255', Rule::unique($table)],
-            'password'              => 'required|string|confirmed|min:6',
-            'password_confirmation' => 'required|string|same:password',
-        ];
+        $sent = $create->handle($request->validated());
+        $response = redirect('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
 
-        if ($this->_rolesEnabled) {
-            $rules['role'] = 'required';
-        }
-
-        $messages = [
-            'name.unique'       => trans('laravelusers::laravelusers.messages.userNameTaken'),
-            'name.required'     => trans('laravelusers::laravelusers.messages.userNameRequired'),
-            'name'              => trans('laravelusers::laravelusers.messages.userNameInvalid'),
-            'email.required'    => trans('laravelusers::laravelusers.messages.emailRequired'),
-            'email.email'       => trans('laravelusers::laravelusers.messages.emailInvalid'),
-            'password.required' => trans('laravelusers::laravelusers.messages.passwordRequired'),
-            'password.min'      => trans('laravelusers::laravelusers.messages.PasswordMin'),
-            'password.max'      => trans('laravelusers::laravelusers.messages.PasswordMax'),
-            'role.required'     => trans('laravelusers::laravelusers.messages.roleRequired'),
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput($request->except(['password', 'password_confirmation']));
-        }
-
-        $model->getConnection()->transaction(function () use ($userModel, $request) {
-            $user = $userModel::create([
-                'name'     => strip_tags($request->input('name')),
-                'email'    => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
-            ]);
-
-            if ($this->_rolesEnabled) {
-                $user->attachRole($request->input('role'));
-                $user->save();
-            }
-        });
-
-        return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.user-creation-success'));
+        return $sent ? $response : $response->with('error', trans('laravelusers::ui.welcome_failed'));
     }
 
     /**
@@ -195,7 +197,7 @@ class UsersManagementController extends Controller
         $passwordCheck = $request->filled('password');
 
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', new PlainTextName()],
         ];
 
         if ($emailCheck) {
@@ -261,7 +263,7 @@ class UsersManagementController extends Controller
     /**
      * Method to search the users.
      */
-    public function search(Request $request): JsonResponse
+    public function search(Request $request, UserActivity $activity, Avatar $avatar): JsonResponse
     {
         $searchTerm = $request->input('user_search_box');
         $searchRules = [
@@ -293,6 +295,17 @@ class UsersManagementController extends Controller
             });
         }
 
-        return response()->json($results->toArray(), 200);
+        $data = $results->toArray();
+        if ($request->boolean('include_activity') || $request->boolean('include_avatar')) {
+            $data = ['users' => $data];
+            if ($request->boolean('include_activity')) {
+                $data['activity'] = $activity->listing($results);
+            }
+            if ($request->boolean('include_avatar')) {
+                $data['avatars'] = $avatar->listing($results);
+            }
+        }
+
+        return response()->json($data, 200);
     }
 }

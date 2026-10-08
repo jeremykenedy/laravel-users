@@ -193,7 +193,7 @@
                                     </a>
                                 </div>
                                 <div class="col-12 col-sm-6">
-                                    <button type="button" class="btn btn-success btn-block margin-bottom-1 mt-3 mb-2 btn-save" data-toggle="modal" data-target="#confirmSave" data-title="{{ trans('laravelusers::modals.edit_user__modal_text_confirm_title') }}" data-message="{{ trans('laravelusers::modals.edit_user__modal_text_confirm_message') }}">
+                                    <button type="{{ config('laravelusers.confirmSave', true) ? 'button' : 'submit' }}" class="btn btn-success btn-block margin-bottom-1 mt-3 mb-2 btn-save" @if(config('laravelusers.confirmSave', true)) data-toggle="modal" data-target="#confirmSave" @endif data-title="{{ trans('laravelusers::modals.edit_user__modal_text_confirm_title') }}" data-message="{{ trans('laravelusers::modals.edit_user__modal_text_confirm_message') }}">
                                         {!! trans('laravelusers::forms.save-changes') !!}
                                     </button>
                                 </div>

@@ -21,7 +21,7 @@ class Frontend
     public static function view(string $view): string
     {
         $defaults = [
-            'show-users', 'create-user', 'show-user', 'edit-user',
+            'show-users', 'create-user', 'show-user', 'edit-user', 'deleted-users',
         ];
 
         foreach ($defaults as $name) {

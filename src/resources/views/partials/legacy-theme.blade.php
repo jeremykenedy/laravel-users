@@ -8,3 +8,7 @@
     #laravelusers[data-lu-theme="dark"] .dropdown-item { color: #edf2fa; }
     #laravelusers[data-lu-theme="dark"] .dropdown-item:hover { background: #334155; }
 </style>
+
+@if(config('laravelusers.themeToggle'))
+    @include('laravelusers::partials.theme-toggle-styles')
+@endif

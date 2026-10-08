@@ -1,0 +1,1 @@
+<th scope="col" class="no-sort" data-lu-no-sort data-lu-required><span class="lu-sr-only sr-only">{{ __('laravelusers::ui.selection') }}</span><input type="checkbox" data-lu-select-all aria-label="{{ __('laravelusers::ui.select_all') }}"></th>

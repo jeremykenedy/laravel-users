@@ -128,4 +128,15 @@ class CommandsTest extends TestCase
         $this->artisan('laravelusers:switch')->assertExitCode(1);
         $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
     }
+
+    public function test_generated_frontend_settings_keep_environment_fallbacks(): void
+    {
+        $this->artisan('laravelusers:install', ['--framework' => 'tailwind', '--theme' => 'dark', '--no-interaction' => true])->assertExitCode(0);
+        $contents = file_get_contents(config_path('laravelusers-ui.php'));
+        $this->assertStringContainsString("env('LARAVEL_USERS_FRONTEND', 'tailwind')", $contents);
+        $this->assertStringContainsString("env('LARAVEL_USERS_THEME', 'dark')", $contents);
+        $settings = require config_path('laravelusers-ui.php');
+        $this->assertSame('tailwind', $settings['framework']);
+        $this->assertSame('dark', $settings['theme']);
+    }
 }

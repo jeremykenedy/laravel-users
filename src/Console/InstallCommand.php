@@ -159,7 +159,14 @@ class InstallCommand extends Command
         }
 
         $settings = array_merge(config('laravelusers-ui', []), ['framework' => $framework, 'theme' => $theme]);
-        $files->replace(config_path('laravelusers-ui.php'), "<?php\n\nreturn ".var_export($settings, true).";\n");
+        $environment = ['framework' => 'LARAVEL_USERS_FRONTEND', 'theme' => 'LARAVEL_USERS_THEME'];
+        $lines = [];
+        foreach ($settings as $key => $value) {
+            $default = var_export($value, true);
+            $export = isset($environment[$key]) ? "env('".$environment[$key]."', ".$default.')' : $default;
+            $lines[] = '    '.var_export($key, true).' => '.$export.',';
+        }
+        $files->replace(config_path('laravelusers-ui.php'), "<?php\n\nreturn [\n".implode("\n", $lines)."\n];\n");
     }
 
     private function printIntegrationInstructions(): void

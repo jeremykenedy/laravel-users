@@ -80,6 +80,19 @@ class FrontendTest extends TestCase
         }
     }
 
+    public function test_theme_button_can_be_disabled_without_changing_the_configured_theme(): void
+    {
+        $this->actingAs($this->user());
+        foreach (Frontend::FRAMEWORKS as $framework) {
+            foreach (['light', 'dark', 'system'] as $theme) {
+                config(['laravelusers.frontend' => $framework, 'laravelusers.theme' => $theme, 'laravelusers.themeToggle' => true]);
+                $this->get('/users')->assertOk()->assertSee('id="lu-theme"', false)->assertSee('data-theme-icon="'.$theme.'"', false)->assertDontSee('<select id="lu-theme"', false);
+                config(['laravelusers.themeToggle' => false]);
+                $this->get('/users')->assertOk()->assertDontSee('id="lu-theme"', false)->assertSee('data-lu-theme="'.$theme.'"', false);
+            }
+        }
+    }
+
     public function test_modern_validation_repopulates_non_secret_fields(): void
     {
         config(['laravelusers.frontend' => 'tailwind']);

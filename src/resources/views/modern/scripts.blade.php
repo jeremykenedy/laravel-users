@@ -2,25 +2,73 @@
 (function () {
     const root = document.getElementById('laravelusers');
     if (!root) return;
+    const tooltips = @json((bool) config('laravelusers.tooltipsEnabled', true));
+    function buttonLabels() {
+        root.querySelectorAll('.lu-button').forEach(function (button) {
+            const label = button.textContent.trim();
+            if (label && !button.hasAttribute('aria-label')) button.setAttribute('aria-label', label);
+            if (label && tooltips) button.title = label;
+        });
+    }
+    buttonLabels();
+    root.addEventListener('lu:rows', buttonLabels);
+    const modal = root.querySelector('#lu-confirmation');
+    let pendingForm;
+    let confirmedForm;
+    let previousFocus;
     root.addEventListener('submit', function (event) {
-        if (event.target.dataset.luConfirm && !window.confirm(event.target.dataset.luConfirm)) event.preventDefault();
+        const form = event.target;
+        if (!form.hasAttribute('data-lu-confirm') || form === confirmedForm || !modal) return;
+        event.preventDefault();
+        pendingForm = form;
+        previousFocus = document.activeElement;
+        modal.querySelector('#lu-confirm-title').textContent = form.dataset.luConfirmTitle || @json(__('laravelusers::modals.delete_user_title'));
+        modal.querySelector('#lu-confirm-message').textContent = form.dataset.luConfirm;
+        modal.showModal();
     });
+    if (modal) {
+        modal.querySelectorAll('[data-lu-dismiss]').forEach(button => button.addEventListener('click', () => modal.close()));
+        modal.addEventListener('close', function () {
+            pendingForm = null;
+            if (previousFocus && previousFocus.isConnected) previousFocus.focus();
+        });
+        modal.querySelector('#lu-confirm-submit').addEventListener('click', function () {
+            if (!pendingForm) return;
+            confirmedForm = pendingForm;
+            modal.close();
+            confirmedForm.requestSubmit();
+            confirmedForm = null;
+        });
+    }
     const form = root.querySelector('#lu-search');
     if (!form) return;
+    const input = form.querySelector('#user_search_box');
     const original = root.querySelector('#lu-users');
     const results = root.querySelector('#lu-results');
     const status = root.querySelector('#lu-search-status');
     const pagination = root.querySelector('#lu-pagination');
+    const avatarColumn = @json((bool) config('laravelusers.avatar.enabled', false));
+    const bulk = @json((bool) config('laravelusers.bulkActions', false));
     const roles = @json((bool) config('laravelusers.rolesEnabled'));
+    const createdColumn = @json((bool) config('laravelusers.showCreatedColumn', true));
+    const updatedColumn = @json((bool) config('laravelusers.showUpdatedColumn', true));
+    const onlineColumn = @json((bool) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true)));
+    const loginColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true)));
+    const emailLinks = @json((bool) config('laravelusers.emailLinks', true));
+    const currentUser = @json(Auth::id());
     const baseUrl = @json(url('users'));
+    const delay = @json(max(0, (int) config('laravelusers.searchDebounce', 2000)));
     let request;
+    let timer;
     function reset() {
+        clearTimeout(timer);
         if (request) request.abort();
         original.hidden = false;
         results.hidden = true;
         results.replaceChildren();
         status.hidden = true;
         if (pagination) pagination.hidden = false;
+        root.dispatchEvent(new Event('lu:rows'));
     }
     function cell(row, value) {
         const td = document.createElement('td');
@@ -28,9 +76,20 @@
         row.append(td);
         return td;
     }
+    function dateCell(row, value) {
+        const td = cell(row, value || '');
+        if (value) td.dataset.luDate = value;
+    }
     form.addEventListener('reset', reset);
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        if (request) request.abort();
+        if (!input.value.trim()) return reset();
+        timer = setTimeout(() => form.requestSubmit(), delay);
+    });
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
+        clearTimeout(timer);
         if (request) request.abort();
         const current = new AbortController();
         request = current;
@@ -42,36 +101,94 @@
                 headers: { 'Accept': 'application/json' }, signal: current.signal
             });
             if (!response.ok) throw new Error('Search failed');
-            const users = await response.json();
+            const payload = await response.json();
+            const users = Array.isArray(payload) ? payload : payload.users;
+            const activity = payload.activity || {};
+            const avatars = payload.avatars || {};
             if (current !== request || current.signal.aborted) return;
             results.replaceChildren();
             users.forEach(function (user) {
                 const row = document.createElement('tr');
+                if (avatarColumn) {
+                    const details = avatars[user.id] || { initials: '?', size: 40, fallback: 'icon' };
+                    const fragment = root.querySelector('#lu-avatar-template').content.cloneNode(true);
+                    const avatar = fragment.querySelector('.lu-avatar');
+                    avatar.style.width = details.size + 'px';
+                    avatar.style.height = details.size + 'px';
+                    const initials = avatar.querySelector('[data-lu-initials]');
+                    initials.textContent = details.initials;
+                    initials.hidden = details.fallback !== 'initials';
+                    avatar.querySelector('svg').hidden = details.fallback === 'initials';
+                    if (details.fallback === 'initials') avatar.querySelector('svg').setAttribute('hidden', '');
+                    if (details.src) {
+                        const image = document.createElement('img');
+                        image.alt = '';
+                        image.loading = 'lazy';
+                        image.referrerPolicy = 'no-referrer';
+                        image.src = details.src;
+                        avatar.append(image);
+                    }
+                    cell(row, '').append(fragment);
+                }
+                if (bulk) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox'; checkbox.value = user.id; checkbox.dataset.luSelect = '';
+                    checkbox.setAttribute('aria-label', @json(__('laravelusers::ui.select_user', ['name' => ':name'])).replace(':name', user.name));
+                    checkbox.disabled = String(user.id) === String(currentUser);
+                    cell(row, '').append(checkbox);
+                }
                 cell(row, user.id);
                 const name = cell(row, '');
                 const link = document.createElement('a');
                 link.href = baseUrl + '/' + encodeURIComponent(user.id);
                 link.textContent = user.name;
+                if (tooltips) link.title = @json(__('laravelusers::ui.view_user'));
                 name.append(link);
-                cell(row, user.email);
-                if (roles) cell(row, (user.roles || []).map(function (role) { return role.name; }).join(', '));
-                const actions = cell(row, '');
-                const edit = document.createElement('a');
-                edit.href = link.href + '/edit';
-                edit.className = 'lu-button lu-secondary';
-                edit.textContent = @json(__('laravelusers::ui.edit'));
-                actions.append(edit);
+                const email = cell(row, emailLinks ? '' : user.email);
+                if (emailLinks) {
+                    const mail = document.createElement('a');
+                    mail.href = 'mailto:' + user.email;
+                    mail.textContent = user.email;
+                    if (tooltips) mail.title = @json(__('laravelusers::ui.email_user'));
+                    email.append(mail);
+                }
+                if (roles) cell(row, (user.roles || []).map(role => role.name).join(', '));
+                const details = activity[user.id] || {};
+                if (onlineColumn) {
+                    const presence = cell(row, '');
+                    presence.dataset.luValue = details.online === true ? 'online' : 'offline';
+                    if (details.online === true) {
+                        const badge = document.createElement('span');
+                        badge.className = 'lu-badge lu-online';
+                        badge.textContent = @json(__('laravelusers::ui.online'));
+                        presence.append(badge);
+                    }
+                }
+                if (createdColumn) dateCell(row, user.created_at);
+                if (updatedColumn) dateCell(row, user.updated_at);
+                if (loginColumn) dateCell(row, details.last_login_at);
+                const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);
+                actions.querySelector('[data-lu-show]').href = link.href;
+                actions.querySelector('[data-lu-edit]').href = link.href + '/edit';
+                const deletion = actions.querySelector('form');
+                if (String(user.id) === String(currentUser)) deletion.remove();
+                else {
+                    deletion.action = link.href;
+                    if (deletion.hasAttribute('data-lu-confirm')) deletion.dataset.luConfirm = @json(__('laravelusers::ui.confirm_delete', ['name' => ':name'])).replace(':name', user.name);
+                }
+                cell(row, '').append(actions);
                 results.append(row);
             });
             if (!users.length) {
                 const row = document.createElement('tr');
-                cell(row, @json(__('laravelusers::laravelusers.search.no-results'))).colSpan = roles ? 5 : 4;
+                cell(row, @json(__('laravelusers::laravelusers.search.no-results'))).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn);
                 results.append(row);
             }
             original.hidden = true;
             results.hidden = false;
             if (pagination) pagination.hidden = true;
             status.textContent = @json(__('laravelusers::ui.results', ['count' => ':count'])).replace(':count', users.length);
+            root.dispatchEvent(new Event('lu:rows'));
         } catch (error) {
             if (error.name === 'AbortError' || current !== request) return;
             original.hidden = false;

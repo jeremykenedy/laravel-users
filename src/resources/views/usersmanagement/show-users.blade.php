@@ -52,7 +52,7 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="/users/deleted">
+                                            <a href="{{ route('users.deleted') }}">
                                                 @if(config('laravelusers.fontAwesomeEnabled'))
                                                     <i class="fa fa-fw fa-group" aria-hidden="true"></i>
                                                 @endif
@@ -71,27 +71,32 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
+                    @include('laravelusers::partials.bulk-actions', ['modern' => false, 'deleted' => false])
+        <div class="card-body">
 
                         @if(config('laravelusers.enableSearchUsers'))
                             @include('laravelusers::partials.search-users-form')
                         @endif
 
                         <div class="table-responsive users-table">
-                            <table class="table table-striped table-sm data-table">
+                            <table data-lu-view="users" class="table table-striped table-sm data-table" data-lu-table>
                                 <caption id="user_count">
-                                    {!! trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) !!}
+                                    {!! trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $pagintaionEnabled ? $users->total() : $users->count()]) !!}
                                 </caption>
                                 <thead class="thead">
                                     <tr>
+                                        @if(config('laravelusers.avatar.enabled', false))<th class="no-sort">{{ __('laravelusers::ui.avatar') }}</th>@endif
+                                        @if(config('laravelusers.bulkActions', false))@include('laravelusers::partials.select-all')@endif
                                         <th>{!! trans('laravelusers::laravelusers.users-table.id') !!}</th>
                                         <th>{!! trans('laravelusers::laravelusers.users-table.name') !!}</th>
                                         <th class="hidden-xs">{!! trans('laravelusers::laravelusers.users-table.email') !!}</th>
                                         @if(config('laravelusers.rolesEnabled'))
                                             <th class="hidden-sm hidden-xs">{!! trans('laravelusers::laravelusers.users-table.role') !!}</th>
                                         @endif
-                                        <th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.created') !!}</th>
-                                        <th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.updated') !!}</th>
+                                        @if(config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true))<th>{{ __('laravelusers::ui.presence') }}</th>@endif
+                                        @if(config('laravelusers.showCreatedColumn', true))<th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.created') !!}</th>@endif
+                                        @if(config('laravelusers.showUpdatedColumn', true))<th class="hidden-sm hidden-xs hidden-md">{!! trans('laravelusers::laravelusers.users-table.updated') !!}</th>@endif
+                                        @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true))<th>{{ __('laravelusers::ui.last_login_at') }}</th>@endif
                                         <th class="no-search no-sort">{!! trans('laravelusers::laravelusers.users-table.actions') !!}</th>
                                         <th class="no-search no-sort"></th>
                                         <th class="no-search no-sort"></th>
@@ -100,11 +105,11 @@
                                 <tbody id="users_table">
                                     @foreach($users as $user)
                                         <tr>
+                                            @if(config('laravelusers.avatar.enabled', false))<td>@include('laravelusers::partials.avatar', ['avatar' => $userAvatars[$user->getKey()]])</td>@endif
+                                            @if(config('laravelusers.bulkActions', false))<td>@include('laravelusers::partials.select-user')</td>@endif
                                             <td>{{$user->id}}</td>
-                                            <td>{{$user->name}}
-                                                @if(config('laravelusers.activity.online', false))<small>{{ __('laravelusers::ui.'.(($onlineUsers[$user->getKey()] ?? null) === null ? 'unknown' : ($onlineUsers[$user->getKey()] ? 'online' : 'offline'))) }}</small>@endif
-                                            </td>
-                                            <td class="hidden-xs">{{$user->email}}</td>
+                                            <td><a href="{{ route('users.show', $user->id) }}" @if(config('laravelusers.tooltipsEnabled', true)) title="{{ __('laravelusers::ui.view_user') }}" data-toggle="tooltip" @endif>{{ $user->name }}</a></td>
+                                            <td class="hidden-xs">@if(config('laravelusers.emailLinks', true))<a href="mailto:{{ $user->email }}" @if(config('laravelusers.tooltipsEnabled', true)) title="{{ __('laravelusers::ui.email_user') }}" data-toggle="tooltip" @endif>{{ $user->email }}</a>@else{{ $user->email }}@endif</td>
                                             @if(config('laravelusers.rolesEnabled'))
                                                 <td class="hidden-sm hidden-xs">
                                                     @foreach ($user->roles as $user_role)
@@ -121,13 +126,15 @@
                                                     @endforeach
                                                 </td>
                                             @endif
-                                            <td class="hidden-sm hidden-xs hidden-md">{{$user->created_at}}</td>
-                                            <td class="hidden-sm hidden-xs hidden-md">{{$user->updated_at}}</td>
+                                            @if(config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true))<td data-lu-value="{{ ($userActivity[$user->getKey()]['online'] ?? false) ? 'online' : 'offline' }}">@if(($userActivity[$user->getKey()]['online'] ?? false) === true)<span class="badge badge-success">{{ __('laravelusers::ui.online') }}</span>@endif</td>@endif
+                                            @if(config('laravelusers.showCreatedColumn', true))<td class="hidden-sm hidden-xs hidden-md">@include('laravelusers::partials.date', ['value' => $user->created_at])</td>@endif
+                                            @if(config('laravelusers.showUpdatedColumn', true))<td class="hidden-sm hidden-xs hidden-md">@include('laravelusers::partials.date', ['value' => $user->updated_at])</td>@endif
+                                            @if(config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true))<td>@include('laravelusers::partials.date', ['value' => $userActivity[$user->getKey()]['last_login_at'] ?? null])</td>@endif
                                             <td>
                                                 <form method="POST" action="{{ url('users/' . $user->id) }}" data-toggle="tooltip" title="{{ trans('laravelusers::laravelusers.tooltips.delete') }}">
                                                     @method('DELETE')
                                                     @csrf
-                                                    <button type="button" class="btn btn-danger btn-sm" style="width: 100%;" data-toggle="modal" data-target="#confirmDelete" data-title="{{ trans('laravelusers::modals.delete_user_title') }}" data-message="{{ trans('laravelusers::modals.delete_user_message', ['user' => $user->name]) }}">
+                                                    <button type="{{ config('laravelusers.confirmDelete', true) ? 'button' : 'submit' }}" class="btn btn-danger btn-sm" style="width: 100%;" @if(config('laravelusers.confirmDelete', true)) data-toggle="modal" data-target="#confirmDelete" @endif data-title="{{ trans('laravelusers::modals.delete_user_title') }}" data-message="{{ trans('laravelusers::modals.delete_user_message', ['user' => $user->name]) }}">
                                                         {!! trans('laravelusers::laravelusers.buttons.delete') !!}
                                                     </button>
                                                 </form>
@@ -150,6 +157,7 @@
                                 @endif
                             </table>
 
+                            @if(config('laravelusers.showUserCount', true))<p>{{ $pagintaionEnabled ? __('laravelusers::ui.showing_users', ['first' => $users->firstItem() ?? 0, 'last' => $users->lastItem() ?? 0, 'total' => $users->total()]) : __('laravelusers::ui.total_users', ['count' => $users->count()]) }}</p>@endif
                             @if($pagintaionEnabled)
                                 {{ $users->links() }}
                             @endif

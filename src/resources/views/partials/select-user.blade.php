@@ -1,0 +1,1 @@
+<input type="checkbox" data-lu-select value="{{ $user->getKey() }}" aria-label="{{ __('laravelusers::ui.select_user', ['name' => $user->name]) }}" @if(Auth::check() && (string) Auth::id() === (string) $user->getKey()) disabled @endif>

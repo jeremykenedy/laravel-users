@@ -175,6 +175,7 @@
                             <button type="submit" class="btn btn-success margin-bottom-1 mb-1 float-right">
                                 {!! trans('laravelusers::forms.create_user_button_text') !!}
                             </button>
+                            @include('laravelusers::partials.welcome-options')
                         </form>
                     </div>
                 </div>

@@ -16,11 +16,9 @@ class ActivityComposer
     public function compose(View $view): void
     {
         $data = $view->getData();
-        $online = [];
-        foreach ($data['users'] ?? [] as $user) {
-            $online[$user->getKey()] = $this->activity->isOnline($user);
-        }
-        $view->with('onlineUsers', $online);
+        $activity = $this->activity->listing($data['users'] ?? []);
+        $view->with('userActivity', $activity);
+        $view->with('onlineUsers', array_map(fn ($record) => $record['online'], $activity));
         if (isset($data['user'])) {
             $view->with('userOnline', $this->activity->isOnline($data['user']));
             $view->with('lastLogin', $this->activity->lastLogin($data['user']));

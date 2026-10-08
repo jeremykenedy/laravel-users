@@ -54,4 +54,11 @@ class CompatibilityTest extends TestCase
         $this->assertContains(resource_path('views/vendor/laravelusers'), $paths);
         $this->assertCount(3, $paths);
     }
+
+    public function test_create_validation_keeps_the_original_redirect_for_json_requests(): void
+    {
+        $this->actingAs($this->user())->from('/users/create')->postJson('/users', ['name' => 'invalid', 'password' => 'secret'])
+            ->assertRedirect('/users/create')->assertSessionHasErrors('email')->assertSessionMissing('_old_input.password');
+        $this->assertDatabaseMissing('users', ['name' => 'invalid']);
+    }
 }

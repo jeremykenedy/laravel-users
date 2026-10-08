@@ -37,6 +37,11 @@ class LaravelUsersServiceProvider extends ServiceProvider
             'laravelusers::usersmanagement.show-users', 'laravelusers::modern.show-users',
         ], View\ActivityComposer::class);
 
+        $this->app['view']->composer([
+            'laravelusers::usersmanagement.show-users', 'laravelusers::modern.show-users',
+            'laravelusers::usersmanagement.deleted-users', 'laravelusers::modern.deleted-users',
+        ], View\AvatarComposer::class);
+
         $this->publishes([
             __DIR__.'/database/migrations' => database_path('migrations'),
         ], 'laravelusers-activity-migrations');

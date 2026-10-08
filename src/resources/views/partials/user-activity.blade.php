@@ -8,7 +8,7 @@
     @foreach(['last_login_at', 'ip_address', 'device', 'os', 'browser'] as $field)
         <div class="lu-detail">
             <dt>{{ __('laravelusers::ui.'.$field) }}</dt>
-            <dd>{{ $lastLogin->$field ?? __('laravelusers::ui.not_recorded') }}</dd>
+            <dd>@if($field === 'last_login_at')@include('laravelusers::partials.date', ['value' => $lastLogin->$field ?? null])@else{{ $lastLogin->$field ?? '' }}@endif</dd>
         </div>
     @endforeach
 @endif

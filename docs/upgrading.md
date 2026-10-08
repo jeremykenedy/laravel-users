@@ -16,7 +16,9 @@ Composer updates retain Bootstrap 4 unless you have explicitly selected another 
 
 Modern views live under `laravelusers::modern`. They share form and page partials across Bootstrap 5 and Tailwind. They do not rewrite existing Bootstrap 4 view overrides. Explicitly configured custom view names still win, even if you select a modern framework.
 
-The modern views intentionally use their own JavaScript search and native browser deletion confirmation. They do not load legacy DataTables, tooltips, jQuery, or Bootstrap modal scripts. Pagination remains server-side. To retain those integrations, continue using Bootstrap 4 or adapt published modern views.
+Modern views use their own search and accessible confirmation modals. They provide optional table sorting, column filters, persistent column visibility, and a mobile entry layout without jQuery or legacy DataTables. Bootstrap 4 retains its existing modal and DataTables integrations. Pagination remains server-side. Table controls act on displayed rows; use search for matches across pages or disable pagination for a complete in-memory table.
+
+The theme control uses Laravel Logger's icon button and cycles through light, dark, and system modes. Set `laravelusers.themeToggle` to `false` to hide it and ignore saved browser preferences; the configured `theme` still applies. Published layouts can keep their existing select control, which remains supported by the theme script, or adopt the updated theme partial and styles.
 
 ## Updating published views
 
@@ -48,3 +50,13 @@ The `css/app.css` and `js/app.js` URLs are host assets, not package files. Disab
 Validation uses the configured user model's table and connection for uniqueness checks. Blank edit-password fields preserve the existing password. User changes and role assignments share a database transaction. Failure of a role assignment restores previous database state on that connection; external side effects in application model observers are outside that transaction.
 
 Authenticated self-deletion compares normalized model identifiers. Applications that deliberately disable CRUD authentication can delete users without dereferencing a missing authenticated user. Existing route names and redirects remain unchanged.
+
+## Interface options
+
+All existing config keys remain available. New options use environment fallbacks in the bundled config; published config files are preserved. Merge the `env()` calls into older published configuration if you want environment overrides there. See [configuration](configuration.md) for the complete mapping.
+
+Published overrides need the shared table, date, avatar, selection, and column scripts to use these features. Use the backed-up publication workflow or merge those partials into your own views. Missing dates now remain blank. Dates display in the browser's timezone and the footer distinguishes the current page from the total count.
+
+Welcome email and password setup options are unchecked by default. Password setup uses the host password broker and `password.reset` route, requires a welcome email, and stores an unusable random password until the user follows the reset link. No password is emailed. Configure mail and queue workers before using welcome notifications.
+
+The deleted table requires the host model's `SoftDeletes` trait and existing `deleted_at` column. Enabling the package option does not modify the users table. Restoring a user keeps their login history; permanent deletion removes activity records.

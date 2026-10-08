@@ -2,6 +2,8 @@
     <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
         <form method="POST" action="{{ route('search-users') }}" role="form" class="needs-validation" id="search_users">
             @csrf
+            @if(config('laravelusers.avatar.enabled', false))<input type="hidden" name="include_avatar" value="1">@endif
+            @if(config('laravelusers.activity.online', false) || config('laravelusers.activity.login', false))<input type="hidden" name="include_activity" value="1">@endif
             <div class="input-group mb-3">
                 <input type="text" name="user_search_box" id="user_search_box" class="form-control" placeholder="{{ trans('laravelusers::forms.search-users-ph') }}" aria-label="{{ trans('laravelusers::forms.search-users-ph') }}">
                 <div class="input-group-append">

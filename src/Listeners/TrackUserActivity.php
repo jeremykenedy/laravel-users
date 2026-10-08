@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use jeremykenedy\laravelusers\Support\UserActivity;
 
@@ -40,7 +41,9 @@ class TrackUserActivity
     {
         $model = config('laravelusers.defaultUserModel');
         if (($data[0] ?? null) instanceof $model) {
-            $this->activity->forget($data[0]);
+            $user = $data[0];
+            $softDelete = in_array(SoftDeletes::class, class_uses_recursive($user), true) && !$user->isForceDeleting();
+            $this->activity->forget($user, !$softDelete);
         }
     }
 }

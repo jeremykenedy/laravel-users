@@ -244,4 +244,40 @@ class ActivityTest extends TestCase
         $user->delete();
         $this->assertFalse($this->app->make(UserActivity::class)->isOnline($user));
     }
+
+    public function test_listing_loads_login_times_in_one_query_and_search_metadata_is_opt_in(): void
+    {
+        $this->migrate();
+        config(['laravelusers.activity.login' => true, 'laravelusers.activity.online' => true, 'laravelusers.paginateListSize' => 1]);
+        $admin = $this->user();
+        $other = $this->user(['name' => 'RemoteAccount']);
+        $activity = $this->app->make(UserActivity::class);
+        $activity->recordLogin($other, $this->request());
+        DB::enableQueryLog();
+        $records = $activity->listing([$admin, $other]);
+        $queries = array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'laravelusers_login_activity'));
+        $this->assertCount(1, $queries);
+        $this->assertNull($records[$admin->id]['last_login_at']);
+        $this->assertNotNull($records[$other->id]['last_login_at']);
+        $this->actingAs($admin);
+        $this->postJson('/search-users', ['user_search_box' => 'RemoteAccount'])->assertExactJson([$other->toArray()]);
+        $this->postJson('/search-users', ['user_search_box' => 'RemoteAccount', 'include_activity' => 1])->assertOk()
+            ->assertJsonPath('users.0.id', $other->id)->assertJsonPath('activity.'.$other->id.'.online', false)
+            ->assertJsonPath('activity.'.$other->id.'.last_login_at', $records[$other->id]['last_login_at'])
+            ->assertDontSee('192.0.2.10')->assertDontSee('Chrome');
+        DB::disableQueryLog();
+    }
+
+    public function test_activity_columns_can_be_hidden_without_disabling_tracking(): void
+    {
+        $this->migrate();
+        $this->actingAs($this->user());
+        config(['laravelusers.activity.login' => true, 'laravelusers.activity.online' => true, 'laravelusers.showOnlineColumn' => false, 'laravelusers.showLastLoginColumn' => false]);
+        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $response = $this->get('/users')->assertOk();
+            $this->assertDoesNotMatchRegularExpression('/<th[^>]*>\s*Status\s*<\/th>/', $response->getContent());
+            $this->assertDoesNotMatchRegularExpression('/<th[^>]*>\s*Last login\s*<\/th>/', $response->getContent());
+        }
+    }
 }

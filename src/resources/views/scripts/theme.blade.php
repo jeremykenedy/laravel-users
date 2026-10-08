@@ -2,25 +2,41 @@
 (function () {
     const root = document.getElementById('laravelusers');
     if (!root) return;
-    const select = root.querySelector('#lu-theme');
+    const toggle = root.querySelector('#lu-theme');
+    const legacySelect = toggle && toggle.tagName === 'SELECT';
+    const modes = ['light', 'dark', 'system'];
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     let preference = root.dataset.luTheme;
-    if (select) {
+    if (toggle) {
         try { preference = localStorage.getItem('laravelusers.theme') || preference; } catch (error) {}
     }
-    if (!['light', 'dark', 'system'].includes(preference)) preference = 'light';
+    if (!modes.includes(preference)) preference = 'light';
     function apply() {
         const theme = preference === 'system' ? (media.matches ? 'dark' : 'light') : preference;
         root.dataset.luTheme = theme;
         root.dataset.bsTheme = theme;
-        if (select) select.value = preference;
+        if (!toggle) return;
+        if (legacySelect) {
+            toggle.value = preference;
+            return;
+        }
+        toggle.querySelectorAll('[data-theme-icon]').forEach(function (icon) {
+            if (icon.dataset.themeIcon === preference) {
+                icon.removeAttribute('hidden');
+                toggle.setAttribute('aria-label', toggle.dataset.themeLabel + ': ' + icon.dataset.label);
+                toggle.setAttribute('title', icon.dataset.label);
+            } else {
+                icon.setAttribute('hidden', '');
+            }
+        });
     }
-    if (select) select.addEventListener('change', function () {
-        preference = select.value;
+    if (toggle) toggle.addEventListener(legacySelect ? 'change' : 'click', function () {
+        preference = legacySelect ? toggle.value : modes[(modes.indexOf(preference) + 1) % modes.length];
         try { localStorage.setItem('laravelusers.theme', preference); } catch (error) {}
         apply();
     });
     if (media.addEventListener) media.addEventListener('change', apply);
+    else media.addListener(apply);
     apply();
 })();
 </script>

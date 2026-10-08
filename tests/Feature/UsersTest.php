@@ -113,4 +113,16 @@ class UsersTest extends TestCase
         $this->put('/users/999')->assertNotFound();
         $this->delete('/users/999')->assertNotFound();
     }
+
+    public function test_usernames_reject_markup_on_create_and_update(): void
+    {
+        $user = $this->user();
+        $this->actingAs($user);
+        $markup = '<img src=x onerror=alert(1)>';
+        $this->post('/users', ['name' => $markup, 'email' => 'markup@example.com', 'password' => 'password123', 'password_confirmation' => 'password123'])->assertSessionHasErrors('name');
+        $this->assertDatabaseMissing('users', ['email' => 'markup@example.com']);
+        $this->put('/users/'.$user->id, ['name' => $markup, 'email' => $user->email])->assertSessionHasErrors('name');
+        $this->assertSame($user->name, $user->fresh()->name);
+        $this->put('/users/'.$user->id, ['name' => 'A normal name', 'email' => $user->email])->assertSessionHasNoErrors();
+    }
 }

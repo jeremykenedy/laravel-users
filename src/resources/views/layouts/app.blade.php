@@ -21,6 +21,16 @@
         @if(\jeremykenedy\laravelusers\Support\Frontend::theme() !== 'light' || config('laravelusers.themeToggle'))
             @include('laravelusers::partials.legacy-theme')
         @endif
+        <style>
+            #laravelusers .btn:hover, #laravelusers .btn:focus { text-decoration: none; }
+            #laravelusers [data-lu-full-width="true"] .container { max-width: none; }
+            #laravelusers[data-lu-responsive-buttons="false"] .users-table .btn span { display: inline !important; }
+            #laravelusers .users-table .btn { white-space: nowrap; }
+            #laravelusers .lu-sort { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+            #laravelusers .lu-column-filter { width: 100%; min-width: 90px; border: 1px solid #ced4da; border-radius: 4px; padding: 4px; }
+        </style>
+        @include('laravelusers::partials.avatar-styles')
+    @include('laravelusers::partials.table-styles')
         @yield('template_linked_css')
 
         {{-- Scripts --}}
@@ -30,8 +40,12 @@
             ]) !!};
         </script>
     </head>
-    <body id="laravelusers" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
-        <div id="app">
+    <body id="laravelusers" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
+        <div id="app" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}">
+            @if(config('laravelusers.showHeader', true))
+            @if(config('laravelusers.headerView'))
+                @include(config('laravelusers.headerView'))
+            @else
             <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
                 <div class="container">
                     <a class="navbar-brand" href="{{ url('/') }}">
@@ -47,9 +61,6 @@
 
                         </ul>
 
-                        @if(config('laravelusers.themeToggle'))
-                            @include('laravelusers::partials.theme-toggle')
-                        @endif
 
                         <!-- Right Side Of Navbar -->
                         <ul class="navbar-nav ml-auto">
@@ -60,6 +71,7 @@
                             @else
                                 <li><a class="nav-link" href="{{ route('users') }}">{!! trans('laravelusers::app.nav.users') !!}</a></li>
                                 <li class="nav-item dropdown">
+                                    @if(config('laravelusers.showLogout', true) && Route::has('logout'))
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         {{ Auth::user()->name }} <span class="caret"></span>
                                     </a>
@@ -74,15 +86,22 @@
                                             @csrf
                                         </form>
                                     </div>
+                                    @else
+                                        <span class="nav-link">{{ Auth::user()->name }}</span>
+                                    @endif
                                 </li>
                             @endguest
+                            @if(config('laravelusers.themeToggle'))<li class="nav-item">@include('laravelusers::partials.theme-toggle')</li>@endif
                         </ul>
                     </div>
                 </div>
             </nav>
+            @endif
+            @endif
 
             <main class="py-4">
                 @yield('content')
+                @if(config('laravelusers.footerView'))@include(config('laravelusers.footerView'))@endif
             </main>
         </div>
 
@@ -105,6 +124,12 @@
             @include('laravelusers::scripts.theme')
         @endif
         @yield('template_scripts')
+        @include('laravelusers::scripts.table-controls')
+    @include('laravelusers::scripts.welcome-options')
+    @include('laravelusers::scripts.avatars')
+    @include('laravelusers::scripts.dates')
+    @include('laravelusers::scripts.bulk-actions')
+    @include('laravelusers::scripts.columns')
 
     </body>
 </html>

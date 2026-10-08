@@ -110,22 +110,27 @@ These integrations use the package's Blade pages. Native Livewire, Vue, React, a
 
 - Create, search, edit, and delete users.
 - Keep existing Bootstrap 4 views or choose Bootstrap 5 or Tailwind CSS.
-- Use light, dark, or system themes with an optional theme selector.
+- Use light, dark, or system themes with an optional theme button.
 - Configure user models, routes, role middleware, and parent layouts.
 - Preserve published customizations during installation and updates.
 - Back up published views before replacing them with `--force`.
 - Optionally display the latest login time, IP address, device, OS, and browser.
 - Optionally show online status from recent authenticated sessions.
+- Use icon input groups, modal confirmations, email links, and compact mobile actions.
+- Choose optional avatars, column filters, sorting, saved column visibility, and mobile entries.
+- Send welcome emails and require new users to set their password before signing in.
+- Manage soft-deleted users in a separate table, including restore and permanent deletion.
+- Select multiple users for optional bulk actions.
 
 ## Configuration
 
-The complete configuration is in [src/config/laravelusers.php](src/config/laravelusers.php). Applications may publish it or set the same keys in their configuration.
+The complete configuration is in [src/config/laravelusers.php](src/config/laravelusers.php). Applications may publish it or set the same keys in their configuration. Every option calls `env()` with its documented default as the fallback. Existing option names and defaults are preserved. See [all environment variable names and UI options](docs/configuration.md).
 
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `frontend` | `bootstrap4` | View framework: `bootstrap4`, `bootstrap5`, or `tailwind`. |
 | `theme` | `light` | Default theme: `light`, `dark`, or `system`. |
-| `themeToggle` | `false` | Show the theme selector. |
+| `themeToggle` | `false` | Show the light, dark, and system icon button. |
 | `defaultUserModel` | `App\Models\User` | Application user model. |
 | `authEnabled` | `true` | Require authentication for CRUD routes. |
 | `rolesEnabled` | `false` | Enable role management. |
@@ -140,11 +145,37 @@ The complete configuration is in [src/config/laravelusers.php](src/config/larave
 | `activity.cache_store` | `null` | Presence cache store; null uses the default. |
 | `activity.online_seconds` | `300` | Inactivity window in seconds. |
 
-Set `themeToggle` to `true` to show a light, dark, and system selector. A user's selection is stored locally in their browser. System mode follows their device preference. No dark mode package is required. Dark styles are scoped to the package interface. Existing published layouts need the theme partials added or a reviewed update before they can display the new selector.
+| `searchDebounce` | `2000` | Submit search after this many milliseconds without typing. Enter and Search submit immediately. |
+| `tableSorting`, `tableFiltering` | `false` | Sort and filter displayed rows. Search can find users across pages. |
+| `columnVisibility` | `false` | Show a Columns dropdown and save choices per table in the browser. |
+| `responsiveTable` | `false` | Show labelled user entries on small screens. |
+| `responsiveButtons` | `true` | Use icons with accessible labels and tooltips for mobile table actions. |
+| `iconsEnabled` | `true` | Show icons in modern views. Legacy views retain `fontAwesomeEnabled`. |
+| `emailLinks` | `true` | Link email addresses with `mailto:`. |
+| `showCreatedColumn`, `showUpdatedColumn` | `true` | Show creation and update dates. |
+| `showOnlineColumn`, `showLastLoginColumn` | `true` | Show separate activity columns when tracking is enabled. |
+| `showUserCount` | `true` | Show the displayed range and total in the footer. |
+| `localizeDates` | `true` | Format stored UTC timestamps in the browser's timezone. |
+| `dateStyle`, `timeStyle` | `medium`, `short` | Date and time styles for `Intl.DateTimeFormat`. |
+| `displayTimezone` | `null` | Optional IANA timezone override; null uses the browser's timezone. |
+| `showHeader`, `showLogout` | `true` | Show package navigation and the logout action. |
+| `headerView`, `footerView` | `null` | Optional host Blade includes. |
+| `fullWidth` | `false` | Let the package use the available layout width. |
+| `confirmDelete`, `confirmSave` | `true` | Use modal confirmations for deletion and edits. |
+| `avatar.enabled` | `false` | Show the avatar column first. |
+| `avatar.source` | `initials` | Use initials, `gravatar`, or an `avatar` model attribute. |
+| `avatar.attribute`, `avatar.fallback`, `avatar.size` | `avatar`, `icon`, `40` | Host image attribute, `icon` or `initials` fallback, and size in pixels. |
+| `welcome.enabled` | `true` | Offer an unchecked welcome email option when creating users. |
+| `welcome.force_password_reset` | `true` | Offer password setup through the welcome email. |
+| `welcome.password_broker` | `null` | Host password broker; null uses Laravel's default. |
+| `softDeletedEnabled` | `false` | Enable the deleted table for a host model using SoftDeletes. |
+| `bulkActions`, `bulkLimit` | `false`, `100` | Enable bulk actions and limit users per request. |
 
-If you use the setup commands, `laravelusers-ui.framework` and `laravelusers-ui.theme` take precedence over `laravelusers.frontend` and `laravelusers.theme`.
+Set `themeToggle` to `true` to show the same sun, moon, and monitor button used by Laravel Logger. Clicking cycles through light, dark, and system modes. The button supports keyboard activation, and its accessible label names the current mode. A user's selection is stored locally in their browser. System mode follows their device preference. Set `themeToggle` to `false` to hide the button and use the configured theme without reading the saved browser choice. Use `theme=light` with the toggle disabled to keep the interface in light mode. No dark mode package is required. Dark styles are scoped to the package interface. Existing published layouts need the theme partials added or a reviewed update before they can display the button.
 
-`laravelUsersBladeExtended` selects your parent layout. Custom layouts should render `template_title`, `template_linked_css`, `content`, and `template_scripts` sections. Custom view settings (`showUsersBlade`, `createUserBlade`, `showIndividualUserBlade`, `editIndividualUserBlade`) are never remapped. Only the four exact bundled view names switch to the modern templates when a modern framework is selected.
+If you use the setup commands, `laravelusers-ui.framework` and `laravelusers-ui.theme` take precedence over `laravelusers.frontend` and `laravelusers.theme`. Newly written frontend settings also use `LARAVEL_USERS_FRONTEND` and `LARAVEL_USERS_THEME` environment fallbacks. Environment values override the stored command selections; older generated config files can be refreshed by running update again.
+
+`laravelUsersBladeExtended` selects your parent layout. Custom layouts should render `template_title`, `template_linked_css`, `content`, and `template_scripts` sections. Custom view settings (`showUsersBlade`, `createUserBlade`, `showIndividualUserBlade`, `editIndividualUserBlade`) are never remapped. Only the exact bundled view names switch to the modern templates when a modern framework is selected.
 
 Asset switches remain available. `enableBootstrapCssCdn` controls loading Bootstrap CSS in the package layout; `bootstrap5CssCdn` selects the Bootstrap 5 stylesheet. `enableAppCss` and `enableAppJs` control host assets. Disable them when your application does not provide the configured `css/app.css` or `js/app.js`. Tailwind utilities are compiled and bundled with the package, with an `lu:` prefix and no global preflight reset. Custom layouts should load one framework stylesheet appropriate to the selected view set.
 
@@ -276,11 +307,15 @@ Also accepted: `--with=darkmode-toggle`, `--with=ip-capture`, and `--with=seedst
 | GET | `/users/{user}/edit` | `users.edit` |
 | PUT/PATCH | `/users/{user}` | `users.update` |
 | DELETE | `/users/{user}` | `user.destroy` |
+| GET | `/users/deleted` | `users.deleted` |
+| POST | `/users/{id}/restore` | `users.restore` |
+| DELETE | `/users/{id}/force` | `users.force-destroy` |
+| POST | `/users/bulk` | `users.bulk` |
 | POST | `/search-users` | `search-users` |
 
-Search accepts `user_search_box` and returns the existing JSON array of matching models, using the model's hidden attributes. Ensure sensitive attributes on custom user models are hidden. Search retains its existing `web` and `auth` middleware even when `authEnabled` is disabled for CRUD. Deleting the current authenticated user is blocked.
+Search accepts `user_search_box` and returns the existing JSON array of matching models, using the model's hidden attributes. Ensure sensitive attributes on custom user models are hidden. Bundled views explicitly request activity and avatar metadata when enabled. Requests without `include_activity` or `include_avatar` retain the original JSON array. Search retains its existing `web` and `auth` middleware even when `authEnabled` is disabled for CRUD. Deleting the current authenticated user is blocked.
 
-The `softDeletedEnabled` option is retained for compatibility; a deleted-user management screen is not implemented.
+Enable `softDeletedEnabled` only when the configured user model uses Laravel's `SoftDeletes` trait and its table has a `deleted_at` column. Deleted users have a separate `/users/deleted` table. Restore and permanent deletion affect only trashed records. The package does not add soft deletes to the host model or migrate its users table. Optional bulk actions validate all selected records, protect the signed-in account, and run within a transaction.
 
 ## Testing
 
@@ -293,7 +328,7 @@ npx playwright install chromium firefox webkit
 npm run test:browser
 ```
 
-Tests cover CRUD, validation, password hashing and preservation, authentication, roles and transactional rollback, search, missing users, pagination, custom models, configuration caching, installers, backups, view overrides, themes, and framework rendering. Activity tests cover opt-in defaults, login events, trusted proxies, session regeneration, multiple devices, logout, expiry, failed stores, cleanup, and migration rollback. Browser tests exercise real HTTP requests and rendered Blade templates. Modern views receive automated accessibility checks in both themes.
+Tests cover CRUD, validation, password hashing and preservation, authentication, roles and transactional rollback, search, missing users, pagination, custom models, configuration caching, installers, backups, view overrides, themes, and framework rendering. Activity tests cover opt-in defaults, login events, trusted proxies, session regeneration, multiple devices, logout, expiry, failed stores, cleanup, and migration rollback. Browser tests exercise real HTTP requests and rendered Blade templates. Modern views receive automated accessibility checks in both themes. Additional tests cover welcome mail, single-use password setup tokens, HTML name rejection, bulk actions, soft deletion and restore, avatar fallbacks, environment overrides, date formatting, column persistence, and responsive entries.
 
 See [testing](docs/testing.md) for the CI matrix and local fixture. The fixture is development-only and is never registered by the package service provider. Please include a reproducing test when submitting a bug fix.
 
