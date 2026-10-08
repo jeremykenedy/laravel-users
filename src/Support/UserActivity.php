@@ -15,7 +15,9 @@ use UAParser\Parser;
 
 class UserActivity
 {
-    public function __construct(private CacheManager $cache) {}
+    public function __construct(private CacheManager $cache)
+    {
+    }
 
     public function recordLogin(Model $user, Request $request): void
     {

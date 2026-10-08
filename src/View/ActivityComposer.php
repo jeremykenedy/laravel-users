@@ -9,7 +9,9 @@ use jeremykenedy\laravelusers\Support\UserActivity;
 
 class ActivityComposer
 {
-    public function __construct(private UserActivity $activity) {}
+    public function __construct(private UserActivity $activity)
+    {
+    }
 
     public function compose(View $view): void
     {

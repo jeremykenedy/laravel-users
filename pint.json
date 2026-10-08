@@ -33,6 +33,10 @@
                 "throw",
                 "try"
             ]
+        },
+        "single_line_empty_body": false,
+        "braces_position": {
+            "anonymous_classes_opening_brace": "same_line"
         }
     }
 }

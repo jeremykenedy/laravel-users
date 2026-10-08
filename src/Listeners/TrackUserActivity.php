@@ -13,7 +13,9 @@ use jeremykenedy\laravelusers\Support\UserActivity;
 
 class TrackUserActivity
 {
-    public function __construct(private UserActivity $activity, private Request $request) {}
+    public function __construct(private UserActivity $activity, private Request $request)
+    {
+    }
 
     public function handle(Authenticated|Login|Logout $event): void
     {
