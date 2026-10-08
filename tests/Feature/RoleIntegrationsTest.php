@@ -159,7 +159,6 @@ class RoleIntegrationsTest extends TestCase
             $this->post('/users/email/preview')->assertForbidden();
         }
         $this->exerciseInstaller($userModel, $roleModel);
-
     }
 
     private function exerciseAccess($actor, $role, bool $legacy): void
