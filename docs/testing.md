@@ -17,7 +17,7 @@ CI tests these combinations:
 
 Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. Package users do not inherit CI-only Composer flags.
 
-Scrutinizer uses the Jammy build image with PHP 8.2 and a SQLite version supported by Laravel. It runs PHPUnit coverage, static analysis, and the existing website coding-style checks in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite. PHP_CodeSniffer is a development dependency so the style wrapper uses the patched version instead of its outdated fallback installer.
+Scrutinizer uses the Jammy build image with PHP 8.2 and a SQLite version supported by Laravel. It runs PHPUnit coverage, static analysis, and `composer lint` in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite. Pint checks the same repository standard locally and in both CI services. Website analysis and coding-style settings remain active; the obsolete CodeSniffer wrapper is replaced by the package's lint command.
 
 The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
 
