@@ -61,6 +61,9 @@
     #laravelusers .lu-input-group .lu-input { min-width: 0; border-radius: 6px 0 0 6px; }
     #laravelusers .lu-input-group .lu-input:last-child { border-radius: 6px; }
     #laravelusers .lu-input-icon { display: flex; align-items: center; justify-content: center; width: 44px; flex: 0 0 44px; border: 1px solid var(--lu-border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--lu-soft); color: var(--lu-muted); }
+    #laravelusers .lu-welcome { margin: 8px 0 24px; padding: 16px 20px; border: 1px solid var(--lu-border); border-radius: 7px; background: var(--lu-soft); }
+    #laravelusers .lu-welcome legend { padding: 0 6px; font-weight: 600; }
+    #laravelusers .lu-welcome p { margin: 8px 0 0; font-size: .875rem; }
     #laravelusers .lu-form-actions { justify-content: flex-end; }
     #laravelusers .lu-search { align-items: center; }
     #laravelusers .lu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }

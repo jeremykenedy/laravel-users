@@ -97,7 +97,7 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
     return redirect('/users')->withCookie(cookie('lu-framework', $framework, 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-theme-toggle', request()->query('theme-toggle', '1'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-table-controls', request()->query('table-controls', '1'), 60, '/', null, false, false, false))
-        ->withCookie(cookie('lu-soft-deletes', request()->query('soft-deletes', ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 19849 ? '1' : '0')), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-soft-deletes', request()->query('soft-deletes', (int) ($_SERVER['SERVER_PORT'] ?? 0) === 19849 ? '1' : '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-avatar', request()->query('avatar', 'initials'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-responsive-table', request()->query('responsive-table', '1'), 60, '/', null, false, false, false));
 });
