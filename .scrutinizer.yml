@@ -15,5 +15,6 @@ build:
               file: coverage.xml
               format: clover
           - php-scrutinizer-run
-          - command: 'PATH="$PWD/vendor/bin:$PATH" phpcs-run'
+          - command: 'sed -n ''1,240p'' "$(command -v phpcs-run)"'
+          - command: phpcs-run
             use_website_config: true
