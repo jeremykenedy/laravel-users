@@ -5,6 +5,7 @@ module.exports = defineConfig({
     fullyParallel: false,
     workers: 1,
     retries: process.env.CI ? 1 : 0,
+    failOnFlakyTests: !!process.env.CI,
     use: { baseURL: 'http://127.0.0.1:19847', trace: 'retain-on-failure' },
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

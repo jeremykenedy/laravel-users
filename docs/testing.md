@@ -35,7 +35,7 @@ The suite exercises all three frontends in Chromium, Firefox, and WebKit. It che
 
 Legacy search regression tests cover both `application/json` responses decoded by jQuery and JSON text returned as `text/html`, including empty results and browser errors. PHP rendering tests verify the disabled search setting and host asset switches in all three frameworks.
 
-The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Tailwind loads its bundled stylesheet. Browser artifacts are uploaded on CI failure.
+The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Tailwind loads its bundled stylesheet. Browser artifacts are uploaded on CI failure. Tests that only pass on retry also fail CI.
 
 ## Asset builds
 

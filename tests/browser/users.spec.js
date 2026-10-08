@@ -376,8 +376,10 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
             await page.locator('[data-lu-select-all]').check();
             await expect(page.locator('[data-lu-selected-count]')).toHaveText('2 selected');
             await page.locator('#lu-bulk-submit').click();
+            const confirmed = page.waitForResponse(response => response.url().endsWith('/users/bulk') && response.request().method() === 'POST');
             if (framework === 'bootstrap4') await page.locator('#confirmDelete #confirm').click();
             else await page.locator('#lu-confirm-submit').click();
+            expect((await confirmed).status()).toBe(302);
         }
         await search();
         await apply('delete');
