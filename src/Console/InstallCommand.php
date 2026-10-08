@@ -160,7 +160,6 @@ class InstallCommand extends Command
 
         $settings = array_merge(config('laravelusers-ui', []), ['framework' => $framework, 'theme' => $theme]);
         $files->replace(config_path('laravelusers-ui.php'), "<?php\n\nreturn ".var_export($settings, true).";\n");
-
     }
 
     private function printIntegrationInstructions(): void
