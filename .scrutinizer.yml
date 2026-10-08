@@ -1,4 +1,13 @@
 build:
   environment:
     php:
-      version: '8.3.33'
+      version: '8.2.0'
+  dependencies:
+    override:
+      - composer update --prefer-dist --no-interaction
+  tests:
+    override:
+      - command: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-filter src --coverage-clover coverage.xml
+        coverage:
+          file: coverage.xml
+          format: clover
