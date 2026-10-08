@@ -124,15 +124,19 @@ class UserActivity
 
     public function forget(Model $user): void
     {
-        try {
-            if (config('laravelusers.activity.login', false)) {
+        if (config('laravelusers.activity.login', false)) {
+            try {
                 $this->logins()->where('user_key', $this->key($user))->delete();
+            } catch (Throwable $exception) {
+                report($exception);
             }
-            if (config('laravelusers.activity.online', false)) {
+        }
+        if (config('laravelusers.activity.online', false)) {
+            try {
                 $this->cache->store(config('laravelusers.activity.cache_store'))->forget('laravelusers:online:'.$this->key($user));
+            } catch (Throwable $exception) {
+                report($exception);
             }
-        } catch (Throwable $exception) {
-            report($exception);
         }
     }
 

@@ -229,4 +229,19 @@ class ActivityTest extends TestCase
         $this->assertSame($user->email, $user->fresh()->email);
         $this->assertFalse(Schema::hasColumn('users', 'last_login_at'));
     }
+
+    public function test_presence_cleanup_still_runs_when_login_storage_is_unavailable(): void
+    {
+        config(['laravelusers.activity.online' => true]);
+        $user = $this->user();
+        $this->request();
+        Event::dispatch(new Authenticated('web', $user));
+        $this->assertTrue($this->app->make(UserActivity::class)->isOnline($user));
+        config(['laravelusers.activity.login' => true]);
+        $this->mock(ExceptionHandler::class, function ($mock) {
+            $mock->shouldReceive('report')->once();
+        });
+        $user->delete();
+        $this->assertFalse($this->app->make(UserActivity::class)->isOnline($user));
+    }
 }
