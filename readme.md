@@ -11,7 +11,7 @@
 <p align="center">
     <a href="https://packagist.org/packages/jeremykenedy/laravel-users"><img src="https://poser.pugx.org/jeremykenedy/laravel-users/d/total.svg" alt="Total Downloads"></a>
     <a href="https://packagist.org/packages/jeremykenedy/laravel-users"><img src="https://poser.pugx.org/jeremykenedy/laravel-users/v/stable.svg" alt="Latest Stable Version"></a>
-    <a href="https://github.com/jeremykenedy/laravel-users/actions/workflows/ci.yml"><img src="https://github.com/jeremykenedy/laravel-users/actions/workflows/ci.yml/badge.svg" alt="Tests"></a>
+    <a href="https://github.com/jeremykenedy/laravel-users/actions/workflows/tests.yml"><img src="https://github.com/jeremykenedy/laravel-users/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
     <a href="https://github.styleci.io/repos/83162309"><img src="https://github.styleci.io/repos/83162309/shield?branch=master" alt="StyleCI"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
@@ -24,12 +24,14 @@
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Configuration](#configuration)
+- [Login Details and Online Status](#login-details-and-online-status)
 - [Changing Frameworks](#changing-frameworks)
 - [Artisan Commands](#artisan-commands)
-  - [Install and Update Options](#install-and-update-options)
+  - [Install Options](#install-options)
 - [Roles and Optional Integrations](#roles-and-optional-integrations)
 - [Routes](#routes)
 - [Testing](#testing)
+- [Screenshots](#screenshots)
 - [Historical Releases](#historical-releases)
 - [License](#license)
 
@@ -90,6 +92,20 @@ php artisan laravelusers:install --framework=tailwind --no-interaction
 
 Sign in and visit `/users`. Add `--theme=system` to follow the device color preference, or `--theme=dark` to start in dark mode.
 
+Livewire applications can link to the same server-rendered pages:
+
+```blade
+<a href="{{ route('users') }}">Manage users</a>
+```
+
+Vue, React, and Svelte applications can link to `/users` from their existing navigation:
+
+```html
+<a href="/users">Manage users</a>
+```
+
+These integrations use the package's Blade pages. Native Livewire, Vue, React, and Svelte view sets are not provided; `--frontend` accepts `blade` only.
+
 ## Features
 
 - Create, search, edit, and delete users.
@@ -98,6 +114,8 @@ Sign in and visit `/users`. Add `--theme=system` to follow the device color pref
 - Configure user models, routes, role middleware, and parent layouts.
 - Preserve published customizations during installation and updates.
 - Back up published views before replacing them with `--force`.
+- Optionally display the latest login time, IP address, device, OS, and browser.
+- Optionally show online status from recent authenticated sessions.
 
 ## Configuration
 
@@ -115,6 +133,12 @@ The complete configuration is in [src/config/laravelusers.php](src/config/larave
 | `rolesMiddlware` | `role:admin` | Role middleware name. |
 | `enablePagination` | `true` | Paginate the user list. |
 | `paginateListSize` | `25` | Users per page. |
+| `activity.login` | `false` | Record the latest login in the separate activity table. |
+| `activity.online` | `false` | Track recent authenticated sessions in the cache. |
+| `activity.guard` | `web` | Guard to track. |
+| `activity.connection` | `null` | Connection for login records and migration; null uses the default. |
+| `activity.cache_store` | `null` | Presence cache store; null uses the default. |
+| `activity.online_seconds` | `300` | Inactivity window in seconds. |
 
 Set `themeToggle` to `true` to show a light, dark, and system selector. A user's selection is stored locally in their browser. System mode follows their device preference. No dark mode package is required. Dark styles are scoped to the package interface. Existing published layouts need the theme partials added or a reviewed update before they can display the new selector.
 
@@ -123,6 +147,38 @@ If you use the setup commands, `laravelusers-ui.framework` and `laravelusers-ui.
 `laravelUsersBladeExtended` selects your parent layout. Custom layouts should render `template_title`, `template_linked_css`, `content`, and `template_scripts` sections. Custom view settings (`showUsersBlade`, `createUserBlade`, `showIndividualUserBlade`, `editIndividualUserBlade`) are never remapped. Only the four exact bundled view names switch to the modern templates when a modern framework is selected.
 
 Asset switches remain available. `enableBootstrapCssCdn` controls loading Bootstrap CSS in the package layout; `bootstrap5CssCdn` selects the Bootstrap 5 stylesheet. `enableAppCss` and `enableAppJs` control host assets. Disable them when your application does not provide the configured `css/app.css` or `js/app.js`. Tailwind utilities are compiled and bundled with the package, with an `lu:` prefix and no global preflight reset. Custom layouts should load one framework stylesheet appropriate to the selected view set.
+
+## Login Details and Online Status
+
+Both features are disabled by default. Enable online status in `config/laravelusers.php`:
+
+```php
+'activity' => [
+    'login' => false,
+    'online' => true,
+    'guard' => 'web',
+    'connection' => null,
+    'cache_store' => null,
+    'online_seconds' => 300,
+],
+```
+
+Use a persistent cache store with atomic lock support, such as file, database, Redis, or Memcached. Use a shared store across application servers. Status refreshes when Laravel authenticates a request, expires after the configured interval, and removes the current session on logout. Other active devices remain online. Status is shown on page load; no polling or heartbeat is added.
+
+For login details, publish and run the separate migration, then set `activity.login` to `true`:
+
+```sh
+php artisan vendor:publish --tag=laravelusers-activity-migrations
+php artisan migrate
+```
+
+Set `activity.connection` before migrating if records belong on another connection. The migration creates `laravelusers_login_activity`; it never changes the users table. Composer and package setup commands do not run migrations. Only the latest login is retained. Eloquent user deletion removes its activity records.
+
+All three view sets show login time, IP, device, OS, and browser on the detail page. IP resolution follows Laravel's trusted proxy configuration. Device details come from the user-agent header and are estimates, not verified device identities. Existing published views need a reviewed update to display these fields.
+
+Tracking follows Laravel's `Login`, `Authenticated`, and `Logout` events for the configured guard and user model. Custom authentication flows must dispatch those events. Tracking errors are reported without interrupting sign-in. Login details and IP addresses stay out of search JSON. Keep user management behind your application's administrator authorization middleware.
+
+See [activity configuration and usage](docs/activity.md). Laravel IP Capture remains an independent optional integration; neither feature requires it.
 
 ## Changing Frameworks
 
@@ -147,19 +203,39 @@ php artisan config:cache
 
 The update command supports both interactive selection and direct flags. Package assets are ready to use. If you change your host application's asset sources when switching, run `npm run build` in that application.
 
+For a quick switch without prompts:
+
+```sh
+php artisan laravelusers:switch --css=bootstrap5
+php artisan laravelusers:switch --framework=tailwind --theme=dark
+```
+
+| Command | Selection | Configuration |
+| --- | --- | --- |
+| `laravelusers:update` | Interactive or direct flags | Keeps main configuration and custom views. |
+| `laravelusers:switch` | Direct flags only | Uses the same publication and backup safeguards. |
+
+Run `npm run build` after switching if your host builds its own framework assets. Bundled package assets do not need a host build.
+
 ## Artisan Commands
 
 | Command | Purpose | Options |
 | --- | --- | --- |
 | `laravelusers:install` | Set up the package, preserving existing configuration and views. | Options below. |
 | `laravelusers:update` | Update framework, theme, and view publishing choices. | Options below. |
+| `laravelusers:switch` | Change frontend choices without prompts. | Options below; requires framework, CSS, theme, or views. |
+| `vendor:publish --tag=laravelusers-activity-migrations` | Publish the opt-in login activity migration. | Laravel's standard publish options. |
 | `vendor:publish --tag=laravelusers` | Publish package configuration, translations, and views through Laravel. | Laravel's standard publish options. |
 
-### Install and Update Options
+### Install Options
+
+These options also apply to update and switch.
 
 | Option | Behavior |
 | --- | --- |
 | `--framework=bootstrap4\|bootstrap5\|tailwind` | Select a frontend. Omitted unattended updates retain the current selection. |
+| `--css=bootstrap4\|bootstrap5\|tailwind` | Alias for `--framework`. Conflicting choices are rejected. |
+| `--frontend=blade` | Select the supported Blade frontend. Other values are rejected without writing files. |
 | `--theme=light\|dark\|system` | Select the default color theme. |
 | `--views=package` | Use the view loader without publishing files. Existing overrides still take precedence. |
 | `--views=publish` | Copy missing views to `resources/views/vendor/laravelusers`. Preserve existing files. |
@@ -215,9 +291,24 @@ npx playwright install chromium firefox webkit
 npm run test:browser
 ```
 
-Tests cover CRUD, validation, password hashing and preservation, authentication, roles and transactional rollback, search, missing users, pagination, custom models, configuration caching, installers, backups, view overrides, themes, and framework rendering. Browser tests exercise real HTTP requests and rendered Blade templates. Modern views receive automated accessibility checks in both themes.
+Tests cover CRUD, validation, password hashing and preservation, authentication, roles and transactional rollback, search, missing users, pagination, custom models, configuration caching, installers, backups, view overrides, themes, and framework rendering. Activity tests cover opt-in defaults, login events, trusted proxies, session regeneration, multiple devices, logout, expiry, failed stores, cleanup, and migration rollback. Browser tests exercise real HTTP requests and rendered Blade templates. Modern views receive automated accessibility checks in both themes.
 
 See [testing](docs/testing.md) for the CI matrix and local fixture. The fixture is development-only and is never registered by the package service provider. Please include a reproducing test when submitting a bug fix.
+
+## Screenshots
+
+The original Bootstrap 4 screens remain available with the default frontend:
+
+![Show Users](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-users.jpg)
+![Show User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/show-user.jpg)
+![Edit User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user.jpg)
+![Edit User Password](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/edit-user-pw.jpg)
+![Create User](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/create-user.jpg)
+![Create User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/save-user-modal.jpg)
+![Delete User Modal](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/delete-user-modal.jpg)
+![Error Create](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-create.jpg)
+![Error Update](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-update.jpg)
+![Error Delete](https://s3-us-west-2.amazonaws.com/github-project-images/laravel-users/error-delete.jpg)
 
 ## Historical Releases
 

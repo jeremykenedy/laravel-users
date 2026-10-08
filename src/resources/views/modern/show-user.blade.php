@@ -11,5 +11,8 @@
             @endforeach
             @if(config('laravelusers.rolesEnabled'))<div class="lu-detail"><dt>{{ __('laravelusers::laravelusers.users-table.role') }}</dt><dd>{{ $user->roles->pluck('name')->implode(', ') }}</dd></div>@endif
         </dl>
+        @if(config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))
+            <dl>@include('laravelusers::partials.user-activity')</dl>
+        @endif
     </section>
 @endsection

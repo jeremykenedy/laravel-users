@@ -27,7 +27,9 @@
                 <tbody id="lu-users">
                     @forelse($users as $user)
                         <tr>
-                            <td>{{ $user->id }}</td><td><a href="{{ route('users.show', $user->id) }}">{{ $user->name }}</a></td><td>{{ $user->email }}</td>
+                            <td>{{ $user->id }}</td><td><a href="{{ route('users.show', $user->id) }}">{{ $user->name }}</a>
+                                @if(config('laravelusers.activity.online', false))<small>{{ __('laravelusers::ui.'.(($onlineUsers[$user->getKey()] ?? null) === null ? 'unknown' : ($onlineUsers[$user->getKey()] ? 'online' : 'offline'))) }}</small>@endif
+                            </td><td>{{ $user->email }}</td>
                             @if(config('laravelusers.rolesEnabled'))<td>{{ $user->roles->pluck('name')->implode(', ') }}</td>@endif
                             <td><div class="lu-actions">
                                 <a class="lu-button lu-secondary" href="{{ route('users.edit', $user->id) }}">{{ __('laravelusers::ui.edit') }}</a>

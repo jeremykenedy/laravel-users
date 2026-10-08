@@ -12,6 +12,8 @@ class InstallCommand extends Command
 {
     protected $signature = 'laravelusers:install
         {--framework= : bootstrap4, bootstrap5, or tailwind}
+        {--css= : Alias for --framework}
+        {--frontend= : blade}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}
@@ -35,7 +37,13 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        $framework = $this->option('framework');
+        if (($this->option('framework') && $this->option('css') && $this->option('framework') !== $this->option('css'))
+            || ($this->option('frontend') && $this->option('frontend') !== 'blade')) {
+            $this->error('Use one CSS framework. The supported frontend is blade.');
+
+            return self::FAILURE;
+        }
+        $framework = $this->option('framework') ?? $this->option('css');
         $theme = $this->option('theme');
         $views = $this->option('views');
 

@@ -14,6 +14,17 @@ return [
     'themeToggle'      => false,
     'bootstrap5CssCdn' => 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css',
 
+    // Login tracking requires the separately published activity migration.
+    // Online status uses the host cache and does not require database changes.
+    'activity' => [
+        'login'          => false,
+        'online'         => false,
+        'guard'          => 'web',
+        'connection'     => null,
+        'cache_store'    => null,
+        'online_seconds' => 300,
+    ],
+
     // The parent blade file
     'laravelUsersBladeExtended' => 'laravelusers::layouts.app', // 'layouts.app'
 

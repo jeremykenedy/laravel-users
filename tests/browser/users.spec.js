@@ -2,6 +2,27 @@ const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
+    test(`${framework}: login details and online status`, async ({ page }) => {
+        await page.goto(`/__browser/${framework}`);
+        await page.goto('/users/1');
+        await expect(page.getByText('Last login', { exact: true })).toBeVisible();
+        await expect(page.getByText('127.0.0.1', { exact: true })).toBeVisible();
+        await expect(page.getByText('Online', { exact: true })).toBeVisible();
+        await expect(page.getByText('Operating system', { exact: true })).toBeVisible();
+        for (const theme of ['light', 'dark']) {
+            if (framework === 'bootstrap4' && !await page.getByLabel('Color theme', { exact: true }).isVisible()) {
+                await page.getByRole('button', { name: 'Toggle navigation' }).click();
+            }
+            await page.getByLabel('Color theme', { exact: true }).selectOption(theme);
+            await page.setViewportSize({ width: 390, height: 844 });
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+            if (framework !== 'bootstrap4') {
+                const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+                expect(result.violations).toEqual([]);
+            }
+        }
+    });
+
     test(`${framework}: search, themes, and responsive layout`, async ({ page }) => {
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));

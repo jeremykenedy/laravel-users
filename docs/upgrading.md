@@ -37,6 +37,8 @@ Existing Bootstrap 4 overrides will be used again. To undo forced publication, c
 
 ## Compatibility fixes
 
+Login capture and online status are opt-in. Missing `activity` settings retain disabled defaults, so published configurations do not need immediate changes. Login capture uses the separately published `laravelusers-activity-migrations` tag; install, update, switch, and Composer do not run migrations. See [activity setup](activity.md) before enabling tracking. Merge the activity partials into published list and detail views, or use the backed-up publication workflow after reviewing your customizations.
+
 Search now handles Laravel's JSON response correctly and escapes user values before inserting them into legacy search results. With roles disabled, it no longer reads an undeclared roles relationship. With roles enabled, the existing `roles` result field remains available.
 
 Validation uses the configured user model's table and connection for uniqueness checks. Blank edit-password fields preserve the existing password. User changes and role assignments share a database transaction. Failure of a role assignment restores previous database state on that connection; external side effects in application model observers are outside that transaction.

@@ -101,7 +101,9 @@
                                     @foreach($users as $user)
                                         <tr>
                                             <td>{{$user->id}}</td>
-                                            <td>{{$user->name}}</td>
+                                            <td>{{$user->name}}
+                                                @if(config('laravelusers.activity.online', false))<small>{{ __('laravelusers::ui.'.(($onlineUsers[$user->getKey()] ?? null) === null ? 'unknown' : ($onlineUsers[$user->getKey()] ? 'online' : 'offline'))) }}</small>@endif
+                                            </td>
                                             <td class="hidden-xs">{{$user->email}}</td>
                                             @if(config('laravelusers.rolesEnabled'))
                                                 <td class="hidden-sm hidden-xs">

@@ -8,6 +8,8 @@ class UpdateCommand extends InstallCommand
 {
     protected $signature = 'laravelusers:update
         {--framework= : bootstrap4, bootstrap5, or tailwind}
+        {--css= : Alias for --framework}
+        {--frontend= : blade}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}

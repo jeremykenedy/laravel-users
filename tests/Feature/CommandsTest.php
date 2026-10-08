@@ -30,6 +30,7 @@ class CommandsTest extends TestCase
         $this->assertFileExists(config_path('laravelusers.php'));
         $this->assertSame(['framework' => 'bootstrap4', 'theme' => 'light'], require config_path('laravelusers-ui.php'));
         $this->assertDirectoryDoesNotExist(resource_path('views/vendor/laravelusers'));
+        $this->assertDirectoryDoesNotExist(database_path('migrations'));
     }
 
     public function test_switch_preserves_custom_config_and_existing_view_files(): void
@@ -108,5 +109,23 @@ class CommandsTest extends TestCase
             ->expectsChoice('Views (existing overrides always take precedence)', 'package', ['package', 'publish'])
             ->assertExitCode(0);
         $this->assertSame(['framework' => 'bootstrap5', 'theme' => 'dark'], require config_path('laravelusers-ui.php'));
+    }
+
+    public function test_quick_switch_and_css_alias_preserve_configuration(): void
+    {
+        $this->artisan('laravelusers:switch', ['--css' => 'bootstrap5', '--frontend' => 'blade'])->assertExitCode(0);
+        $this->assertSame('bootstrap5', (require config_path('laravelusers-ui.php'))['framework']);
+        $before = file_get_contents(config_path('laravelusers.php'));
+        $this->artisan('laravelusers:switch', ['--framework' => 'tailwind'])->assertExitCode(0);
+        $this->assertSame($before, file_get_contents(config_path('laravelusers.php')));
+        $this->assertSame('tailwind', (require config_path('laravelusers-ui.php'))['framework']);
+    }
+
+    public function test_conflicting_frameworks_and_unsupported_frontends_write_nothing(): void
+    {
+        $this->artisan('laravelusers:install', ['--css' => 'tailwind', '--framework' => 'bootstrap5', '--no-interaction' => true])->assertExitCode(1);
+        $this->artisan('laravelusers:update', ['--frontend' => 'vue', '--no-interaction' => true])->assertExitCode(1);
+        $this->artisan('laravelusers:switch')->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
     }
 }

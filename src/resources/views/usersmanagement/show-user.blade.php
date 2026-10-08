@@ -186,6 +186,9 @@
                                 </li>
                             @endif
                         </ul>
+                        @if(config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))
+                            <dl class="px-3">@include('laravelusers::partials.user-activity')</dl>
+                        @endif
                     </div>
                 </div>
             </div>

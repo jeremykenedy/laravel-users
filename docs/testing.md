@@ -19,6 +19,8 @@ Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly 
 
 The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
 
+Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of search JSON.
+
 ## Browser suite
 
 ```sh

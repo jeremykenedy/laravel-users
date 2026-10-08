@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'presence'       => 'Status',
+    'online'         => 'Online',
+    'offline'        => 'Offline',
+    'unknown'        => 'Unknown',
+    'not_recorded'   => 'Not recorded',
+    'last_login_at'  => 'Last login',
+    'ip_address'     => 'Login IP address',
+    'device'         => 'Device',
+    'os'             => 'Operating system',
+    'browser'        => 'Browser',
     'navigation'     => 'User management navigation',
     'intro'          => 'Manage accounts and keep your user directory up to date.',
     'directory'      => 'User directory',

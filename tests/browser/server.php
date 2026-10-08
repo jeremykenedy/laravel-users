@@ -44,7 +44,15 @@ config([
     'laravelusers.theme'                    => 'system',
     'laravelusers.themeToggle'              => true,
     'laravelusers.paginateListSize'         => 2,
+    'laravelusers.activity.login'           => true,
+    'laravelusers.activity.online'          => true,
+    'cache.default'                         => 'file',
+    'cache.stores.file.path'                => $runtime.'/cache',
 ]);
+
+if (!Schema::hasTable('laravelusers_login_activity')) {
+    (require dirname(__DIR__, 2).'/src/database/migrations/2026_10_07_000000_create_laravelusers_login_activity_table.php')->up();
+}
 
 if (!Schema::hasTable('users')) {
     Schema::create('users', function (Blueprint $table) {
