@@ -36,7 +36,8 @@ class CreateUser
 
     private function createAccount(Model $model, array $data, ?PasswordBroker $broker): array
     {
-        return $model->getConnection()->transaction(function () use ($model, $data, $broker) {
+        $account = [];
+        $model->getConnection()->transaction(function () use ($model, $data, $broker, &$account) {
             $user = $model::create([
                 'name'     => strip_tags($data['name']),
                 'email'    => $data['email'],
@@ -46,10 +47,22 @@ class CreateUser
                 $user->attachRole($data['role']);
                 $user->save();
             }
-            $resetUrl = $broker ? route('password.reset', ['token' => $broker->createToken($user), 'email' => $user->getEmailForPasswordReset()]) : null;
-
-            return [$user, $resetUrl];
+            $account = [$user, $this->resetUrl($user, $broker)];
         });
+
+        return $account;
+    }
+
+    private function resetUrl(Model $user, ?PasswordBroker $broker): ?string
+    {
+        if (!$broker) {
+            return null;
+        }
+        if (!$user instanceof CanResetPassword) {
+            throw ValidationException::withMessages(['force_password_reset' => trans('laravelusers::ui.reset_unavailable')]);
+        }
+
+        return route('password.reset', ['token' => $broker->createToken($user), 'email' => $user->getEmailForPasswordReset()]);
     }
 
     private function sendWelcome(Model $user, ?string $resetUrl): bool

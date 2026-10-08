@@ -20,11 +20,7 @@ class TrackUserActivity
 
     public function handle(Authenticated|Login|Logout $event): void
     {
-        if (!config('laravelusers.activity.login', false) && !config('laravelusers.activity.online', false)) {
-            return;
-        }
-        if ($event->guard !== config('laravelusers.activity.guard', 'web')
-            || !$event->user instanceof Model || !$this->matchesUserModel($event->user)) {
+        if (!$this->shouldTrack($event)) {
             return;
         }
 
@@ -32,6 +28,14 @@ class TrackUserActivity
             $this->activity->recordLogin($event->user, $this->request);
         }
         $this->activity->touch($event->user, $this->request, $event instanceof Logout);
+    }
+
+    private function shouldTrack(Authenticated|Login|Logout $event): bool
+    {
+        return (config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))
+            && $event->guard === config('laravelusers.activity.guard', 'web')
+            && $event->user instanceof Model
+            && $this->matchesUserModel($event->user);
     }
 
     private function matchesUserModel(Model $user): bool
