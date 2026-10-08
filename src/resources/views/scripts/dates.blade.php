@@ -1,4 +1,4 @@
-@if(config('laravelusers.localizeDates', true))
+@if(config('laravelusers.localizeDates', false))
 <script>
 (function () {
     const root = document.getElementById('laravelusers');

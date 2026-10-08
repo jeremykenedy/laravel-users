@@ -10,7 +10,7 @@ use jeremykenedy\laravelusers\Support\DeletedUsers;
 
 class BulkUsers
 {
-    public function __construct(private readonly DeletedUsers $deleted)
+    public function __construct(private readonly DeletedUsers $deleted, private readonly SendGoodbye $goodbye)
     {
     }
 
@@ -25,7 +25,14 @@ class BulkUsers
             }
             $method = ['delete' => 'delete', 'restore' => 'restore', 'force_delete' => 'forceDelete'][$data['action']];
             foreach ($users as $user) {
-                $user->$method();
+                if (!$user->$method()) {
+                    throw new \RuntimeException('The user action was rejected. No users were changed.');
+                }
+            }
+            if ($data['action'] === 'delete') {
+                foreach ($users as $user) {
+                    $this->goodbye->handle($user, $data);
+                }
             }
         });
     }

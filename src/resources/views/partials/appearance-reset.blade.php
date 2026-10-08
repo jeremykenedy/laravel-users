@@ -1,0 +1,1 @@
+<button type="button" class="lu-appearance-reset" data-lu-appearance-reset="{{ $target }}" data-lu-default="{{ $value }}" title="{{ __('laravelusers::ui.reset_default') }}" aria-label="{{ __('laravelusers::ui.reset_setting', ['setting' => $label]) }}">@include('laravelusers::partials.icon', ['name' => 'restore']) {{ __('laravelusers::ui.reset') }}</button>

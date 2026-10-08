@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-labelledby="title description">
   <title id="title">Laravel Users</title>
-  <desc id="description">User management for Laravel. Bootstrap 4, Bootstrap 5, Tailwind CSS, dark mode, and optional activity tracking.</desc>
+  <desc id="description">User management for Laravel. Bootstrap 4, Bootstrap 5, Tailwind CSS, dark mode, roles, email previews, and optional activity tracking.</desc>
   <defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="#0c0a09"/><stop offset="1" stop-color="#1c1917"/></linearGradient></defs>
   <rect width="800" height="200" rx="16" fill="url(#background)"/>
   <g font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
@@ -15,7 +15,7 @@
     <rect x="345" y="133" width="85" height="22" rx="11" fill="#1a1a1a" stroke="#fbbf24" stroke-width=".8" opacity=".8"/>
     <text x="387.5" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#fbbf24">Dark mode</text>
     <rect x="440" y="133" width="80" height="22" rx="11" fill="#1a1a1a" stroke="#4ade80" stroke-width=".8" opacity=".8"/>
-    <text x="480" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#4ade80">User activity</text>
+    <text x="480" y="148" font-size="10" font-weight="500" text-anchor="middle" fill="#4ade80">Roles &amp; email</text>
   </g>
   <g transform="translate(570 40)">
     <rect width="180" height="120" rx="16" fill="#292524"/>
@@ -25,5 +25,6 @@
     <path d="M 114 97 Q 114 63 136 63 Q 158 63 158 97 Z" fill="#60a5fa"/>
     <circle cx="90" cy="37" r="20" fill="#8b5cf6"/>
     <path d="M 62 91 Q 62 57 90 57 Q 118 57 118 91 Z" fill="#8b5cf6"/>
+    <circle cx="143" cy="21" r="7" fill="#22c55e" stroke="#292524" stroke-width="3"/>
   </g>
 </svg>

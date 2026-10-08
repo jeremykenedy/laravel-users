@@ -58,8 +58,25 @@ class RolesTest extends TestCase
         $this->postJson('/search-users')->assertForbidden();
     }
 
+    public function test_additional_middleware_protects_all_management_routes_without_roles(): void
+    {
+        $this->app['router']->aliasMiddleware('deny-users', DenyUsers::class);
+        config(['laravelusers.rolesEnabled' => false, 'laravelusers.middleware' => ['deny-users']]);
+        foreach (['/users', '/users/create', '/users/1', '/users/1/edit', '/users/deleted', '/users/settings', '/users/settings/packages/00000000-0000-0000-0000-000000000000'] as $url) {
+            $this->get($url)->assertForbidden();
+        }
+        foreach (['/users', '/users/email', '/users/email/preview', '/users/bulk', '/users/1/restore', '/search-users', '/users/settings/packages'] as $url) {
+            $this->post($url)->assertForbidden();
+        }
+        $this->put('/users/1')->assertForbidden();
+        $this->put('/users/settings')->assertForbidden();
+        $this->delete('/users/1')->assertForbidden();
+        $this->delete('/users/1/force')->assertForbidden();
+    }
+
     public function test_failed_role_assignment_rolls_back_user_creation(): void
     {
+        Role::create(['name' => 'User']);
         RoleUser::$failAssignment = true;
         $this->withoutExceptionHandling();
 
@@ -77,6 +94,7 @@ class RolesTest extends TestCase
         $role = Role::create(['name' => 'Admin']);
         $user = RoleUser::findOrFail(1);
         $user->attachRole($role->id);
+        Role::create(['name' => 'User']);
         RoleUser::$failAssignment = true;
         $this->withoutExceptionHandling();
 

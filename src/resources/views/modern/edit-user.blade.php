@@ -2,8 +2,12 @@
 @php($tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind')
 @section('template_title', __('laravelusers::laravelusers.editing-user', ['name' => $user->name]))
 @section('users_content')
-    <section class="lu-panel lu-form-card">
-    <header class="lu-heading lu-card-heading"><h1>{{ __('laravelusers::laravelusers.editing-user', ['name' => $user->name]) }}</h1><a class="lu-button lu-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'back']) {{ __('laravelusers::ui.back') }}</a></header>
-    @include('laravelusers::modern.form')
+    <section class="lu-profile lu-edit-card">
+    <header class="lu-profile-header"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::laravelusers.editing-user', ['name' => $user->name]) }}</h1><div class="lu-actions">@if(!($deletedUser ?? false) && \jeremykenedy\laravelusers\Support\UserAccess::allows('view_users'))<a class="lu-button lu-secondary" href="{{ route('users.show', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.view_user') }}</a>@endif<a class="lu-button lu-secondary" href="{{ route(($deletedUser ?? false) ? 'users.deleted' : 'users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></div></header>
+    <div class="lu-profile-body">
+        @include('laravelusers::partials.user-identity')
+        @include('laravelusers::modern.form')
+    </div>
+    <x-laravelusers::email-actions :user="$user" :deleted="$deletedUser ?? false" />
     </section>
 @endsection

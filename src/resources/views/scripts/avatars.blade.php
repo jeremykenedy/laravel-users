@@ -1,8 +1,8 @@
-@if(config('laravelusers.avatar.enabled', false) || config('laravelusers.showProfileAvatar', true))
 <script>
 (function () {
-    const root = document.getElementById('laravelusers');
-    if (!root) return;
+    const root = document;
+    if (root.documentElement.dataset.luAvatarsReady) return;
+    root.documentElement.dataset.luAvatarsReady = 'true';
     function fallback(image) { image.hidden = true; }
     root.addEventListener('error', function (event) {
         if (event.target.matches('.lu-avatar img')) fallback(event.target);
@@ -12,4 +12,3 @@
     });
 })();
 </script>
-@endif

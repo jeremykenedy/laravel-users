@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/jeremykenedy/laravel-users/security/advisories/new
+    about: Report a vulnerability privately through GitHub Security Advisories.

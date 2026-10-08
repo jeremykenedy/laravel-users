@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Notifications\WelcomeUser;
+use jeremykenedy\laravelusers\Support\AccountPreferences;
+use jeremykenedy\laravelusers\Support\AppearancePreferences;
+use jeremykenedy\laravelusers\Support\AvatarPreferences;
+use jeremykenedy\laravelusers\Support\UserPermissions;
+use jeremykenedy\laravelusers\Support\UserRoles;
+use LogicException;
 use Throwable;
 
 class CreateUser
@@ -43,10 +49,19 @@ class CreateUser
                 'email'    => $data['email'],
                 'password' => Hash::make($broker ? Str::random(64) : $data['password']),
             ]);
+            if (!$user instanceof Model) {
+                throw new LogicException('The configured user model must create an Eloquent model.');
+            }
             if (config('laravelusers.rolesEnabled', false)) {
-                $user->attachRole($data['role']);
+                UserRoles::assign($user, $data['role']);
                 $user->save();
             }
+            if (UserPermissions::enabled($user) && (!empty($data['permissions_present']) || array_key_exists('permissions', $data))) {
+                UserPermissions::assign($user, $data['permissions'] ?? []);
+            }
+            AvatarPreferences::save($user, $data);
+            AppearancePreferences::save($user, $data);
+            AccountPreferences::save($user, $data);
             $account = [$user, $this->resetUrl($user, $broker)];
         });
 

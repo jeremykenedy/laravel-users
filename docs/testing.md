@@ -15,11 +15,11 @@ CI tests these combinations:
 | 12 | 8.2, 8.3, 8.4 | 10 |
 | 13 | 8.3, 8.4, 8.5 | 11 |
 
-Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. Package users do not inherit CI-only Composer flags.
+Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. The Laravel 8 SQLite job adds Doctrine DBAL 3.x only to its test dependencies so migration rollback is exercised using the framework's supported schema tools. Package users do not inherit CI-only Composer flags.
 
 Scrutinizer uses the Jammy build image with PHP 8.2 and a SQLite version supported by Laravel. It runs PHPUnit coverage, static analysis, and `composer lint` in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite. Pint checks the same repository standard locally and in both CI services. Website analysis and coding-style settings remain active; the obsolete CodeSniffer wrapper is replaced by the package's lint command.
 
-The quality job exports coverage for inspection. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations.
+The quality job exports coverage for inspection. It does not yet enforce the requested 100% coverage target. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations. Local results also do not confirm GitHub Actions or external quality ratings for an unpublished commit.
 
 Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Default listing metadata excludes login IP and agent details. Bundled tables request those fields explicitly when the login-details column is enabled. Listing tests check one query for login records rather than a query per row.
 
@@ -47,6 +47,32 @@ The legacy Bootstrap 4 browser tests load its existing external CDN assets. Mode
 
 Review list, create, edit, and detail views on desktop and mobile. Check published overrides, custom parent layouts, host authentication and authorization, role models, translations, asset loading, and any custom JavaScript before upgrading a consuming application.
 
-The table tests cover debounce cancellation and immediate submission, column sorting and filtering, stored visibility choices with merged headers, avatar image failures, profile cards, configurable timezone formatting, compact actions, red delete confirmations, mobile entries, and disabled options. Bulk tests use real requests to create users, soft-delete them, visit the separate deleted table, restore them, and permanently delete them. Server tests reject invalid or oversized selections and self-deletion before changing any selected account.
+Appearance tests cover independent light/dark global and individual settings, omission-preserving updates, inherited defaults, reset controls, authorization, validation and additive migration rollback. Settings width checks cover 320px through 1280px, around both grid breakpoints, with full width enabled and disabled.
+
+Card tests verify saved view choices, configurable grid counts, toolbar order, mobile icon alignment, pinned footers, selection controls, and accessibility. The table tests cover debounce cancellation and immediate submission, column sorting and filtering, stored visibility choices with merged headers, avatar image failures, profile cards, configurable timezone formatting, compact actions, red delete confirmations, mobile entries, and disabled options. Bulk tests use real requests to create users, soft-delete them, visit the separate deleted table, restore them, and permanently delete them. Server tests reject invalid or oversized selections and self-deletion before changing any selected account.
 
 Welcome tests confirm that ordinary creation sends no mail, only validated fields are saved, passwords are not emailed, disabled choices cannot be submitted, and password setup tokens work once. A mail dispatch failure leaves the created account intact and reports a warning. Create and edit tests reject HTML usernames.
+
+Email tests cover per-recipient authorization before dispatch, disabled actions, request limits, personalized messages, HTML escaping, queued delivery, broker selection, expiry, throttling, and single-use reset tokens. Expiry tests verify that a newly resolved native host broker rejects expired tokens and that an unset override preserves host settings. Welcome templates are rendered as HTML and plain text with and without password setup. Password tests cover unchanged default limits, optional stronger rules, and preserving blank passwords. Browser tests check the shared email dialog in all bundled frameworks, hidden selection controls for the current user, and the Bootstrap 5 edit-card layout and password meter.
+
+## Optional integration jobs
+
+The role-integration CI matrix installs real Laravel Roles alongside Spatie 5 on Laravel 8, Spatie 6 on Laravel 12, and Spatie 8 on Laravel 13. It tests assignment, multiple roles, guard restrictions, direct permissions, inherited permissions, middleware, and installer readiness. Ordinary package tests skip those integrations when the optional dependencies are absent; they remain optional runtime dependencies.
+
+Per-user avatar tests verify disabled defaults, a missing optional migration, inherited settings, explicit choices, all three forms, search metadata, batched queries, safe URLs, soft-delete restoration, permanent deletion, and transaction rollback on the host connection. Create-password tests preserve the existing unbounded create maximum and enforce configured stronger rules.
+
+Email coverage includes editable welcome/reset content, escaped templates, preview without side effects, minutes/hours/days, non-expiring single-use tokens, cleanup behavior, disabled switches, CSRF rejection, public-link throttling, and concurrent consumption. Browser coverage checks preview/back state, recipient chips, expiry inputs, and create-password feedback across all bundled frameworks.
+
+The isolated automated browser fixture raises only its send/preview request limit to avoid a shared-actor rate limit across sequential tests. Production defaults and the friendly preview retain their normal limit. PHP tests exercise the production limits directly.
+
+## Settings and dependency-change coverage
+
+Settings tests verify opt-in defaults, missing migrations, host gates, forbidden fields, persistence, self-lockout protection and route/search/bulk/email-preview restrictions. Real roles tests cover direct and inherited permissions, minimum levels, guards and team boundaries. Appearance tests cover nullable inheritance, strength limits, transaction behavior and cleanup after permanent Eloquent deletion.
+
+Package-management tests use a mocked Composer boundary so they cannot install or remove dependencies from the test application. They verify exact confirmation words, acknowledgement, the package allowlist, the second-roles-package block, unsafe removal, queue timeouts, pending-operation locks, status ownership, authorization revocation before execution and duplicate-job handling. Browser tests verify the warning modals, disabled confirmations, cleared fields and visible backend rejections. Composer installation is tested through the separate real optional-dependency jobs; this is distinct from testing a complete deployment's web package-removal workflow.
+
+The presentation integration matrix installs actual DiceBear core/styles and Laravel Toast on Laravel 12 and 13. It tests local SVG generation, installed notification rendering and settings availability. Optional integrations remain absent from the normal dependency matrix. Each suite explicitly reports applicable skips.
+
+Standalone component browser tests render an application-owned page without `#laravelusers`, check theme persistence and synchronized controls, and verify outside-click/Escape behavior. Long-name/email tests cover bounded horizontal scrolling, keyboard access, preserved mail links and mobile card wrapping in all three frameworks. Settings browser tests include color/gradient resets, sliders, persistence, small-screen overflow and modern accessibility.
+
+Composer process tests use disposable application directories and local executable fixtures. They check fixed command arguments, disabled scripts/plugins, manifest refresh, graceful worker restart, failed commands, and dependencies that remain installed. They never change the working application's Composer files.

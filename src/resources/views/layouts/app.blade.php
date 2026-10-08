@@ -31,6 +31,10 @@
         </style>
         @include('laravelusers::partials.avatar-styles')
     @include('laravelusers::partials.table-styles')
+        @include('laravelusers::partials.email-styles')
+        @include('laravelusers::partials.user-menu-styles')
+        @include('laravelusers::partials.settings-styles')
+    @include('laravelusers::partials.notification-styles')
         @yield('template_linked_css')
 
         {{-- Scripts --}}
@@ -40,7 +44,7 @@
             ]) !!};
         </script>
     </head>
-    <body id="laravelusers" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', true) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
+    <body id="laravelusers" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', false) && config('laravelusers.fontAwesomeEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}">
         <div id="app" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}">
             @if(config('laravelusers.showHeader', true))
             @if(config('laravelusers.headerView'))
@@ -49,7 +53,7 @@
             <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
                 <div class="container">
                     <a class="navbar-brand" href="{{ url('/') }}">
-                        {{ config('app.name', 'Laravel') }}
+                        {{ __('laravelusers::ui.package_name') }}
                     </a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -70,26 +74,7 @@
                                 <li><a class="nav-link" href="{{ route('register') }}">Register</a></li>
                             @else
                                 <li><a class="nav-link" href="{{ route('users') }}">{!! trans('laravelusers::app.nav.users') !!}</a></li>
-                                <li class="nav-item dropdown">
-                                    @if(config('laravelusers.showLogout', true) && Route::has('logout'))
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        {{ Auth::user()->name }} <span class="caret"></span>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item" href="{{ route('logout') }}"
-                                           onclick="event.preventDefault();
-                                                         document.getElementById('logout-form').submit();">
-                                            Logout
-                                        </a>
-
-                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                            @csrf
-                                        </form>
-                                    </div>
-                                    @else
-                                        <span class="nav-link">{{ Auth::user()->name }}</span>
-                                    @endif
-                                </li>
+                                <li class="nav-item">@include('laravelusers::partials.user-menu')</li>
                             @endguest
                             @if(config('laravelusers.themeToggle'))<li class="nav-item">@include('laravelusers::partials.theme-toggle')</li>@endif
                         </ul>
@@ -99,8 +84,13 @@
             @endif
             @endif
 
+            @if(config('laravelusers.showBreadcrumbs', false))
+                <div class="container">@include('laravelusers::partials.breadcrumbs')</div>
+            @endif
+
             <main class="py-4">
                 @yield('content')
+                <x-laravelusers::email-modal />
                 @if(config('laravelusers.footerView'))@include(config('laravelusers.footerView'))@endif
             </main>
         </div>
@@ -124,13 +114,27 @@
             @include('laravelusers::scripts.theme')
         @endif
         @yield('template_scripts')
-        @include('laravelusers::scripts.table-controls')
+        @include('laravelusers::partials.icon-templates')
+    @include('laravelusers::scripts.table-controls')
     @include('laravelusers::scripts.welcome-options')
     @include('laravelusers::scripts.avatars')
     @include('laravelusers::scripts.dates')
     @include('laravelusers::scripts.bulk-actions')
+    @include('laravelusers::scripts.table-view')
     @include('laravelusers::scripts.columns')
+    @include('laravelusers::scripts.activity-icons')
     @include('laravelusers::scripts.table-buttons')
+    @include('laravelusers::scripts.emails')
+    @include('laravelusers::scripts.password-meter')
+    @include('laravelusers::scripts.user-menu')
+    @include('laravelusers::scripts.notifications')
+    @include('laravelusers::scripts.user-appearance')
+    @include('laravelusers::scripts.table-text')
+    @include('laravelusers::scripts.packages')
+        @include('laravelusers::scripts.cleanup-settings')
+        @include('laravelusers::scripts.goodbye-options')
+        @include('laravelusers::scripts.settings-tabs')
+        @include('laravelusers::scripts.account')
 
     </body>
 </html>

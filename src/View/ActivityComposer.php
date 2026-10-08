@@ -17,7 +17,7 @@ class ActivityComposer
     public function compose(View $view): void
     {
         $data = $view->getData();
-        $activity = $this->activity->listing($data['users'] ?? [], (bool) config('laravelusers.showLastLoginDetailsColumn', true));
+        $activity = $this->activity->listing($data['users'] ?? [], (bool) config('laravelusers.showLastLoginDetailsColumn', false));
         $view->with('userActivity', $activity);
         $view->with('onlineUsers', array_map(fn ($record) => $record['online'], $activity));
         if (isset($data['users'])) {

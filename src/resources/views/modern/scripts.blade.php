@@ -27,6 +27,7 @@
         const action = form.querySelector('[name="action"]');
         const deletion = form.querySelector('[name="_method"]')?.value === 'DELETE' || (action && ['delete', 'force_delete'].includes(action.value));
         modal.dataset.luDelete = deletion ? 'true' : 'false';
+        modal.dispatchEvent(new CustomEvent('lu:delete-modal', { bubbles: true, detail: { action: deletion && (!action || action.value === 'delete') && !/\/force(?:\?|$)/.test(form.action) ? 'delete' : null } }));
         modal.querySelector('[data-lu-delete-icon]').hidden = !deletion;
         modal.querySelector('[data-lu-save-icon]').hidden = deletion;
         modal.showModal();
@@ -40,6 +41,7 @@
         modal.querySelector('#lu-confirm-submit').addEventListener('click', function () {
             if (!pendingForm) return;
             confirmedForm = pendingForm;
+            modal.dispatchEvent(new CustomEvent('lu:delete-confirm', { bubbles: true, detail: { form: confirmedForm } }));
             modal.close();
             confirmedForm.requestSubmit();
             confirmedForm = null;
@@ -59,10 +61,10 @@
     const roles = @json((bool) config('laravelusers.rolesEnabled'));
     const createdColumn = @json((bool) config('laravelusers.showCreatedColumn', true));
     const updatedColumn = @json((bool) config('laravelusers.showUpdatedColumn', true));
-    const onlineColumn = @json((bool) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', true)));
-    const loginColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', true)));
-    const loginDetailsColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', true)));
-    const emailLinks = @json((bool) config('laravelusers.emailLinks', true));
+    const onlineColumn = @json((bool) (config('laravelusers.activity.online', false) && config('laravelusers.showOnlineColumn', false)));
+    const loginColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginColumn', false)));
+    const loginDetailsColumn = @json((bool) (config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', false)));
+    const emailLinks = @json((bool) config('laravelusers.emailLinks', false));
     const currentUser = @json(Auth::id());
     const baseUrl = @json(url('users'));
     const delay = @json(max(0, (int) config('laravelusers.searchDebounce', 2000)));
@@ -85,9 +87,14 @@
         row.append(td);
         return td;
     }
-    function dateCell(row, value) {
+    function dateCell(row, value, empty = '') {
         const td = cell(row, value || '');
         if (value) td.dataset.luDate = value;
+        else if (empty) {
+            const label = document.createElement('span');
+            label.className = 'lu-date'; label.textContent = empty;
+            td.append(label);
+        }
     }
     form.addEventListener('reset', reset);
     input.addEventListener('input', function () {
@@ -95,7 +102,7 @@
         if (request) request.abort();
         clear.hidden = !input.value.length;
         if (!input.value.length) return reset();
-        if (!@json((bool) config('laravelusers.searchDebounceEnabled', true))) return;
+        if (!@json((bool) config('laravelusers.searchDebounceEnabled', false))) return;
         timer = setTimeout(() => form.requestSubmit(), delay);
     });
     form.addEventListener('submit', async function (event) {
@@ -120,6 +127,7 @@
             results.replaceChildren();
             users.forEach(function (user) {
                 const row = document.createElement('tr');
+                row.dataset.luUser = String(user.id);
                 if (avatarColumn) {
                     const details = avatars[user.id] || { initials: '?', size: 40, fallback: 'icon' };
                     const fragment = root.querySelector('#lu-avatar-template').content.cloneNode(true);
@@ -142,11 +150,14 @@
                     cell(row, '').append(fragment);
                 }
                 if (bulk) {
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox'; checkbox.value = user.id; checkbox.dataset.luSelect = '';
-                    checkbox.setAttribute('aria-label', @json(__('laravelusers::ui.select_user', ['name' => ':name'])).replace(':name', user.name));
-                    checkbox.disabled = String(user.id) === String(currentUser);
-                    cell(row, '').append(checkbox);
+                    const selection = cell(row, '');
+                    selection.dataset.luSelectionCell = '';
+                    if (String(user.id) !== String(currentUser) && @json(\jeremykenedy\laravelusers\Support\UserAccess::selectable())) {
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox'; checkbox.value = user.id; checkbox.dataset.luSelect = '';
+                        checkbox.setAttribute('aria-label', @json(__('laravelusers::ui.select_user', ['name' => ':name'])).replace(':name', user.name));
+                        selection.append(checkbox);
+                    }
                 }
                 cell(row, user.id);
                 const name = cell(row, '');
@@ -177,7 +188,7 @@
                 }
                 if (createdColumn) dateCell(row, user.created_at);
                 if (updatedColumn) dateCell(row, user.updated_at);
-                if (loginColumn) dateCell(row, details.last_login_at);
+                if (loginColumn) dateCell(row, details.last_login_at, @json(__('laravelusers::ui.no_logins')));
                 if (loginDetailsColumn) {
                     const summary = ['device', 'os', 'browser', 'ip_address'].map(field => details[field]).filter(Boolean).join(' / ');
                     const detail = document.createElement('span');
@@ -185,6 +196,7 @@
                     ['device', 'os', 'browser', 'ip_address'].forEach(field => {
                         if (!details[field]) return;
                         const item = document.createElement('span');
+                        item.dataset.luLoginField = field;
                         item.textContent = details[field];
                         detail.append(item);
                     });
@@ -192,10 +204,12 @@
                 }
                 const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);
                 actions.querySelector('[data-lu-show]').href = link.href;
-                actions.querySelector('[data-lu-edit]').href = link.href + '/edit';
+                const edit = actions.querySelector('[data-lu-edit]');
+                if (edit) edit.href = link.href + '/edit';
+                actions.querySelectorAll('[data-lu-email-action]').forEach(button => { button.dataset.luEmailUser = user.id; button.dataset.luEmailName = user.name; });
                 const deletion = actions.querySelector('form');
-                if (String(user.id) === String(currentUser)) deletion.remove();
-                else {
+                if (deletion && String(user.id) === String(currentUser)) deletion.remove();
+                else if (deletion) {
                     deletion.action = link.href;
                     if (deletion.hasAttribute('data-lu-confirm')) deletion.dataset.luConfirm = @json(__('laravelusers::ui.confirm_delete', ['name' => ':name'])).replace(':name', user.name);
                 }
@@ -212,6 +226,7 @@
             if (pagination) pagination.hidden = true;
             status.textContent = @json(__('laravelusers::ui.results', ['count' => ':count'])).replace(':count', users.length);
             root.dispatchEvent(new Event('lu:rows'));
+            root.dispatchEvent(new CustomEvent('lu:appearance', {detail: payload.appearance || {}}));
         } catch (error) {
             if (error.name === 'AbortError' || current !== request) return;
             original.hidden = false;

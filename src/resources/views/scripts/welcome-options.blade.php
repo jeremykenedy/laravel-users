@@ -1,4 +1,4 @@
-@if(config('laravelusers.welcome.enabled', true))
+@if(config('laravelusers.welcome.enabled', false))
 <script>
 (function () {
     const reset = document.querySelector('[name="force_password_reset"]');

@@ -9,12 +9,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Route;
+use jeremykenedy\laravelusers\Support\EmailContent;
 
 class WelcomeUser extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public readonly string $name, public readonly ?string $resetUrl = null)
+    public function __construct(public readonly string $name, public readonly ?string $resetUrl = null, public readonly array $contents = [])
     {
         $this->afterCommit();
     }
@@ -26,10 +27,12 @@ class WelcomeUser extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
+        $defaults = EmailContent::defaults('welcome');
+        $copy = $this->contents ? EmailContent::viewData($this->name, array_replace($defaults, $this->contents)) : [];
         $mail = (new MailMessage())
-            ->subject(trans('laravelusers::ui.welcome_subject', ['app' => config('app.name')]))
+            ->subject($this->contents['subject'] ?? $defaults['subject'])
             ->greeting(trans('laravelusers::ui.welcome_greeting', ['name' => $this->name]))
-            ->line(trans('laravelusers::ui.welcome_message', ['app' => config('app.name')]));
+            ->line($defaults['message']);
         if ($this->resetUrl) {
             $broker = config('laravelusers.welcome.password_broker') ?: config('auth.defaults.passwords');
             $mail->line(trans('laravelusers::ui.reset_notice'))
@@ -39,6 +42,14 @@ class WelcomeUser extends Notification implements ShouldQueue
             $mail->action(trans('laravelusers::ui.sign_in'), route('login'));
         }
 
-        return $mail;
+        return $mail->markdown('laravelusers::emails.welcome', [
+            'name'           => $this->name,
+            'appName'        => config('app.name'),
+            'resetUrl'       => $this->resetUrl,
+            'resetMinutes'   => $this->resetUrl ? config('auth.passwords.'.$broker.'.expire', 60) : null,
+            'loginUrl'       => Route::has('login') ? route('login') : null,
+            'copy'           => $copy,
+            'welcomeMessage' => $defaults['message'],
+        ]);
     }
 }

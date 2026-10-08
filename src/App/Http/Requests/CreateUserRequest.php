@@ -9,12 +9,19 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 use jeremykenedy\laravelusers\Rules\PlainTextName;
+use jeremykenedy\laravelusers\Support\AccountPreferences;
+use jeremykenedy\laravelusers\Support\AppearancePreferences;
+use jeremykenedy\laravelusers\Support\AvatarPreferences;
+use jeremykenedy\laravelusers\Support\PasswordRules;
+use jeremykenedy\laravelusers\Support\UserAccess;
+use jeremykenedy\laravelusers\Support\UserPermissions;
 
 class CreateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (!$this->boolean('send_welcome_email') || UserAccess::email('welcome'))
+            && (!$this->boolean('force_password_reset') || UserAccess::email('reset'));
     }
 
     public function rules(): array
@@ -26,20 +33,26 @@ class CreateUserRequest extends FormRequest
         $rules = [
             'name'                  => ['required', 'string', 'max:255', Rule::unique($table), 'alpha_dash', new PlainTextName()],
             'email'                 => ['required', 'email', 'max:255', Rule::unique($table)],
-            'password'              => [$reset ? 'nullable' : 'required', 'string', 'confirmed', 'min:6'],
+            'password'              => PasswordRules::validation(true, !$reset),
             'password_confirmation' => [$reset ? 'nullable' : 'required', 'string', 'same:password'],
         ];
         if (config('laravelusers.rolesEnabled', false)) {
-            $rules['role'] = ['required'];
+            $rules['role'] = ['required', function ($attribute, $value, $fail) {
+                foreach ((array) $value as $id) {
+                    if (!is_int($id) && !is_string($id)) {
+                        $fail(trans('laravelusers::ui.invalid_role'));
+                    }
+                }
+            }];
         }
 
-        return array_merge($rules, $this->welcomeRules());
+        return array_merge($rules, $this->welcomeRules(), UserPermissions::rules($model), AvatarPreferences::rules($model), AppearancePreferences::rules($model), AccountPreferences::rules($model));
     }
 
     private function welcomeRules(): array
     {
         $rules = [
-            'send_welcome_email'   => [$this->boolean('force_password_reset') ? 'required' : 'sometimes', 'boolean', Rule::in(config('laravelusers.welcome.enabled', true) ? [0, 1] : [0])],
+            'send_welcome_email'   => [$this->boolean('force_password_reset') ? 'required' : 'sometimes', 'boolean', Rule::in(config('laravelusers.emails.enabled', false) && config('laravelusers.emails.welcome', true) && config('laravelusers.welcome.enabled', false) ? [0, 1] : [0])],
             'force_password_reset' => ['sometimes', 'boolean', Rule::in(config('laravelusers.welcome.force_password_reset', true) ? [0, 1] : [0])],
         ];
         if ($this->boolean('force_password_reset')) {

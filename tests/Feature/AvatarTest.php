@@ -16,7 +16,7 @@ class AvatarTest extends TestCase
         $this->assertSame('ÉS', $avatar->forUser($user)['initials']);
         $this->assertNull($avatar->forUser($user)['src']);
         config(['laravelusers.avatar.source' => 'gravatar']);
-        $this->assertSame('https://www.gravatar.com/avatar/'.hash('sha256', $user->email).'?s=40&d=404&r=g', $avatar->forUser($user)['src']);
+        $this->assertSame('https://www.gravatar.com/avatar/'.hash('sha256', $user->email).'?s=256&d=404&r=g', $avatar->forUser($user)['src']);
         config(['laravelusers.avatar.source' => 'avatar', 'laravelusers.avatar.attribute' => 'profile_photo_url']);
         foreach (['https://example.com/avatar.jpg', '/storage/photo.jpg'] as $src) {
             $user->setAttribute('profile_photo_url', $src);

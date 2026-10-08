@@ -18,4 +18,18 @@ Install with `composer require` followed by the chosen package name. Consult eac
 - [IP Capture](https://github.com/jeremykenedy/laravel-ip-capture): configure tracking on your user model according to your application's requirements. Laravel Users does not add IP columns or enable tracking.
 - [Seedster](https://github.com/jeremykenedy/laravel-seedster): register application-owned seeders. Laravel Users does not seed accounts or execute seeders.
 
-No integration option runs migrations, seeds, nested Composer commands, or another package's installer.
+The `--with` options do not run migrations, seeds, Composer, or another package's installer. Role setup has a separate explicit Composer installation choice; see [roles and permissions](roles.md#installer-choices).
+
+## Toast notifications
+
+Laravel Toast is optional. Use `laravelusers:update --toast=install`, complete `toast:install` for your CSS framework, then select `--notifications=toast` or choose Toast in global settings. The UI shows that choice only when the dependency and its views are available. Missing Toast falls back to inline alerts. The package preserves host Toast configuration and maps its existing success/error/message notices into the installed service.
+
+`--toast=remove` removes the Composer dependency explicitly, preserves published files and selects alerts. Application references must be reviewed separately. [Settings](settings.md) documents the optional web installation/removal workflow, dedicated gate, queue requirements and typed confirmations.
+
+## Local avatars
+
+UI Avatars works locally without another package. DiceBear can use its official optional PHP libraries on PHP 8.2 or newer. See [avatars](avatars.md) for installation, resolution, fallbacks, external-service choices and privacy settings.
+
+## Application navigation
+
+The theme toggle and avatar/user menu are available separately as [Blade components](navigation-components.md). They do not require a full package page, UI Kit or Darkmode Toggle dependency.

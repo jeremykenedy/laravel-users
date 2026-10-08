@@ -31,23 +31,25 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             {!! trans('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]) !!}
                             <div class="pull-right">
-                                <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
+                                <a href="{{ route(($deletedUser ?? false) ? 'users.deleted' : 'users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
-                                        <i class="fas fa-fw fa-reply-all" aria-hidden="true"></i>
+                                        <i class="fas fa-fw fa-reply" aria-hidden="true"></i>
                                     @endif
                                     {!! trans('laravelusers::laravelusers.buttons.back-to-users') !!}
                                 </a>
+                                @if(!($deletedUser ?? false) && \jeremykenedy\laravelusers\Support\UserAccess::allows('view_users'))
                                 <a href="{{ url('/users/' . $user->id) }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-user') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
                                         <i class="fas fa-fw fa-reply" aria-hidden="true"></i>
                                     @endif
                                     {!! trans('laravelusers::laravelusers.buttons.back-to-user') !!}
                                 </a>
+                                @endif
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ route('users.update', $user->id) }}" role="form" class="needs-validation">
+                        <form method="POST" action="{{ route(($deletedUser ?? false) ? 'users.deleted.update' : 'users.update', $user->id) }}" role="form" class="needs-validation">
                             @method('PUT')
                             @csrf
                             <div class="form-group has-feedback row {{ $errors->has('name') ? ' has-error ' : '' }}">
@@ -110,9 +112,9 @@
                                             @if ($roles)
                                                 @foreach($roles as $role)
                                                     @if ($currentRole)
-                                                        <option value="{{ $role->id }}" {{ in_array($role->id ,$currentRole) ? 'selected="selected"' : '' }}>{{ $role->name }}</option>
+                                                        <option value="{{ $role->id }}" {{ in_array($role->id ,$currentRole) ? 'selected="selected"' : '' }}>{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>
                                                     @else
-                                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                        <option value="{{ $role->id }}">{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>
                                                     @endif
                                                 @endforeach
                                             @endif
@@ -135,6 +137,10 @@
                                     </div>
                                 </div>
                             @endif
+                            @include('laravelusers::partials.avatar-source', ['modern' => false])
+                            @include('laravelusers::partials.user-appearance', ['modern' => false])
+                            @include('laravelusers::partials.user-permissions', ['modern' => false])
+    @include('laravelusers::partials.account-access', ['modern' => false])
                             <div class="pw-change-container">
                                 <div class="form-group has-feedback row {{ $errors->has('password') ? ' has-error ' : '' }}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
@@ -153,6 +159,7 @@
                                                 </label>
                                             </div>
                                         </div>
+                                        @include('laravelusers::partials.password-meter')
                                         @if ($errors->has('password'))
                                             <span class="help-block">
                                                 <strong>{{ $errors->first('password') }}</strong>
@@ -177,6 +184,7 @@
                                                 </label>
                                             </div>
                                         </div>
+                                        @include('laravelusers::partials.password-confirmation')
                                         @if ($errors->has('password_confirmation'))
                                             <span class="help-block">
                                                 <strong>{{ $errors->first('password_confirmation') }}</strong>
@@ -199,6 +207,7 @@
                                 </div>
                             </div>
                         </form>
+                        <x-laravelusers::email-actions :user="$user" :deleted="$deletedUser ?? false" />
                     </div>
                 </div>
             </div>

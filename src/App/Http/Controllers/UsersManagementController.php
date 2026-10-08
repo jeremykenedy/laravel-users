@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace jeremykenedy\laravelusers\App\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,13 +16,31 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use jeremykenedy\laravelusers\Actions\BulkUsers;
 use jeremykenedy\laravelusers\Actions\CreateUser;
+use jeremykenedy\laravelusers\Actions\EmailUsers;
+use jeremykenedy\laravelusers\Actions\PreviewUserEmail;
+use jeremykenedy\laravelusers\Actions\SendGoodbye;
+use jeremykenedy\laravelusers\Actions\UpdateUserSettings;
+use jeremykenedy\laravelusers\App\Http\Middleware\UserAccessMiddleware;
 use jeremykenedy\laravelusers\App\Http\Requests\BulkUsersRequest;
 use jeremykenedy\laravelusers\App\Http\Requests\CreateUserRequest;
+use jeremykenedy\laravelusers\App\Http\Requests\DeleteUserRequest;
+use jeremykenedy\laravelusers\App\Http\Requests\EmailUsersRequest;
+use jeremykenedy\laravelusers\App\Http\Requests\UpdateSettingsRequest;
 use jeremykenedy\laravelusers\Rules\PlainTextName;
+use jeremykenedy\laravelusers\Support\AccountPreferences;
+use jeremykenedy\laravelusers\Support\AppearancePreferences;
 use jeremykenedy\laravelusers\Support\Avatar;
+use jeremykenedy\laravelusers\Support\AvatarPreferences;
 use jeremykenedy\laravelusers\Support\DeletedUsers;
 use jeremykenedy\laravelusers\Support\Frontend;
+use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageRequirements;
+use jeremykenedy\laravelusers\Support\PasswordRules;
+use jeremykenedy\laravelusers\Support\RoleAccess;
 use jeremykenedy\laravelusers\Support\UserActivity;
+use jeremykenedy\laravelusers\Support\UserPermissions;
+use jeremykenedy\laravelusers\Support\UserRoles;
+use jeremykenedy\laravelusers\Support\UserSettings;
 
 class UsersManagementController extends Controller
 {
@@ -29,7 +48,7 @@ class UsersManagementController extends Controller
 
     private bool $_rolesEnabled;
 
-    private string $_rolesMiddlware;
+    private string|array $_rolesMiddlware;
 
     private bool $_rolesMiddleWareEnabled;
 
@@ -49,9 +68,33 @@ class UsersManagementController extends Controller
             $this->middleware('auth');
         }
 
+        $middleware = config('laravelusers.middleware', []);
+        if ($middleware) {
+            $this->middleware($middleware);
+        }
+
         if ($this->_rolesEnabled && $this->_rolesMiddleWareEnabled) {
             $this->middleware($this->_rolesMiddlware);
         }
+        $this->middleware(UserAccessMiddleware::class);
+    }
+
+    public function settings(UserSettings $settings, ManagedPackages $packages, PackageRequirements $requirements): View
+    {
+        abort_unless(config('laravelusers.settings.enabled', false), 404);
+        $user = Auth::user();
+        $accessAvailable = $user instanceof Model && RoleAccess::available($user);
+        $roles = $accessAvailable ? RoleAccess::query($user, 'role')->get() : collect();
+        $permissions = $accessAvailable ? RoleAccess::query($user, 'permission')->get() : collect();
+
+        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $user instanceof Model && $packages->allowed($user), 'managedPackages' => $packages->listing(), 'packageQueueReady' => $requirements->verify($packages)]);
+    }
+
+    public function updateSettings(UpdateSettingsRequest $request, UpdateUserSettings $update): RedirectResponse
+    {
+        $update->handle($request->validated());
+
+        return back()->with('success', trans('laravelusers::ui.settings_saved'));
     }
 
     /**
@@ -63,9 +106,9 @@ class UsersManagementController extends Controller
         $userModel = config('laravelusers.defaultUserModel');
 
         if ($pagintaionEnabled) {
-            $users = $userModel::paginate(config('laravelusers.paginateListSize', 25));
+            $users = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'))->paginate(config('laravelusers.paginateListSize', 25));
         } else {
-            $users = $userModel::all();
+            $users = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'))->get();
         }
 
         $data = [
@@ -84,9 +127,22 @@ class UsersManagementController extends Controller
         return redirect()->route($data['action'] === 'delete' ? 'users' : 'users.deleted')->with('success', trans('laravelusers::ui.bulk_success'));
     }
 
+    public function email(EmailUsersRequest $request, EmailUsers $emails): RedirectResponse
+    {
+        $sent = $emails->handle($request->validated());
+
+        return back()->with('success', trans_choice('laravelusers::ui.email_sent', $sent, ['count' => $sent]));
+    }
+
+    public function previewEmail(EmailUsersRequest $request, PreviewUserEmail $preview): JsonResponse
+    {
+        return response()->json($preview->handle($request->validated()))->header('Cache-Control', 'no-store, private');
+    }
+
     public function deleted(DeletedUsers $deleted): View
     {
         $query = $deleted->query();
+        $query->when($this->_rolesEnabled, fn ($query) => $query->with('roles'));
         $query->orderBy('deleted_at', 'desc')->orderBy($query->getModel()->getKeyName(), 'desc');
         $pagintaionEnabled = config('laravelusers.enablePagination', true);
         $users = $pagintaionEnabled ? $query->paginate(config('laravelusers.paginateListSize', 25)) : $query->get();
@@ -117,11 +173,13 @@ class UsersManagementController extends Controller
      */
     public function create(): View
     {
+        $userModel = config('laravelusers.defaultUserModel');
+        $model = new $userModel();
         $roles = [];
 
         if ($this->_rolesEnabled) {
-            $roleModel = config('laravelusers.roleModel');
-            $roles = $roleModel::all();
+            $userModel = config('laravelusers.defaultUserModel');
+            $roles = UserRoles::query(new $userModel())->get();
         }
 
         $data = [
@@ -129,7 +187,7 @@ class UsersManagementController extends Controller
             'roles'        => $roles,
         ];
 
-        return view(Frontend::view(config('laravelusers.createUserBlade')), $data);
+        return view(Frontend::view(config('laravelusers.createUserBlade')), array_merge($data, UserPermissions::formData($model), AvatarPreferences::formData($model), AppearancePreferences::formData($model), AccountPreferences::formData($model)));
     }
 
     /**
@@ -151,7 +209,7 @@ class UsersManagementController extends Controller
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        return view(Frontend::view(config('laravelusers.showIndividualUserBlade')), ['user' => $user]);
+        return view(Frontend::view(config('laravelusers.showIndividualUserBlade')), array_merge(['user' => $user], UserRoles::viewData($user), UserPermissions::displayData($user)));
     }
 
     /**
@@ -161,12 +219,24 @@ class UsersManagementController extends Controller
     {
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
+
+        return $this->editForm($user);
+    }
+
+    public function editDeleted(int $id, DeletedUsers $deleted): View
+    {
+        abort_unless(config('laravelusers.settings.enabled', false), 404);
+
+        return $this->editForm($deleted->query()->findOrFail($id), true);
+    }
+
+    private function editForm(Model $user, bool $deletedUser = false): View
+    {
         $roles = [];
         $currentRole = [];
 
         if ($this->_rolesEnabled) {
-            $roleModel = config('laravelusers.roleModel');
-            $roles = $roleModel::all();
+            $roles = UserRoles::query($user)->get();
 
             foreach ($user->roles as $user_role) {
                 $currentRole[] = $user_role->id;
@@ -175,6 +245,7 @@ class UsersManagementController extends Controller
 
         $data = [
             'user'         => $user,
+            'deletedUser'  => $deletedUser,
             'rolesEnabled' => $this->_rolesEnabled,
         ];
 
@@ -183,7 +254,7 @@ class UsersManagementController extends Controller
             $data['currentRole'] = $currentRole;
         }
 
-        return view(Frontend::view(config('laravelusers.editIndividualUserBlade')), $data);
+        return view(Frontend::view(config('laravelusers.editIndividualUserBlade')), array_merge($data, UserRoles::viewData($user), UserPermissions::formData($user), AvatarPreferences::formData($user), AppearancePreferences::formData($user), AccountPreferences::formData($user)));
     }
 
     /**
@@ -192,7 +263,7 @@ class UsersManagementController extends Controller
     public function update(Request $request, int $id): RedirectResponse
     {
         $userModel = config('laravelusers.defaultUserModel');
-        $user = $userModel::findOrFail($id);
+        $user = $request->route()->getName() === 'users.deleted.update' ? (new DeletedUsers())->query()->findOrFail($id) : $userModel::findOrFail($id);
         $emailCheck = ($request->input('email') !== '') && ($request->input('email') !== $user->email);
         $passwordCheck = $request->filled('password');
 
@@ -206,40 +277,59 @@ class UsersManagementController extends Controller
         }
 
         if ($passwordCheck) {
-            $rules['password'] = 'required|string|min:6|max:20|confirmed';
+            $rules['password'] = PasswordRules::validation();
             $rules['password_confirmation'] = 'required|string|same:password';
         }
 
         if ($this->_rolesEnabled) {
-            $rules['role'] = 'required';
+            $rules['role'] = ['required', function ($attribute, $value, $fail) {
+                foreach ((array) $value as $id) {
+                    if (!is_int($id) && !is_string($id)) {
+                        $fail(trans('laravelusers::ui.invalid_role'));
+                    }
+                }
+            }];
         }
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), array_merge($rules, UserPermissions::rules($user), AvatarPreferences::rules($user), AppearancePreferences::rules($user), AccountPreferences::rules($user)));
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except(['password', 'password_confirmation']));
         }
 
-        $user->getConnection()->transaction(function () use ($user, $request, $emailCheck, $passwordCheck) {
-            $user->name = strip_tags($request->input('name'));
+        $data = $validator->validated();
+        $user->getConnection()->transaction(function () use ($user, $data, $emailCheck, $passwordCheck) {
+            $user->name = strip_tags($data['name']);
 
             if ($emailCheck) {
-                $user->email = $request->input('email');
+                $user->email = $data['email'];
             }
 
             if ($passwordCheck) {
-                $user->password = Hash::make($request->input('password'));
+                $user->password = Hash::make($data['password']);
             }
 
             if ($this->_rolesEnabled) {
-                $user->detachAllRoles();
-                $user->attachRole($request->input('role'));
+                UserRoles::assign($user, $data['role'], true);
             }
 
+            if (UserPermissions::enabled($user) && (!empty($data['permissions_present']) || array_key_exists('permissions', $data))) {
+                UserPermissions::assign($user, $data['permissions'] ?? []);
+            }
             $user->save();
+            AvatarPreferences::save($user, $data);
+            AppearancePreferences::save($user, $data);
+            AccountPreferences::save($user, $data);
         });
 
         return back()->with('success', trans('laravelusers::laravelusers.messages.update-user-success'));
+    }
+
+    public function updateDeleted(Request $request, int $id): RedirectResponse
+    {
+        abort_unless(config('laravelusers.settings.enabled', false), 404);
+
+        return $this->update($request, $id);
     }
 
     /**
@@ -247,12 +337,29 @@ class UsersManagementController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
+        return $this->deleteUser($id);
+    }
+
+    public function destroyWithEmail(int $id, DeleteUserRequest $request, SendGoodbye $goodbye): RedirectResponse
+    {
+        return $this->deleteUser($id, $request->validated(), $goodbye);
+    }
+
+    private function deleteUser(int $id, array $data = [], ?SendGoodbye $goodbye = null): RedirectResponse
+    {
         $currentUser = Auth::user();
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
         if (!$currentUser || (string) $currentUser->getAuthIdentifier() !== (string) $user->getKey()) {
-            $user->delete();
+            $user->getConnection()->transaction(function () use ($user, $data, $goodbye) {
+                if (!$user->delete()) {
+                    throw new \RuntimeException('User deletion was rejected.');
+                }
+                if ($goodbye) {
+                    $goodbye->handle($user, $data);
+                }
+            });
 
             return redirect('users')->with('success', trans('laravelusers::laravelusers.messages.delete-success'));
         }
@@ -284,7 +391,7 @@ class UsersManagementController extends Controller
         }
 
         $userModel = config('laravelusers.defaultUserModel');
-        $results = $userModel::where('id', 'like', $searchTerm.'%')
+        $results = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'))->where('id', 'like', $searchTerm.'%')
             ->orWhere('name', 'like', $searchTerm.'%')
             ->orWhere('email', 'like', $searchTerm.'%')
             ->get();
@@ -299,10 +406,13 @@ class UsersManagementController extends Controller
         if ($request->boolean('include_activity') || $request->boolean('include_avatar')) {
             $data = ['users' => $data];
             if ($request->boolean('include_activity')) {
-                $data['activity'] = $activity->listing($results, $request->boolean('include_login_details') && (bool) config('laravelusers.showLastLoginDetailsColumn', true));
+                $data['activity'] = $activity->listing($results, $request->boolean('include_login_details') && (bool) config('laravelusers.showLastLoginDetailsColumn', false));
             }
             if ($request->boolean('include_avatar')) {
                 $data['avatars'] = $avatar->listing($results);
+                if (config('laravelusers.appearance.per_user', false)) {
+                    $data['appearance'] = AppearancePreferences::colors($results);
+                }
             }
         }
 

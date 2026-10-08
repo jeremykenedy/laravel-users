@@ -6,7 +6,9 @@ use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\CacheManager;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Session\ArraySessionHandler;
 use Illuminate\Session\Store;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\Fixtures\Account;
+use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\TestCase;
 use RuntimeException;
 
@@ -135,6 +138,7 @@ class ActivityTest extends TestCase
         $this->request();
         Event::dispatch(new Login('admin', $user, false));
         Event::dispatch(new Login('web', new Account(['id' => $user->id]), false));
+        Event::dispatch(new Login('web', $this->createStub(Authenticatable::class), false));
         $this->assertSame(0, DB::table('laravelusers_login_activity')->count());
         $this->assertFalse($this->app->make(UserActivity::class)->isOnline($user));
     }
@@ -207,11 +211,14 @@ class ActivityTest extends TestCase
         $user = $this->user();
         $activity = $this->app->make(UserActivity::class);
         $activity->recordLogin($user, $this->request());
+        $withoutLogin = $this->user();
         $this->actingAs($user);
         foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
             config(['laravelusers.frontend' => $framework]);
             $this->get('/users/'.$user->id)->assertOk()->assertSee('192.0.2.10')->assertSee('Chrome 130.0.0')->assertSee('Last login');
-            $this->get('/users')->assertOk()->assertSee('Online');
+            config(['laravelusers.showOnlineColumn' => true, 'laravelusers.showLastLoginColumn' => true, 'laravelusers.showLastLoginDetailsColumn' => true]);
+            $this->get('/users')->assertOk()->assertSee('Online')->assertSee('<span class="lu-date">No logins</span>', false);
+            $this->get('/users/'.$withoutLogin->id)->assertOk()->assertSee('<span class="lu-date">No logins</span>', false);
         }
         $this->postJson('/search-users', ['user_search_box' => $user->name])->assertOk()->assertExactJson([$user->toArray()]);
         config(['laravelusers.activity.login' => false, 'laravelusers.activity.online' => false]);
@@ -248,7 +255,7 @@ class ActivityTest extends TestCase
     public function test_listing_loads_login_times_in_one_query_and_search_metadata_is_opt_in(): void
     {
         $this->migrate();
-        config(['laravelusers.activity.login' => true, 'laravelusers.activity.online' => true, 'laravelusers.paginateListSize' => 1]);
+        config(['laravelusers.activity.login' => true, 'laravelusers.activity.online' => true, 'laravelusers.showLastLoginDetailsColumn' => true, 'laravelusers.paginateListSize' => 1]);
         $admin = $this->user();
         $other = $this->user(['name' => 'RemoteAccount']);
         $activity = $this->app->make(UserActivity::class);
@@ -270,6 +277,25 @@ class ActivityTest extends TestCase
         config(['laravelusers.showLastLoginDetailsColumn' => false]);
         $this->postJson('/search-users', ['user_search_box' => 'RemoteAccount', 'include_activity' => 1, 'include_login_details' => 1])->assertOk()->assertDontSee('192.0.2.10')->assertDontSee('Chrome');
         DB::disableQueryLog();
+    }
+
+    public function test_deleted_lists_keep_login_history_and_configurable_email_links(): void
+    {
+        $this->migrate();
+        Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
+        config(['laravelusers.defaultUserModel' => SoftUser::class, 'laravelusers.softDeletedEnabled' => true, 'laravelusers.activity.login' => true, 'laravelusers.showLastLoginDetailsColumn' => true]);
+        $this->actingAs($this->user());
+        $user = SoftUser::findOrFail($this->user()->id);
+        $this->app->make(UserActivity::class)->recordLogin($user, $this->request());
+        $user->delete();
+        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+            config(['laravelusers.frontend' => $framework, 'laravelusers.showLastLoginColumn' => true, 'laravelusers.emailLinks' => true]);
+            $response = $this->get('/users/deleted')->assertOk()->assertSee('192.0.2.10')->assertSee('href="mailto:'.$user->email.'"', false)->assertSee('title="Send user an email"', false);
+            $this->assertMatchesRegularExpression('/<th[^>]*>Last login<\/th>/', $response->getContent());
+            config(['laravelusers.showLastLoginColumn' => false, 'laravelusers.emailLinks' => false]);
+            $response = $this->get('/users/deleted')->assertOk()->assertDontSee('href="mailto:', false);
+            $this->assertDoesNotMatchRegularExpression('/<th[^>]*>Last login<\/th>/', $response->getContent());
+        }
     }
 
     public function test_activity_columns_can_be_hidden_without_disabling_tracking(): void

@@ -5,6 +5,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -16,9 +17,29 @@ use jeremykenedy\laravelusers\Test\TestCase;
 
 class WelcomeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['laravelusers.emails.enabled' => true, 'laravelusers.welcome.enabled' => true]);
+    }
+
     private function account(array $extra = []): array
     {
         return array_merge(['name' => 'newaccount', 'email' => 'new@example.com', 'password' => 'password123', 'password_confirmation' => 'password123'], $extra);
+    }
+
+    public function test_master_email_and_welcome_action_switches_also_disable_creation_mail(): void
+    {
+        Notification::fake();
+        $this->actingAs($this->user());
+        foreach (['enabled', 'welcome'] as $setting) {
+            config(['laravelusers.emails.'.$setting => false]);
+            $this->get('/users/create')->assertOk()->assertDontSee('type="checkbox" name="send_welcome_email"', false);
+            $this->post('/users', $this->account(['send_welcome_email' => 1]))->assertSessionHasErrors('send_welcome_email');
+            config(['laravelusers.emails.'.$setting => true]);
+        }
+        Notification::assertNothingSent();
+        $this->assertSame(1, User::count());
     }
 
     public function test_existing_creation_does_not_send_mail_and_only_saves_validated_fields(): void
@@ -107,5 +128,28 @@ class WelcomeTest extends TestCase
         $this->actingAs($this->user())->post('/users', $this->account(['send_welcome_email' => 1]))
             ->assertRedirect('/users')->assertSessionHas('success')->assertSessionHas('error', trans('laravelusers::ui.welcome_failed'));
         $this->assertDatabaseHas('users', ['email' => 'new@example.com']);
+    }
+
+    public function test_welcome_template_renders_normal_and_password_setup_emails(): void
+    {
+        $recipient = $this->user();
+        foreach ([null, 'https://example.com/reset-password/token?email=user%40example.com'] as $url) {
+            $mail = (new WelcomeUser('<img src=x onerror=alert(1)>', $url))->toMail($recipient);
+            $this->assertSame('laravelusers::emails.welcome', $mail->markdown);
+            $html = (string) $mail->render();
+            $this->assertStringNotContainsString('<img src=x', $html);
+            $this->assertStringContainsString('&lt;img src=x', $html);
+            $this->assertStringContainsString(trans('laravelusers::ui.welcome_message', ['app' => config('app.name')]), $html);
+            $markdown = $this->app->make(Markdown::class);
+            $text = (string) $markdown->renderText($mail->markdown, $mail->data());
+            $this->assertStringContainsString(trans('laravelusers::ui.welcome_message', ['app' => config('app.name')]), $text);
+            if ($url) {
+                $this->assertStringContainsString(trans('laravelusers::ui.reset_notice'), $html);
+                $this->assertStringContainsString(trans('laravelusers::ui.reset_expiry', ['minutes' => config('auth.passwords.users.expire')]), $text);
+            } else {
+                $this->assertStringContainsString(route('login'), $html);
+                $this->assertStringNotContainsString(trans('laravelusers::ui.reset_notice'), $text);
+            }
+        }
     }
 }

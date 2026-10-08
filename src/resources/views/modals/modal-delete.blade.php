@@ -11,6 +11,7 @@
                 </button>
             </div>
             <div class="modal-body">
+                @include('laravelusers::partials.goodbye-options')
                 <p>
                     {!! trans('laravelusers::modals.delete_user_message') !!}
                 </p>

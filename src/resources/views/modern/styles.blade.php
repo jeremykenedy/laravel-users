@@ -60,7 +60,7 @@
     #laravelusers .lu-input-group { display: flex; }
     #laravelusers .lu-input-group .lu-input { min-width: 0; border-radius: 6px 0 0 6px; }
     #laravelusers .lu-input-group .lu-input:last-child { border-radius: 6px; }
-    #laravelusers .lu-input-icon { display: flex; align-items: center; justify-content: center; width: 44px; flex: 0 0 44px; border: 1px solid var(--lu-border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--lu-soft); color: var(--lu-muted); }
+    #laravelusers .lu-input-icon { margin-bottom: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; flex: 0 0 44px; border: 1px solid var(--lu-border); border-left: 0; border-radius: 0 6px 6px 0; background: var(--lu-soft); color: var(--lu-muted); }
     #laravelusers .lu-welcome { margin: 8px 0 24px; padding: 16px 20px; border: 1px solid var(--lu-border); border-radius: 7px; background: var(--lu-soft); }
     #laravelusers .lu-welcome legend { padding: 0 6px; font-weight: 600; }
     #laravelusers .lu-welcome p { margin: 8px 0 0; font-size: .875rem; }
@@ -76,7 +76,7 @@
     #laravelusers .lu-sort { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
     #laravelusers .lu-column-filter { width: 100%; min-width: 40px; padding: 4px 8px; border: 1px solid var(--lu-border); border-radius: 4px; background: var(--lu-bg); color: var(--lu-text); }
     @media (max-width: 640px) { #laravelusers .lu-field { display: block; } #laravelusers .lu-field > label { text-align: start; padding: 0; } #laravelusers .lu-card-heading { padding: 16px; } }
-    @media (max-width: 640px) { #laravelusers[data-lu-responsive-buttons="true"] .lu-button { font-size: 0; width: 40px; min-height: 40px; padding: 10px; } }
+    @media (max-width: 640px) { #laravelusers[data-lu-responsive-buttons="true"] .lu-button { font-size: 0; gap: 0; width: 40px; height: 40px; min-height: 40px; padding: 0; line-height: 1; } }
     @media (max-width: 640px) { #laravelusers .lu-card-heading { flex-wrap: nowrap; } #laravelusers .lu-card-heading h1 { flex: 1; min-width: 0; } #laravelusers .lu-card-heading .lu-actions { flex-wrap: nowrap; } #laravelusers .lu-search-field { min-width: 120px; } }
 </style>
 

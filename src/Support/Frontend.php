@@ -18,6 +18,43 @@ class Frontend
         return config('laravelusers-ui.theme', config('laravelusers.theme', 'light'));
     }
 
+    public static function profileColors(string $setting = 'profileCardColor', string $default = '#2458b7', bool $dark = false): array
+    {
+        $prefix = $setting === 'editCardColor' ? 'editCard' : 'profileCard';
+        $color = ($dark ? config('laravelusers.'.$prefix.'DarkColor') : null) ?? config('laravelusers.'.$setting, $default);
+        $strength = ($dark ? config('laravelusers.'.$prefix.'DarkGradientStrength') : null) ?? config('laravelusers.'.$prefix.'GradientStrength', 50);
+
+        return self::gradientColors(self::colors($color, $default), $strength);
+    }
+
+    public static function gradientColors(array $colors, mixed $strength): array
+    {
+        $strength = max(0, min(100, (int) $strength));
+        $opacity = $strength / 50;
+        $shade = substr($colors['shade'], 0, 7).sprintf('%02x', min(255, (int) round(hexdec(substr($colors['shade'], 7)) * $opacity)));
+
+        return array_replace($colors, ['shade' => $shade, 'highlight' => '#ffffff'.sprintf('%02x', (int) round(72 * $opacity)), 'strength' => $strength]);
+    }
+
+    public static function colors(mixed $color, string $default = '#2458b7'): array
+    {
+        if (!is_string($color) || !preg_match('/^#(?:[a-f0-9]{3}|[a-f0-9]{6})$/iD', $color)) {
+            $color = $default;
+        }
+        $hex = substr($color, 1);
+        if (strlen($hex) === 3) {
+            $hex = implode('', array_map(static fn ($digit) => $digit.$digit, str_split($hex)));
+        }
+        $channels = array_map(static function ($channel) {
+            $value = hexdec($channel) / 255;
+
+            return $value <= 0.04045 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
+        }, str_split($hex, 2));
+        $light = (0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2]) > 0.179;
+
+        return ['base' => '#'.$hex, 'text' => $light ? '#000' : '#fff', 'shade' => $light ? '#ffffff48' : '#00000050'];
+    }
+
     public static function view(string $view): string
     {
         $defaults = [

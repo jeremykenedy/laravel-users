@@ -59,11 +59,14 @@
             input.addEventListener('input', apply);
         }
     });
-    if (sorting && @json((bool) config('laravelusers.responsiveTable', false))) {
+    if (sorting && @json((bool) (config('laravelusers.responsiveTable', false) || config('laravelusers.tableViewToggle', false)))) {
         const toolbar = document.createElement('div');
         toolbar.className = 'lu-mobile-sort';
         const label = document.createElement('label');
         label.textContent = @json(__('laravelusers::ui.sort')); label.htmlFor = 'lu-mobile-sort';
+        const icon = document.querySelector('[data-lu-icon-template="sort"]');
+        if (icon) label.prepend(icon.content.cloneNode(true));
+        const selected = document.createElement('span'); selected.className = 'lu-sort-value'; selected.setAttribute('aria-hidden', 'true');
         const select = document.createElement('select');
         select.id = 'lu-mobile-sort'; select.className = 'lu-column-filter';
         headers.forEach(function (header, column) {
@@ -75,18 +78,25 @@
                 select.append(option);
             });
         });
+        selected.textContent = select.selectedOptions[0]?.textContent || '';
+        if (@json((bool) config('laravelusers.tooltipsEnabled', true))) select.title = label.textContent.trim();
         select.addEventListener('change', function () {
+            selected.textContent = select.selectedOptions[0].textContent;
             const parts = select.value.split(':');
             sortColumn = Number(parts[0]); descending = parts[1] === 'descending';
             headers.forEach(header => { if (header.hasAttribute('aria-sort')) header.setAttribute('aria-sort', 'none'); });
             headers[sortColumn].setAttribute('aria-sort', parts[1]);
             apply();
         });
-        toolbar.append(label, select); table.parentElement.before(toolbar);
+        toolbar.append(label, selected, select); table.parentElement.before(toolbar);
     }
-    if (filtering && @json((bool) config('laravelusers.responsiveTable', false))) {
+    if (filtering && @json((bool) (config('laravelusers.responsiveTable', false) || config('laravelusers.tableViewToggle', false)))) {
         const menu = document.createElement('details'); menu.className = 'lu-mobile-filters';
         const summary = document.createElement('summary'); summary.textContent = @json(__('laravelusers::ui.filters'));
+        summary.setAttribute('aria-label', @json(__('laravelusers::ui.filters')));
+        if (@json((bool) config('laravelusers.tooltipsEnabled', true))) summary.title = summary.textContent;
+        const template = document.querySelector('[data-lu-icon-template="filter"]');
+        if (template) summary.prepend(template.content.cloneNode(true));
         const fields = document.createElement('div'); fields.className = 'lu-mobile-filter-fields';
         filters.forEach(function (input, column) {
             const mobile = input.cloneNode();
@@ -96,6 +106,7 @@
             fields.append(mobile);
         });
         menu.append(summary, fields); table.parentElement.before(menu);
+        document.addEventListener('click', function (event) { if (!menu.contains(event.target)) menu.open = false; });
     }
     root.addEventListener('lu:rows', apply);
 })();

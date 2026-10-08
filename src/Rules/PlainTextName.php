@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace jeremykenedy\laravelusers\Rules;
 
-use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Validation\ClosureValidationRule;
 
-class PlainTextName implements Rule
+class PlainTextName extends ClosureValidationRule
 {
-    public function passes($attribute, $value): bool
+    public function __construct()
     {
-        return is_string($value) && !str_contains($value, '<') && !str_contains($value, '>');
-    }
-
-    public function message(): string
-    {
-        return trans('laravelusers::ui.plain_name');
+        parent::__construct(static function ($attribute, $value, $fail) {
+            if (!is_string($value) || str_contains($value, '<') || str_contains($value, '>')) {
+                $fail(trans('laravelusers::ui.plain_name'));
+            }
+        });
     }
 }

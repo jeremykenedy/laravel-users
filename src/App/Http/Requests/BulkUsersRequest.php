@@ -6,6 +6,7 @@ namespace jeremykenedy\laravelusers\App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use jeremykenedy\laravelusers\Support\GoodbyeEmail;
 
 class BulkUsersRequest extends FormRequest
 {
@@ -24,6 +25,6 @@ class BulkUsersRequest extends FormRequest
                     $fail(trans('laravelusers::ui.invalid_selection'));
                 }
             }],
-        ];
+        ] + GoodbyeEmail::rules();
     }
 }

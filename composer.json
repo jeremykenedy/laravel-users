@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": "^8.1|^8.2|^8.3|^8.4",
+        "php": "^8.1",
         "ua-parser/uap-php": "^3.9.14"
     },
     "autoload": {
@@ -55,6 +55,8 @@
         ]
     },
     "suggest": {
+        "dicebear/core": "Optional local DiceBear generation on PHP 8.2+. See docs/avatars.md.",
+        "dicebear/styles": "Official styles for the optional local DiceBear generator.",
         "jeremykenedy/laravel-ui-kit": "Optional host application integration. See docs/integrations.md.",
         "jeremykenedy/laravel-toast": "Optional host application integration. See docs/integrations.md.",
         "jeremykenedy/laravel-darkmode-toggle": "Optional host application integration. See docs/integrations.md.",

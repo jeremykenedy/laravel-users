@@ -1,0 +1,78 @@
+<?php
+
+namespace jeremykenedy\laravelusers\Test\Feature;
+
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
+use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageRequirements;
+use jeremykenedy\laravelusers\Test\TestCase;
+
+class PackageRequirementsTest extends TestCase
+{
+    private string $directory;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->directory = sys_get_temp_dir().'/laravelusers-requirements-'.bin2hex(random_bytes(8));
+        $this->app->setBasePath($this->directory);
+        $this->app->useStoragePath($this->directory.'/storage');
+        File::ensureDirectoryExists(storage_path('framework/views'));
+    }
+
+    protected function tearDown(): void
+    {
+        File::deleteDirectory($this->directory);
+        parent::tearDown();
+    }
+
+    public function test_cli_setup_creates_an_isolated_queue_without_changing_host_defaults(): void
+    {
+        $queue = config('queue.default');
+        $cache = config('cache.default');
+        foreach (['laravelusers:install', 'laravelusers:update'] as $command) {
+            $this->artisan($command, ['--setup-packages' => true, '--no-interaction' => true])->assertExitCode(0);
+            $this->assertTrue(Schema::hasTable('laravelusers_package_jobs'));
+            $this->assertSame($queue, config('queue.default'));
+            $this->assertSame($cache, config('cache.default'));
+            $this->assertSame(600, config('queue.connections.laravelusers-packages.retry_after'));
+            $this->assertTrue($this->app->make(ManagedPackages::class)->queueReady());
+        }
+        $this->assertFileExists(config_path('laravelusers-packages.php'));
+        $this->assertDirectoryDoesNotExist(database_path('migrations'));
+        $migration = require dirname(__DIR__, 2).'/src/database/package-jobs/2026_10_08_181116_create_laravelusers_package_jobs_table.php';
+        $migration->down();
+        $this->assertFalse(Schema::hasTable('laravelusers_package_jobs'));
+    }
+
+    public function test_gui_setup_requires_explicit_confirmation_and_authorization(): void
+    {
+        $data = ['package' => 'requirements', 'operation' => 'setup', 'confirmation' => 'continue', 'acknowledgement' => 1];
+        $this->actingAs($this->user())->postJson('/users/settings/packages', $data)->assertForbidden();
+        config(['laravelusers.settings.enabled' => true, 'laravelusers.settings.packages.enabled' => true]);
+        Gate::define('manage-laravelusers-settings', fn ($user) => $user->id === 1);
+        Gate::define('manage-laravelusers-packages', fn ($user) => $user->id === 1);
+        $this->postJson('/users/settings/packages', array_replace($data, ['confirmation' => 'wrong']))->assertUnprocessable();
+        $this->assertFalse(Schema::hasTable('laravelusers_package_jobs'));
+        $this->postJson('/users/settings/packages', $data)->assertOk()->assertJsonPath('status', 'completed')->assertJsonPath('queue_ready', true);
+        $this->assertTrue(Schema::hasTable('laravelusers_package_jobs'));
+        $this->assertTrue(ManagedPackages::cache()->lock('gui-setup', 10)->get());
+        $this->postJson('/users/settings/packages/verify', ['package' => 'requirements', 'operation' => 'verify'])
+            ->assertOk()
+            ->assertJsonPath('status', 'completed')
+            ->assertJsonPath('queue_ready', true);
+    }
+
+    public function test_existing_setup_configuration_is_preserved(): void
+    {
+        File::ensureDirectoryExists(config_path());
+        $contents = "<?php return ['connection' => 'redis', 'cache' => 'file', 'database' => null];\n";
+        File::put(config_path('laravelusers-packages.php'), $contents);
+        $this->app->make(PackageRequirements::class)->configure();
+        $this->assertSame($contents, File::get(config_path('laravelusers-packages.php')));
+        $this->assertSame('redis', config('laravelusers.settings.packages.connection'));
+        $this->assertSame('file', config('laravelusers.settings.packages.cache'));
+    }
+}

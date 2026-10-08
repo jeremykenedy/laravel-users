@@ -1,28 +1,29 @@
-<section class="lu-profile" aria-label="{{ __('laravelusers::ui.profile') }}">
+<section class="lu-profile" aria-label="{{ __('laravelusers::ui.profile') }}" @include('laravelusers::partials.appearance-attributes', ['appearance' => $profileAppearance ?? null])>
     <header class="lu-profile-header">
-        <h1>{{ __('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) }}</h1>
-        <a class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-info' }}" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'back']) {{ __('laravelusers::ui.back') }}</a>
+        <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) }}</h1>
+        <a class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-info' }}" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a>
     </header>
-    <div class="lu-profile-identity">
-        @if(config('laravelusers.showProfileAvatar', true) && isset($userAvatar))@include('laravelusers::partials.avatar', ['avatar' => $userAvatar])@endif
-        <div><h2>{{ $user->name }}</h2><p>@if(config('laravelusers.emailLinks', true))<a href="mailto:{{ $user->email }}" @if(config('laravelusers.tooltipsEnabled', true)) title="{{ __('laravelusers::ui.email_user') }}" @endif>{{ $user->email }}</a>@else{{ $user->email }}@endif</p></div>
+    <div class="lu-profile-body">
+        @include('laravelusers::partials.user-identity')
+        <dl class="lu-profile-details">
+            @foreach(['id' => 'id', 'name' => 'user', 'email' => 'mail', 'created_at' => 'clock', 'updated_at' => 'clock'] as $field => $icon)
+                <div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => $icon]) {{ strip_tags(__('laravelusers::laravelusers.show-user.'.str_replace('_at', '', $field))) }}</dt><dd>@if(str_ends_with($field, '_at'))@include('laravelusers::partials.date', ['value' => $user->$field])@else{{ $user->$field }}@endif</dd></div>
+            @endforeach
+            @if(config('laravelusers.rolesEnabled'))
+                <div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ __('laravelusers::laravelusers.show-user.labelRole') }}</dt><dd>@foreach($user->roles as $role)<span class="badge badge-primary lu-badge">{{ $role->name }}</span> @endforeach</dd></div>
+                @if(config('laravelusers.showRoleLevels', true) && isset($roleLevel))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ trans_choice('laravelusers::laravelusers.show-user.labelAccessLevel', 1) }}</dt><dd>@foreach(range(5, 1) as $level)@if($roleLevel >= $level)<span class="badge badge-primary lu-badge">{{ $level }}</span> @endif @endforeach</dd></div>@endif
+            @endif
+            @if(isset($directPermissions))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ __('laravelusers::ui.direct_permissions') }}</dt><dd>@foreach($directPermissions as $permission)<span class="badge badge-primary lu-badge">{{ $permission->name }}</span> @endforeach</dd></div>@endif
+            @if(config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))@include('laravelusers::partials.user-activity')@endif
+        </dl>
     </div>
-    <dl class="lu-profile-details">
-        @foreach(['id' => 'id', 'name' => 'user', 'email' => 'mail', 'created_at' => 'clock', 'updated_at' => 'clock'] as $field => $icon)
-            <div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => $icon]) {{ strip_tags(__('laravelusers::laravelusers.show-user.'.str_replace('_at', '', $field))) }}</dt><dd>@if(str_ends_with($field, '_at'))@include('laravelusers::partials.date', ['value' => $user->$field])@else{{ $user->$field }}@endif</dd></div>
-        @endforeach
-        @if(config('laravelusers.rolesEnabled'))
-            <div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ __('laravelusers::laravelusers.show-user.labelRole') }}</dt><dd>@foreach($user->roles as $role)<span class="badge badge-primary lu-badge">{{ $role->name }}</span> @endforeach</dd></div>
-            @if(method_exists($user, 'level'))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ trans_choice('laravelusers::laravelusers.show-user.labelAccessLevel', 1) }}</dt><dd>@foreach(range(5, 1) as $level)@if($user->level() >= $level)<span class="badge badge-primary lu-badge">{{ $level }}</span> @endif @endforeach</dd></div>@endif
-        @endif
-        @if(config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))@include('laravelusers::partials.user-activity')@endif
-    </dl>
     <footer class="lu-profile-actions">
-        <a class="{{ $modern ? 'lu-button' : 'btn btn-info' }}" href="{{ route('users.edit', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>
+        @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_users'))<a class="{{ $modern ? 'lu-button' : 'btn btn-info' }}" href="{{ route('users.edit', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>@endif
         @if($modern)
             @include('laravelusers::modern.delete')
-        @elseif((string) Auth::id() !== (string) $user->id)
+        @elseif(\jeremykenedy\laravelusers\Support\UserAccess::allows('delete_users') && (string) Auth::id() !== (string) $user->id)
             <form method="POST" action="{{ route('user.destroy', $user->id) }}">@csrf @method('DELETE')<button type="{{ config('laravelusers.confirmDelete', true) ? 'button' : 'submit' }}" class="btn btn-danger" @if(config('laravelusers.confirmDelete', true)) data-toggle="modal" data-target="#confirmDelete" @endif data-title="{{ __('laravelusers::modals.delete_user_title') }}" data-message="{{ __('laravelusers::ui.confirm_delete', ['name' => $user->name]) }}">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::ui.delete') }}</button></form>
         @endif
     </footer>
+    <x-laravelusers::email-actions :user="$user" />
 </section>

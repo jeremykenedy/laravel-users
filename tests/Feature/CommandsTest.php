@@ -3,11 +3,66 @@
 namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Filesystem\Filesystem;
+use jeremykenedy\laravelusers\Support\Avatar;
+use jeremykenedy\laravelusers\Support\ComposerPackages;
+use jeremykenedy\laravelusers\Support\LocalAvatars;
+use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Test\TestCase;
 
 class CommandsTest extends TestCase
 {
     private string $directory;
+
+    public function test_avatar_choices_preserve_host_configuration_and_keep_local_generation_by_default(): void
+    {
+        config(['laravelusers-avatar' => ['custom' => 'kept']]);
+        $this->artisan('laravelusers:switch', ['--avatar' => 'ui-avatars'])->assertExitCode(0);
+        $this->assertSame(['custom' => 'kept', 'source' => 'ui-avatars'], require config_path('laravelusers-avatar.php'));
+        $this->assertDirectoryDoesNotExist(database_path('migrations'));
+        $this->artisan('laravelusers:update', ['--avatar' => 'keep', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('ui-avatars', (require config_path('laravelusers-avatar.php'))['source']);
+    }
+
+    public function test_optional_installation_failures_do_not_write_frontend_or_avatar_settings(): void
+    {
+        if (LocalAvatars::diceBearInstalled() || PHP_VERSION_ID < 80200) {
+            $this->markTestSkipped('This check requires the optional library to be absent and PHP 8.2 or newer.');
+        }
+        $this->mock(ComposerPackages::class)->shouldReceive('installMany')->once()->with(['dicebear/core:^10.7', 'dicebear/styles:^10.6'], \Mockery::type('callable'))->andReturn(false);
+        $this->artisan('laravelusers:update', ['--avatar' => 'dicebear', '--install-avatars' => true, '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+        $this->assertFileDoesNotExist(config_path('laravelusers-avatar.php'));
+    }
+
+    public function test_toast_removal_is_explicit_and_preserves_published_host_files(): void
+    {
+        $files = new Filesystem();
+        $path = config_path('toast.php');
+        $files->ensureDirectoryExists(config_path());
+        $files->put($path, 'host settings');
+        $this->mock(ComposerPackages::class)->shouldReceive('remove')->once()->with('jeremykenedy/laravel-toast', \Mockery::type('callable'))->andReturn(true);
+        $this->artisan('laravelusers:update', ['--toast' => 'remove', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('alert', (require config_path('laravelusers-notifications.php'))['driver']);
+        $this->assertSame('host settings', $files->get($path));
+        $this->assertDirectoryDoesNotExist(database_path('migrations'));
+    }
+
+    public function test_failed_toast_removal_preserves_existing_notification_and_frontend_settings(): void
+    {
+        $this->mock(ComposerPackages::class)->shouldReceive('remove')->once()->andReturn(false);
+        $this->artisan('laravelusers:update', ['--toast' => 'remove', '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-notifications.php'));
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+    }
+
+    public function test_invalid_avatar_and_notification_options_are_rejected_before_writing(): void
+    {
+        foreach ([['--avatar' => 'unknown'], ['--install-avatars' => true], ['--toast' => 'unknown'], ['--notifications' => 'unknown'], ['--toast' => 'remove', '--notifications' => 'toast']] as $options) {
+            $this->artisan('laravelusers:update', $options + ['--no-interaction' => true])->assertExitCode(1);
+        }
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+    }
 
     protected function setUp(): void
     {
@@ -46,6 +101,7 @@ class CommandsTest extends TestCase
         $this->assertSame('<?php return ["authEnabled" => false];', $files->get(config_path('laravelusers.php')));
         $this->assertSame('tailwind', (require config_path('laravelusers-ui.php'))['framework']);
         $this->assertFileExists(resource_path('views/vendor/laravelusers/modern/show-users.blade.php'));
+        $this->assertFileExists(resource_path('views/vendor/laravelusers/emails/welcome.blade.php'));
     }
 
     public function test_forced_view_update_keeps_a_complete_backup(): void
@@ -104,9 +160,12 @@ class CommandsTest extends TestCase
     public function test_interactive_choices_are_saved(): void
     {
         $this->artisan('laravelusers:install')
-            ->expectsChoice('Frontend framework', 'bootstrap5', ['bootstrap4', 'bootstrap5', 'tailwind'])
+            ->expectsChoice('CSS framework', 'bootstrap5', ['bootstrap4', 'bootstrap5', 'tailwind'])
             ->expectsChoice('Color theme', 'dark', ['light', 'dark', 'system'])
             ->expectsChoice('Views (existing overrides always take precedence)', 'package', ['package', 'publish'])
+            ->expectsChoice('Roles package (keep preserves existing or custom integrations)', 'keep', ['keep', 'none', 'laravel-roles', 'spatie'])
+            ->expectsChoice('Avatar source (keep preserves current settings)', 'keep', array_merge(['keep'], Avatar::SOURCES))
+            ->expectsChoice('Laravel Toast integration', 'keep', ['keep', 'install', 'remove'])
             ->assertExitCode(0);
         $this->assertSame(['framework' => 'bootstrap5', 'theme' => 'dark'], require config_path('laravelusers-ui.php'));
     }
@@ -138,5 +197,85 @@ class CommandsTest extends TestCase
         $settings = require config_path('laravelusers-ui.php');
         $this->assertSame('tailwind', $settings['framework']);
         $this->assertSame('dark', $settings['theme']);
+    }
+
+    public function test_roles_are_preserved_by_default_and_can_be_explicitly_disabled(): void
+    {
+        config(['laravelusers.rolesEnabled' => true, 'laravelusers.roleModel' => 'Host\\Role', 'laravelusers.middleware' => ['can:manage-users']]);
+        $this->artisan('laravelusers:update', ['--roles' => 'keep', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+        $this->artisan('laravelusers:switch', ['--roles' => 'none'])->assertExitCode(0);
+        $this->assertSame(['rolesEnabled' => false], require config_path('laravelusers-roles.php'));
+        $this->assertSame(['can:manage-users'], config('laravelusers.middleware'));
+        $this->assertStringContainsString("env('LARAVEL_USERS_ROLES_ENABLED', false)", file_get_contents(config_path('laravelusers-roles.php')));
+    }
+
+    public function test_invalid_role_options_do_not_write_files_or_run_composer(): void
+    {
+        $composer = $this->mock(ComposerPackages::class);
+        $composer->shouldNotReceive('install');
+        foreach ([['--roles' => 'wrong'], ['--install-roles' => true], ['--roles' => 'keep', '--role-middleware' => 'role:admin'], ['--roles' => 'spatie', '--role-middleware' => '']] as $options) {
+            $this->artisan('laravelusers:update', array_merge($options, ['--no-interaction' => true]))->assertExitCode(1);
+            $this->assertFileDoesNotExist(config_path('laravelusers.php'));
+            $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+        }
+    }
+
+    public function test_role_selection_writes_separate_config_and_preserves_main_config(): void
+    {
+        $files = new Filesystem();
+        $files->ensureDirectoryExists(config_path());
+        $files->put(config_path('laravelusers.php'), '<?php return ["custom" => "preserved"];');
+        $setup = $this->mock(RolesSetup::class);
+        $settings = ['rolesEnabled' => true, 'roleModel' => 'Host\\Role', 'rolesMiddlwareEnabled' => true, 'rolesMiddlware' => ['role:admin', 'permission:manage users']];
+        $setup->shouldReceive('configure')->once()->andReturn($settings);
+        $this->artisan('laravelusers:update', ['--roles' => 'spatie', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame($settings, require config_path('laravelusers-roles.php'));
+        $this->assertSame('<?php return ["custom" => "preserved"];', $files->get(config_path('laravelusers.php')));
+    }
+
+    public function test_missing_role_package_only_prints_instructions_without_opt_in(): void
+    {
+        if (class_exists('Spatie\\Permission\\Models\\Role')) {
+            $this->markTestSkipped('This check requires the optional package to be absent.');
+        }
+        $this->mock(ComposerPackages::class)->shouldNotReceive('install');
+        $this->artisan('laravelusers:install', ['--roles' => 'spatie', '--no-interaction' => true])
+            ->expectsOutput('Run: composer require spatie/laravel-permission')
+            ->assertExitCode(0);
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+    }
+
+    public function test_installer_cannot_install_a_second_roles_package(): void
+    {
+        if (class_exists('Spatie\\Permission\\Models\\Role')) {
+            $this->markTestSkipped('This check requires the selected package to be absent.');
+        }
+        $this->mock(ManagedPackages::class)->shouldReceive('installed')->once()->with('laravel-roles')->andReturn(true);
+        $this->mock(ComposerPackages::class)->shouldNotReceive('install');
+        $this->artisan('laravelusers:install', ['--roles' => 'spatie', '--install-roles' => true, '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+    }
+
+    public function test_role_dependency_install_failure_preserves_application_files(): void
+    {
+        if (class_exists('Spatie\\Permission\\Models\\Role')) {
+            $this->markTestSkipped('This check requires the optional package to be absent.');
+        }
+        $this->mock(ComposerPackages::class)->shouldReceive('install')->once()->with('spatie/laravel-permission', \Mockery::type('callable'))->andReturn(false);
+        $this->artisan('laravelusers:install', ['--roles' => 'spatie', '--install-roles' => true, '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers.php'));
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+    }
+
+    public function test_successful_dependency_install_still_requires_host_model_setup(): void
+    {
+        if (class_exists('Spatie\\Permission\\Models\\Role')) {
+            $this->markTestSkipped('This check requires the optional package to be absent.');
+        }
+        $this->mock(ComposerPackages::class)->shouldReceive('install')->once()->with('spatie/laravel-permission', \Mockery::type('callable'))->andReturn(true);
+        $this->artisan('laravelusers:install', ['--roles' => 'spatie', '--install-roles' => true, '--no-interaction' => true])->assertExitCode(0);
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
+        $this->assertDirectoryDoesNotExist(database_path('migrations'));
     }
 }
