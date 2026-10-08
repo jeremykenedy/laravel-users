@@ -11,6 +11,15 @@ use Illuminate\Support\Str;
 
 class ResetTokenCacheRepository extends CacheTokenRepository
 {
+    public function cacheKey(CanResetPassword $user): string
+    {
+        if (property_exists($this, 'prefix')) {
+            return $this->prefix.$user->getEmailForPasswordReset();
+        }
+
+        return hash('sha256', $user->getEmailForPasswordReset());
+    }
+
     public function create(CanResetPassword $user)
     {
         if ($this->expires !== 0) {
