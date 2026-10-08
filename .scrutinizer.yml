@@ -15,5 +15,5 @@ build:
               file: coverage.xml
               format: clover
           - php-scrutinizer-run
-          - command: phpcs-run
+          - command: 'PATH="$PWD/vendor/bin:$PATH" phpcs-run'
             use_website_config: true
