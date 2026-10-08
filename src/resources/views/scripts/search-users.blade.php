@@ -40,7 +40,8 @@
                     if (jsonData.length != 0) {
                         $.each(jsonData, function(index, val) {
                             let details = activity[val.id] || {};
-                            let loginDetails = ['device', 'os', 'browser', 'ip_address'].map(field => escapeHtml(details[field])).filter(Boolean).join(' / ');
+                            let loginFields = ['device', 'os', 'browser', 'ip_address'].map(field => escapeHtml(details[field])).filter(Boolean);
+                            let loginDetails = loginFields.map(value => '<span>' + value + '</span>').join('');
                             let avatar = avatars[val.id] || { initials: '?', size: 40, fallback: 'icon' };
                             let avatarHtml = '<span class="lu-avatar" style="width:' + Number(avatar.size) + 'px;height:' + Number(avatar.size) + 'px" aria-hidden="true">' +
                                 (avatar.fallback === 'initials' ? escapeHtml(avatar.initials) : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>') +
@@ -87,7 +88,7 @@
                                 '@if(config("laravelusers.showCreatedColumn", true))<td class="hidden-sm hidden-xs hidden-md" data-lu-date="' + val.created_at + '">' + val.created_at + '</td>@endif' +
                                 '@if(config("laravelusers.showUpdatedColumn", true))<td class="hidden-sm hidden-xs hidden-md" data-lu-date="' + val.updated_at + '">' + val.updated_at + '</td>@endif' +
                                 '@if(config("laravelusers.activity.login", false) && config("laravelusers.showLastLoginColumn", true))<td data-lu-date="' + escapeHtml(details.last_login_at || '') + '">' + escapeHtml(details.last_login_at || '') + '</td>@endif' +
-                                '@if(config("laravelusers.activity.login", false) && config("laravelusers.showLastLoginDetailsColumn", true))<td><span class="lu-login-details" title="' + loginDetails + '">' + loginDetails + '</span></td>@endif' +
+                                '@if(config("laravelusers.activity.login", false) && config("laravelusers.showLastLoginDetailsColumn", true))<td><span class="lu-login-details" title="' + loginFields.join(' / ') + '">' + loginDetails + '</span></td>@endif' +
                                 '<td>' + deleteCellHtml + '</td>' +
                                 '<td>' + showCellHtml + '</td>' +
                                 '<td>' + editCellHtml + '</td>' +

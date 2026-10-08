@@ -72,6 +72,18 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.goto(`/__browser/${framework}`);
         const directory = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
         await expect(directory.locator('.lu-login-details').first()).toContainText('127.0.0.1');
+        async function expectStackedDetails(details) {
+            const positions = await details.locator(':scope > span').evaluateAll(items => items.map(item => item.getBoundingClientRect().top));
+            expect(positions.length).toBeGreaterThan(1);
+            expect(positions.every((top, index) => index === 0 || top > positions[index - 1])).toBe(true);
+            expect(await details.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeLessThan(11);
+        }
+        await expectStackedDetails(directory.locator('.lu-login-details').first());
+        await page.getByRole(framework === 'bootstrap4' ? 'textbox' : 'searchbox', { name: 'Search Users', exact: true }).fill('user0@example.com');
+        await page.locator(framework === 'bootstrap4' ? '#search_users' : '#lu-search').locator('button[type="submit"]').click();
+        const results = page.locator(framework === 'bootstrap4' ? '#search_results' : '#lu-results');
+        await expect(results.locator('.lu-login-details').first()).toContainText('127.0.0.1');
+        await expectStackedDetails(results.locator('.lu-login-details').first());
         await page.goto('/users/1');
         await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
         await expect(page.locator('.lu-profile-details dt svg')).toHaveCount(11);
@@ -380,6 +392,9 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         const headers = await page.locator('[data-lu-table] thead tr').first().locator('th').allTextContents();
         expect(headers.findIndex(value => value.includes('Status'))).toBeLessThan(headers.findIndex(value => value.includes('Created')));
         await expect(page.locator('[data-lu-select-all]').locator('..').locator('..')).toHaveAttribute('colspan', '2');
+        await page.locator('.lu-columns summary').click();
+        await page.locator('#user_search_box').click();
+        await expect(page.locator('.lu-columns')).not.toHaveAttribute('open', '');
         await page.locator('.lu-columns summary').click();
         await page.locator('.lu-column-options').getByLabel('Avatar', { exact: true }).uncheck();
         await expect(body.locator('.lu-avatar').first()).toBeHidden();

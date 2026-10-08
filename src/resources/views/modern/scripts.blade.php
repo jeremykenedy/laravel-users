@@ -181,7 +181,13 @@
                 if (loginDetailsColumn) {
                     const summary = ['device', 'os', 'browser', 'ip_address'].map(field => details[field]).filter(Boolean).join(' / ');
                     const detail = document.createElement('span');
-                    detail.className = 'lu-login-details'; detail.textContent = summary; detail.title = summary;
+                    detail.className = 'lu-login-details'; detail.title = summary;
+                    ['device', 'os', 'browser', 'ip_address'].forEach(field => {
+                        if (!details[field]) return;
+                        const item = document.createElement('span');
+                        item.textContent = details[field];
+                        detail.append(item);
+                    });
                     cell(row, '').append(detail);
                 }
                 const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);

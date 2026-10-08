@@ -48,6 +48,9 @@
             });
         });
         table.parentElement.before(menu);
+        document.addEventListener('click', function (event) {
+            if (!menu.contains(event.target)) menu.open = false;
+        });
     }
     apply();
     root.addEventListener('lu:rows', apply);

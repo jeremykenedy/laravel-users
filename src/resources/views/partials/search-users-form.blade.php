@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-8 offset-sm-4 col-md-6 offset-md-6 col-lg-5 offset-lg-7 col-xl-4 offset-xl-8">
+    <div class="col-12">
         <form method="POST" action="{{ route('search-users') }}" role="form" class="needs-validation" id="search_users">
             @csrf
             @if(config('laravelusers.avatar.enabled', false))<input type="hidden" name="include_avatar" value="1">@endif
@@ -32,4 +32,3 @@
         </form>
     </div>
 </div>
-

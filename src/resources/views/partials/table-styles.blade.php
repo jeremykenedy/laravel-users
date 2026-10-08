@@ -13,8 +13,8 @@
     #laravelusers #confirmDelete .close, #laravelusers .lu-modal[data-lu-delete="true"] .lu-card-heading button { color: #fff; }
     #laravelusers #confirmDelete #confirm, #laravelusers .lu-modal[data-lu-delete="true"] #lu-confirm-submit { background: #b42332; color: #fff; border-color: #b42332; }
     #laravelusers .lu-modal[data-lu-delete="true"] .lu-card-heading button { background: transparent; border-color: #ffffff66; }
-    #laravelusers .lu-login-details { display: block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; font-size: .7rem; white-space: nowrap; }
-    #laravelusers .lu-login-details > span + span::before { content: ' / '; color: var(--lu-muted, #526077); }
+    #laravelusers .lu-login-details { display: block; max-width: 190px; font-size: .6rem; line-height: 1.4; }
+    #laravelusers .lu-login-details > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #laravelusers [data-lu-table] .lu-actions { justify-content: flex-end; }
     #laravelusers [data-lu-table] .lu-actions .lu-button { min-width: 64px; }
     #laravelusers[data-lu-table-buttons-icon-only="true"] [data-lu-table] .lu-actions .lu-button { min-width: 34px; }
@@ -22,10 +22,14 @@
     #laravelusers .lu-date { display: inline-block; font-size: .7rem; line-height: 1.4; white-space: nowrap; }
     #laravelusers .lu-select-all-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
     #laravelusers #lu-bulk { gap: 12px; flex-wrap: wrap; }
-    #laravelusers #lu-bulk select { width: auto; min-width: 160px; }
+    #laravelusers #lu-bulk select { width: auto; min-width: 160px; padding-right: 36px; appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: right 18px center, right 12px center; background-size: 6px 6px; background-repeat: no-repeat; }
     #laravelusers [data-lu-selected-count] { white-space: nowrap; }
     #laravelusers .lu-columns { position: relative; display: block; width: fit-content; max-width: calc(100% - 40px); margin: 12px 20px 24px; }
-    #laravelusers .lu-columns summary { cursor: pointer; padding: 6px 12px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; }
+    #laravelusers .lu-search ~ .lu-columns { margin-top: -12px; }
+    #laravelusers .lu-columns summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; padding: 6px 12px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; }
+    #laravelusers .lu-columns summary::-webkit-details-marker { display: none; }
+    #laravelusers .lu-columns summary::before { content: ''; flex-shrink: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; }
+    #laravelusers .lu-columns[open] summary::before { transform: rotate(90deg); }
     #laravelusers .lu-column-options { position: absolute; left: 0; z-index: 10; width: max-content; min-width: 180px; padding: 12px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; background: var(--lu-bg, #fff); box-shadow: 0 6px 20px #0002; }
     #laravelusers .lu-column-options label { display: block; margin: 4px 0; white-space: nowrap; }
     #laravelusers .lu-column-options input { margin-right: 6px; }
