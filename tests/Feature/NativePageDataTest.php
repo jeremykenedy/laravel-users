@@ -31,6 +31,10 @@ class NativePageDataTest extends TestCase
         $this->assertStringNotContainsString($actor->password, json_encode($page));
         $this->assertArrayNotHasKey('remember_token', $page['data']['users'][0]);
         $this->assertNotContains('delete', array_column($page['data']['users'][0]['actions'], 'name'));
+        $this->assertArrayNotHasKey('impersonate-user', $page['forms']);
+        $this->assertArrayNotHasKey('impersonate_users', $page['capabilities']);
+        $this->assertArrayNotHasKey('banner', $page['data']);
+        $this->assertStringNotContainsString('/impersonate', json_encode($page));
     }
 
     public function test_user_form_reuses_old_non_secret_values_and_server_validation_errors(): void

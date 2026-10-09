@@ -34,6 +34,9 @@ class NativePageData
         $screen = $this->screen($view);
         $public = $screen === 'account-link';
         $capabilities = $public ? [] : array_combine(UserAccess::ACTIONS, array_map(fn ($action) => UserAccess::allows($action), UserAccess::ACTIONS));
+        if (!UserAccess::canImpersonate()) {
+            unset($capabilities['impersonate_users']);
+        }
         $page = [
             'screen'       => $screen,
             'title'        => $this->title($screen, $data),
@@ -59,14 +62,19 @@ class NativePageData
         if (!$public && $request->user() instanceof Model) {
             $page['data']['current_user'] = $this->identity($request->user());
             $state = $request->hasSession() ? $this->impersonation->read($request) : null;
-            $page['data']['impersonation'] = $state ? ['actor_name' => $state['actor_name'], 'target_name' => $request->user()->name, 'stop' => route('users.impersonation.stop')] : null;
+            if ($state) {
+                $page['data']['banner'] = ['message' => $state['actor_name'].': '.$request->user()->name, 'action' => route('users.impersonation.stop'), 'label' => __('laravelusers::ui.impersonation_stop')];
+            }
         }
         if (in_array($screen, ['users', 'deleted-users', 'show-user'], true)) {
             $page['forms'] += $this->emailForms($screen === 'deleted-users', $request);
             $page['forms']['delete-user'] = $this->deleteForm($request);
             $page['forms']['restore-user'] = $this->form('restore-user', __('laravelusers::ui.restore'), null, 'POST', [], $request);
             $page['forms']['force-delete-user'] = $this->form('force-delete-user', __('laravelusers::ui.permanently_delete'), null, 'DELETE', [], $request) + ['danger' => true, 'confirm' => __('laravelusers::ui.confirm_bulk')];
-            $page['forms']['impersonate-user'] = $this->form('impersonate-user', __('laravelusers::ui.impersonation_target'), null, 'POST', [], $request);
+            $users = $page['data']['users'] ?? [$page['data']['user'] ?? []];
+            if (collect($users)->contains(fn ($user) => in_array('impersonate', array_column($user['actions'] ?? [], 'name'), true))) {
+                $page['forms']['impersonate-user'] = $this->form('impersonate-user', __('laravelusers::ui.impersonation_target'), null, 'POST', [], $request);
+            }
         }
 
         return $page;
