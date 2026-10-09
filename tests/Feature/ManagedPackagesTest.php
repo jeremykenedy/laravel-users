@@ -159,4 +159,74 @@ class ManagedPackagesTest extends TestCase
         $job->handle($packages, $composer, new UserSettings());
         $this->assertSame('completed', Cache::get('laravelusers.package.'.$job->id)['status']);
     }
+
+    public function test_worker_only_runs_migrations_when_the_installation_request_includes_them(): void
+    {
+        $packages = $this->enable();
+        $this->actingAs($this->user());
+        foreach ([false, true] as $migrate) {
+            $this->postJson('/users/settings/packages', $this->payload() + ['setup' => true, 'migrate' => $migrate])->assertStatus(202);
+            $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+            $composer = \Mockery::mock(ComposerPackages::class);
+            $composer->shouldReceive('changeFromSettings')->once()->with('install', 'spatie/laravel-permission')->andReturnTrue();
+            $composer->shouldReceive('setup')->once()->with('spatie', 'bootstrap4', $migrate, \Mockery::type('callable'))->andReturnTrue();
+            $job->handle($packages, $composer, new UserSettings());
+            $this->assertSame('completed', Cache::get('laravelusers.package.'.$job->id)['status']);
+        }
+    }
+
+    public function test_composer_and_setup_failures_are_reported_without_leaving_the_package_lock_held(): void
+    {
+        $packages = $this->enable();
+        $this->actingAs($this->user());
+        foreach ([false, true] as $installed) {
+            $this->postJson('/users/settings/packages', $this->payload() + ['setup' => true])->assertStatus(202);
+            $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+            $composer = \Mockery::mock(ComposerPackages::class);
+            $composer->shouldReceive('changeFromSettings')->once()->andReturn($installed);
+            if ($installed) {
+                $composer->shouldReceive('setup')->once()->andReturnFalse();
+            } else {
+                $composer->shouldNotReceive('setup');
+            }
+            $job->handle($packages, $composer, new UserSettings());
+            $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
+            $lock = Cache::lock('laravelusers.packages', 10);
+            $this->assertTrue($lock->get());
+            $lock->release();
+        }
+    }
+
+    public function test_a_worker_cannot_run_while_another_composer_process_holds_the_execution_lock(): void
+    {
+        $packages = $this->enable();
+        $this->actingAs($this->user())->postJson('/users/settings/packages', $this->payload())->assertStatus(202);
+        $job = Bus::dispatched(ChangeManagedPackage::class)->first();
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $composer->shouldNotReceive('changeFromSettings');
+        $execution = Cache::lock('laravelusers.composer', 30);
+        $this->assertTrue($execution->get());
+        $job->handle($packages, $composer, new UserSettings());
+        $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
+        $this->assertFalse(Cache::lock('laravelusers.composer', 10)->get());
+        $execution->release();
+    }
+
+    public function test_an_expired_job_cannot_release_a_newer_package_operation_lock(): void
+    {
+        $packages = $this->enable();
+        $this->actingAs($this->user())->postJson('/users/settings/packages', $this->payload())->assertStatus(202);
+        $job = Bus::dispatched(ChangeManagedPackage::class)->first();
+        Cache::restoreLock('laravelusers.packages', $job->lockOwner)->release();
+        $newer = Cache::lock('laravelusers.packages', 30);
+        $this->assertTrue($newer->get());
+        Cache::put('laravelusers.packages.owner', $newer->owner());
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $composer->shouldNotReceive('changeFromSettings');
+        $job->handle($packages, $composer, new UserSettings());
+        $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
+        $this->assertSame($newer->owner(), Cache::get('laravelusers.packages.owner'));
+        $this->assertFalse(Cache::lock('laravelusers.packages', 10)->get());
+        $newer->release();
+    }
 }

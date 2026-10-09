@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use jeremykenedy\LaravelRoles\Middleware\VerifyRole;
 use jeremykenedy\LaravelRoles\RolesServiceProvider;
+use jeremykenedy\laravelusers\Models\UserSetting;
 use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
@@ -171,8 +172,9 @@ class RoleIntegrationsTest extends TestCase
         $this->actingAs($actor->fresh())->get('/users/create')->assertOk();
         $this->get('/users/settings')->assertOk()->assertSee('Administrator');
         $this->exerciseImpersonation($actor->fresh(), $role);
+        $saved = UserSetting::findOrFail('global')->value;
         $this->from('/users/settings')->put('/users/settings', ['avatar_source' => 'initials', 'profile_color' => '#2458b7', 'edit_color' => '#705000', 'access' => ['edit_settings' => ['mode' => 'deny']]])->assertSessionHasErrors('access');
-        $this->assertDatabaseCount('laravelusers_settings', 0);
+        $this->assertSame($saved, UserSetting::findOrFail('global')->value);
         $permissionModel = $legacy ? \jeremykenedy\LaravelRoles\Models\Permission::class : Permission::class;
         $permission = $permissionModel::create(['name' => 'Manage directory'] + ($legacy ? ['slug' => 'manage-directory'] : ['guard_name' => 'web']));
         config(['laravelusers.access.view_users' => ['mode' => 'restricted', 'permissions' => [$permission->getKey()]]]);
@@ -212,6 +214,7 @@ class RoleIntegrationsTest extends TestCase
     {
         (require dirname(__DIR__, 2).'/src/database/migrations/2026_10_07_000000_create_laravelusers_login_activity_table.php')->up();
         config(['laravelusers.impersonation.enabled' => true, 'laravelusers.access.impersonate_users' => ['mode' => 'restricted', 'roles' => [$role->getKey()]], 'laravelusers.activity.login' => true]);
+        $this->exerciseImpersonationSettings();
         $target = $actor->newInstance(['name' => 'Temporary Account', 'email' => 'temporary@example.com', 'password' => bcrypt('password')]);
         $target->save();
         if (method_exists($target, 'assignRole')) {
@@ -232,6 +235,21 @@ class RoleIntegrationsTest extends TestCase
         $this->post('/users/impersonation/stop')->assertRedirect('/users?page=2')->assertSessionHas('success');
         $this->assertAuthenticatedAs($actor);
         $this->assertNull($this->app->make(UserActivity::class)->lastLogin($target));
+    }
+
+    private function exerciseImpersonationSettings(): void
+    {
+        config(['laravelusers.settings.packages.enabled' => true]);
+        Gate::define('manage-laravelusers-packages', fn () => false);
+        $this->postJson('/users/settings/impersonation', ['enabled' => true])->assertForbidden();
+        Gate::define('manage-laravelusers-packages', fn () => true);
+        $this->postJson('/users/settings/impersonation', ['enabled' => 'invalid'])->assertUnprocessable()->assertJsonValidationErrors('enabled');
+        $this->post('/users/settings/impersonation', ['enabled' => false])->assertRedirect('/users/settings#packages');
+        $this->assertFalse(config('laravelusers.impersonation.enabled'));
+        $this->assertFalse(UserSetting::findOrFail('global')->value['impersonation.enabled']);
+        $this->post('/users/settings/impersonation', ['enabled' => true])->assertRedirect('/users/settings#packages');
+        $this->assertTrue(config('laravelusers.impersonation.enabled'));
+        $this->assertTrue(UserSetting::findOrFail('global')->value['impersonation.enabled']);
     }
 
     private function exercisePermissions(string $userModel, $user, $role, bool $legacy): void

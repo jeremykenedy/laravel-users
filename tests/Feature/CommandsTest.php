@@ -3,6 +3,7 @@
 namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Support\Avatar;
@@ -88,6 +89,26 @@ class CommandsTest extends TestCase
         $this->assertSame(['framework' => 'bootstrap4', 'theme' => 'light'], require config_path('laravelusers-ui.php'));
         $this->assertDirectoryDoesNotExist(resource_path('views/vendor/laravelusers'));
         $this->assertDirectoryDoesNotExist(database_path('migrations'));
+    }
+
+    public function test_account_setup_only_migrates_optional_storage_and_does_not_enable_features(): void
+    {
+        $files = new Filesystem();
+        $files->ensureDirectoryExists(database_path('migrations'));
+        $hostMigration = database_path('migrations/2020_01_01_000000_host_migration.php');
+        $files->put($hostMigration, '<?php throw new \\RuntimeException("Host migrations must not run during account setup.");');
+        $columns = Schema::getColumnListing('users');
+        $this->artisan('laravelusers:setup-accounts', ['--migrate' => true, '--no-interaction' => true])->assertExitCode(0);
+        foreach (['laravelusers_account_preferences', 'laravelusers_email_changes', 'laravelusers_avatar_preferences', 'laravelusers_appearance_preferences'] as $table) {
+            $this->assertTrue(Schema::hasTable($table));
+        }
+        $this->assertTrue(Schema::hasColumn('laravelusers_appearance_preferences', 'gradient_strength'));
+        $this->assertTrue(Schema::hasColumn('laravelusers_appearance_preferences', 'dark_gradient_strength'));
+        $this->assertSame($columns, Schema::getColumnListing('users'));
+        $this->assertFalse(config('laravelusers.account.enabled'));
+        $this->assertFalse(config('laravelusers.avatar.per_user'));
+        $this->assertSame('<?php throw new \\RuntimeException("Host migrations must not run during account setup.");', $files->get($hostMigration));
+        $this->artisan('laravelusers:setup-accounts', ['--migrate' => true, '--no-interaction' => true])->assertExitCode(0);
     }
 
     public function test_hyphenated_command_aliases_preserve_the_existing_command_names(): void

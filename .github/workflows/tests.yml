@@ -86,7 +86,7 @@ jobs:
       - name: Install historical compatibility dependencies
         if: matrix.legacy
         run: composer update --prefer-dist --no-interaction --no-plugins --no-security-blocking
-      - run: vendor/bin/phpunit --filter RoleIntegrationsTest
+      - run: vendor/bin/phpunit --filter 'RoleIntegrationsTest|PackageSetupIntegrationsTest'
 
   presentation-integrations:
     name: Optional avatars and toast / Laravel ${{ matrix.laravel }}
@@ -109,7 +109,7 @@ jobs:
       - name: Select optional presentation dependencies
         run: composer require --dev "orchestra/testbench:${{ matrix.testbench }}" 'dicebear/core:^10.7' 'dicebear/styles:^10.6' 'jeremykenedy/laravel-toast:^3.0' --no-update --no-interaction
       - run: composer update --prefer-dist --no-interaction --no-plugins
-      - run: vendor/bin/phpunit --filter 'AvatarProvidersTest|ToastIntegrationsTest'
+      - run: vendor/bin/phpunit --filter 'AvatarProvidersTest|ToastIntegrationsTest|PackageSetupIntegrationsTest'
 
   quality:
     runs-on: ubuntu-latest
@@ -125,9 +125,24 @@ jobs:
       - run: composer update --prefer-dist --no-interaction
       - run: composer lint
       - run: composer audit
-      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --coverage-clover coverage.xml
+      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --coverage-php coverage-core.cov
         env:
           XDEBUG_MODE: coverage
+      - name: Install optional packages for integration coverage
+        run: composer require --dev 'spatie/laravel-permission:^8.0' 'jeremykenedy/laravel-roles:^13.0' 'dicebear/core:^10.7' 'dicebear/styles:^10.6' 'jeremykenedy/laravel-toast:^3.0' --no-interaction --no-plugins
+      - run: composer audit
+      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --filter 'RoleIntegrationsTest|AvatarProvidersTest|ToastIntegrationsTest|PackageSetupIntegrationsTest' --coverage-php coverage-optional.cov
+        env:
+          XDEBUG_MODE: coverage
+      - name: Combine core and optional integration coverage
+        run: |
+          php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $coverage = require 'coverage-core.cov';
+          $coverage->merge(require 'coverage-optional.cov');
+          (new SebastianBergmann\CodeCoverage\Report\Clover())->process($coverage, 'coverage.xml');
+          PHP
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: php-coverage

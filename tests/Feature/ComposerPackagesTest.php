@@ -83,6 +83,40 @@ PHP);
         $this->assertFileDoesNotExist(base_path('commands.jsonl'));
     }
 
+    public function test_cli_install_remove_and_setup_use_separate_process_arguments(): void
+    {
+        $composer = new ComposerPackages();
+        $output = fn ($text) => null;
+        $this->assertTrue($composer->install('jeremykenedy/laravel-toast', $output));
+        $this->assertTrue($composer->installMany(['dicebear/core:^10.7', 'dicebear/styles:^10.6'], $output));
+        $this->assertTrue($composer->remove('jeremykenedy/laravel-toast', $output));
+        $this->assertTrue($composer->setup('toast', 'bootstrap5', false, $output));
+        $this->assertTrue($composer->setup('spatie', 'tailwind', true, $output));
+        $commands = array_map(fn ($line) => json_decode($line, true), file(base_path('commands.jsonl'), FILE_IGNORE_NEW_LINES));
+        $this->assertSame([
+            ['require', 'jeremykenedy/laravel-toast', '--no-interaction'],
+            ['require', 'dicebear/core:^10.7', 'dicebear/styles:^10.6', '--no-interaction'],
+            ['remove', 'jeremykenedy/laravel-toast', '--no-interaction'],
+            ['laravelusers:setup-package', 'toast', '--framework=bootstrap5', '--no-interaction'],
+            ['laravelusers:setup-package', 'spatie', '--framework=tailwind', '--no-interaction', '--migrate'],
+        ], $commands);
+        $this->assertFalse($composer->setup('unapproved', 'tailwind', true, $output));
+        $this->assertFalse($composer->setup('toast', 'unapproved', true, $output));
+        $this->assertCount(5, file(base_path('commands.jsonl')));
+    }
+
+    public function test_missing_composer_returns_an_actionable_failure_without_starting_a_process(): void
+    {
+        putenv('PATH='.$this->fixturePath.'/missing');
+        $output = '';
+        $this->assertFalse((new ComposerPackages())->install('jeremykenedy/laravel-toast', function ($text) use (&$output) {
+            $output .= $text;
+        }));
+        $this->assertStringContainsString('Composer was not found', $output);
+        $this->assertFileDoesNotExist(base_path('commands.jsonl'));
+        $this->assertFalse((new ComposerPackages())->changeFromSettings('install', 'jeremykenedy/laravel-toast'));
+    }
+
     public function test_a_dependency_that_remains_installed_is_not_reported_as_removed(): void
     {
         File::put(base_path('package-remains'), '');

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Verify optional package and account setup against real installers without running unrelated host migrations.
+- Cover package worker setup failures, explicit migration choices and operation lock ownership.
+- Combine core and optional integration coverage and align PHP_CodeSniffer with the existing Pint style.
 - Reject malformed current passwords before changing or deleting an account.
 - Preserve first-class route callables during middleware setup.
 - Verify Composer installed metadata before reporting package changes as completed.

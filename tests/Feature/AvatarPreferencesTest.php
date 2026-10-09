@@ -109,7 +109,9 @@ class AvatarPreferencesTest extends TestCase
         $connection = $users[0]->getConnection();
         $connection->enableQueryLog();
         $connection->flushQueryLog();
-        $avatars = (new Avatar())->listing((function () use ($users) { yield from $users; })());
+        $avatars = (new Avatar())->listing((function () use ($users) {
+            yield from $users;
+        })());
         $queries = array_filter($connection->getQueryLog(), fn ($query) => str_contains($query['query'], 'select * from "laravelusers_avatar_preferences"'));
         $this->assertCount(1, $queries);
         $this->assertCount(5, $avatars);
