@@ -6,7 +6,71 @@ namespace jeremykenedy\laravelusers\Support;
 
 class Frontend
 {
-    public const FRAMEWORKS = ['bootstrap4', 'bootstrap5', 'tailwind'];
+    public const FRAMEWORKS = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
+
+    public static function stylesheet(): ?string
+    {
+        return match (self::framework()) {
+            'materialize', 'material3', 'bulma', 'foundation' => self::framework().'.css',
+            default                                           => null,
+        };
+    }
+
+    public static function classes(string $element): string
+    {
+        $classes = match (self::framework()) {
+            'tailwind' => [
+                'shell'  => 'lu:mx-auto lu:max-w-6xl lu:px-6 lu:py-8',
+                'panel'  => 'lu:rounded-xl lu:border lu:shadow-sm',
+                'scroll' => 'lu:overflow-x-auto',
+                'table'  => 'lu:w-full lu:text-left',
+                'input'  => 'lu:block lu:w-full lu:rounded-lg',
+                'select' => 'lu:w-full',
+            ],
+            'materialize' => [
+                'shell'         => 'container',
+                'panel'         => 'card',
+                'table'         => 'striped highlight',
+                'field'         => 'row',
+                'field-label'   => 'col s12 m3',
+                'field-control' => 'col s12 m9',
+                'select'        => 'browser-default',
+            ],
+            'material3' => [
+                'shell' => 'md-typescale-body-large',
+                'panel' => 'lu-material-surface',
+            ],
+            'bulma' => [
+                'shell'         => 'container',
+                'panel'         => 'card',
+                'scroll'        => 'table-container',
+                'table'         => 'table is-fullwidth is-striped',
+                'field'         => 'field is-horizontal',
+                'field-label'   => 'field-label is-normal',
+                'field-control' => 'field-body',
+                'control'       => 'control',
+                'input'         => 'input',
+            ],
+            'foundation' => [
+                'shell'         => 'grid-container',
+                'panel'         => 'card',
+                'table'         => 'hover',
+                'field'         => 'grid-x grid-padding-x',
+                'field-label'   => 'cell small-12 medium-3',
+                'field-control' => 'cell small-12 medium-9',
+            ],
+            default => [
+                'shell'  => 'container py-4',
+                'panel'  => 'card',
+                'scroll' => 'table-responsive',
+                'table'  => 'table',
+                'input'  => 'form-control',
+                'select' => 'form-select',
+            ],
+        };
+
+        return $classes[$element] ?? '';
+    }
 
     public static function framework(): string
     {
