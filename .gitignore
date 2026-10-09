@@ -54,6 +54,7 @@ yarn-error.log
 
 .phpunit.cache/
 .phpunit.result.cache
+/coverage.xml
 /test-results/
 /playwright-report/
 /tests/browser/runtime/

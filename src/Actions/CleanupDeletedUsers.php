@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use jeremykenedy\laravelusers\Support\DeletedUserRetention;
 use jeremykenedy\laravelusers\Support\DeletedUsers;
 use jeremykenedy\laravelusers\Support\UserSettings;
+use RuntimeException;
 
 class CleanupDeletedUsers
 {
@@ -44,7 +45,7 @@ class CleanupDeletedUsers
                             return false;
                         }
                         if (!$deleted->forceDelete()) {
-                            throw new \RuntimeException('Permanent deletion was rejected. Cleanup stopped.');
+                            throw new RuntimeException('Permanent deletion was rejected. Cleanup stopped.');
                         }
 
                         return true;

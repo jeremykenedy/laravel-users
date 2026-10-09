@@ -4,6 +4,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\TestCase;
@@ -85,6 +86,21 @@ class NavigationComponentsTest extends TestCase
 
         $this->assertStringContainsString('javascript:alert(1)', $html);
         $this->assertStringNotContainsString('<a ', $html);
+    }
+
+    public function test_management_link_respects_host_gate_middleware_and_invalid_ability_names(): void
+    {
+        $this->actingAs($this->user());
+        config(['laravelusers.rolesEnabled' => false, 'laravelusers.middleware' => ['auth', 'can:manage-users']]);
+        Gate::define('manage-users', fn () => true);
+        $this->assertStringContainsString('href="'.route('users').'"', Blade::render('<x-laravelusers::user-menu />'));
+
+        Gate::define('manage-users', fn () => false);
+        $this->assertStringNotContainsString('href="'.route('users').'"', Blade::render('<x-laravelusers::user-menu />'));
+
+        Gate::define('manage-users', fn () => true);
+        config(['laravelusers.middleware' => ['can:,manage-users']]);
+        $this->assertStringNotContainsString('href="'.route('users').'"', Blade::render('<x-laravelusers::user-menu />'));
     }
 
     public function test_impersonation_is_not_offered_or_available_without_a_roles_integration(): void

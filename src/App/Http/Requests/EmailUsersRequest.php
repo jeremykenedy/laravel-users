@@ -29,17 +29,9 @@ class EmailUsersRequest extends FormRequest
     private function recipientRules(bool $deleted, array $actions): array
     {
         return [
-            'action' => ['required', Rule::in($deleted ? ['message'] : $actions), function ($attribute, $value, $fail) use ($deleted, $actions) {
-                if ($deleted && (!config('laravelusers.emails.deleted', true) || !config('laravelusers.softDeletedEnabled', false) || !in_array('message', $actions, true))) {
-                    $fail(trans('laravelusers::ui.email_invalid_selection'));
-                }
-            }],
-            'ids' => ['required', 'array', 'min:1', 'max:'.max(1, min(1000, (int) config('laravelusers.bulkLimit', 100))), function ($attribute, $value, $fail) {
-                if (is_array($value) && count($value) > 1 && (!config('laravelusers.bulkActions', false) || !config('laravelusers.emails.bulk', true))) {
-                    $fail(trans('laravelusers::ui.email_bulk_disabled'));
-                }
-            }],
-            'ids.*' => ['required', 'distinct', function ($attribute, $value, $fail) {
+            'action' => $this->actionRules($deleted, $actions),
+            'ids'    => $this->selectionRules(),
+            'ids.*'  => ['required', 'distinct', function ($attribute, $value, $fail) {
                 if ((!is_string($value) && !is_int($value)) || strlen((string) $value) > 255) {
                     $fail(trans('laravelusers::ui.email_invalid_selection'));
                 }
@@ -48,22 +40,51 @@ class EmailUsersRequest extends FormRequest
         ];
     }
 
+    private function actionRules(bool $deleted, array $actions): array
+    {
+        return ['required', Rule::in($deleted ? ['message'] : $actions), function ($attribute, $value, $fail) use ($deleted, $actions) {
+            if ($deleted && (!config('laravelusers.emails.deleted', true) || !config('laravelusers.softDeletedEnabled', false) || !in_array('message', $actions, true))) {
+                $fail(trans('laravelusers::ui.email_invalid_selection'));
+            }
+        }];
+    }
+
+    private function selectionRules(): array
+    {
+        return ['required', 'array', 'min:1', 'max:'.max(1, min(1000, (int) config('laravelusers.bulkLimit', 100))), function ($attribute, $value, $fail) {
+            if (is_array($value) && count($value) > 1 && (!config('laravelusers.bulkActions', false) || !config('laravelusers.emails.bulk', true))) {
+                $fail(trans('laravelusers::ui.email_bulk_disabled'));
+            }
+        }];
+    }
+
     private function accountLinkRules(bool $deleted): array
     {
         $links = $this->boolean('include_restore') || $this->boolean('include_force_delete');
         $never = $this->boolean('account_never_expire');
-        $enabled = $deleted && config('laravelusers.account_links.enabled', false);
+        $allowed = $this->accountLinkOptions($deleted);
 
         return [
-            'account_never_expire' => ['sometimes', 'boolean', Rule::in($enabled && $links && config('laravelusers.account_links.allow_never_expire', true) ? [0, 1] : [0])],
-            'include_restore'      => ['sometimes', 'boolean', Rule::in($enabled && config('laravelusers.account_links.restore', true) ? [0, 1] : [0])],
-            'include_force_delete' => ['sometimes', 'boolean', Rule::in($enabled && config('laravelusers.account_links.force_delete', true) ? [0, 1] : [0])],
+            'account_never_expire' => ['sometimes', 'boolean', Rule::in($links && $allowed['never_expire'] ? [0, 1] : [0])],
+            'include_restore'      => ['sometimes', 'boolean', Rule::in($allowed['restore'] ? [0, 1] : [0])],
+            'include_force_delete' => ['sometimes', 'boolean', Rule::in($allowed['force_delete'] ? [0, 1] : [0])],
             'account_duration'     => [Rule::when($never, 'exclude'), $links ? 'required' : 'nullable', 'integer', 'min:1', 'max:'.max(1, min(525600, (int) config('laravelusers.account_links.max_expire', 43200))), function ($attribute, $value, $fail) {
                 if ($this->accountDurationExceeded($value)) {
                     $fail(trans('laravelusers::ui.account_duration_invalid'));
                 }
             }],
             'account_unit' => [Rule::when($never, 'exclude'), 'required_with:account_duration', 'nullable', Rule::in(['minutes', 'hours', 'days'])],
+        ];
+    }
+
+    private function accountLinkOptions(bool $deleted): array
+    {
+        $enabled = $deleted && config('laravelusers.account_links.enabled', false);
+
+        return [
+            'never_expire' => $enabled && config('laravelusers.account_links.allow_never_expire', true),
+            'restore'      => $enabled && config('laravelusers.account_links.restore', true),
+            'force_delete' => $enabled && config('laravelusers.account_links.force_delete', true),
         ];
     }
 

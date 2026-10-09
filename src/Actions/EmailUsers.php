@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace jeremykenedy\laravelusers\Actions;
 
+use Illuminate\Auth\Passwords\PasswordBroker as NativePasswordBroker;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\PasswordBroker;
 use Illuminate\Contracts\Auth\PasswordBrokerFactory;
@@ -30,10 +31,8 @@ class EmailUsers
     {
         $users = $this->recipients->get($data);
         $broker = $data['action'] === 'reset' ? $this->resetBroker($users->first()) : null;
-        $minutes = !empty($data['reset_never_expire']) ? 0 : (isset($data['reset_duration']) ? (int) $data['reset_duration'] * ['minutes' => 1, 'hours' => 60, 'days' => 1440][$data['reset_unit']] : null);
-        if ($broker && $minutes !== null && (!$broker instanceof \Illuminate\Auth\Passwords\PasswordBroker || !$broker->getRepository() instanceof ExpiringTokenRepository)) {
-            throw ValidationException::withMessages(['reset_duration' => trans('laravelusers::ui.reset_duration_unavailable')]);
-        }
+        $minutes = $this->resetMinutes($data);
+        $this->validateResetExpiry($broker, $minutes);
         $actions = array_keys(array_filter(['restore' => !empty($data['include_restore']), 'force_delete' => !empty($data['include_force_delete'])]));
         $sent = 0;
         foreach ($users as $user) {
@@ -41,8 +40,7 @@ class EmailUsers
                 if ($broker) {
                     $this->sendReset($user, $broker, $minutes, $data);
                 } else {
-                    $links = $actions && !empty($data['deleted']) ? $this->links->issue($user, $actions, !empty($data['account_never_expire']) ? 0 : (int) $data['account_duration'] * ['minutes' => 1, 'hours' => 60, 'days' => 1440][$data['account_unit']]) : [];
-                    $this->notifications->send((new AnonymousNotifiable())->route('mail', $user->email), $data['action'] === 'welcome' ? new WelcomeUser($user->name, null, $this->contents($data)) : new UserMessage($user->name, $data, $links));
+                    $this->sendMessage($user, $data, $actions);
                 }
                 $sent++;
             } catch (ValidationException $exception) {
@@ -55,6 +53,47 @@ class EmailUsers
         }
 
         return $sent;
+    }
+
+    private function resetMinutes(array $data): ?int
+    {
+        if (!empty($data['reset_never_expire'])) {
+            return 0;
+        }
+        if (!isset($data['reset_duration'])) {
+            return null;
+        }
+
+        return (int) $data['reset_duration'] * ['minutes' => 1, 'hours' => 60, 'days' => 1440][$data['reset_unit']];
+    }
+
+    private function validateResetExpiry(?PasswordBroker $broker, ?int $minutes): void
+    {
+        if ($broker === null || $minutes === null) {
+            return;
+        }
+        if (!$broker instanceof NativePasswordBroker || !$broker->getRepository() instanceof ExpiringTokenRepository) {
+            throw ValidationException::withMessages(['reset_duration' => trans('laravelusers::ui.reset_duration_unavailable')]);
+        }
+    }
+
+    private function sendMessage(Model $user, array $data, array $actions): void
+    {
+        $links = $this->accountLinks($user, $data, $actions);
+        $notification = $data['action'] === 'welcome'
+            ? new WelcomeUser($user->name, null, $this->contents($data))
+            : new UserMessage($user->name, $data, $links);
+        $this->notifications->send((new AnonymousNotifiable())->route('mail', $user->email), $notification);
+    }
+
+    private function accountLinks(Model $user, array $data, array $actions): array
+    {
+        if (!$actions || empty($data['deleted'])) {
+            return [];
+        }
+        $minutes = !empty($data['account_never_expire']) ? 0 : (int) $data['account_duration'] * ['minutes' => 1, 'hours' => 60, 'days' => 1440][$data['account_unit']];
+
+        return $this->links->issue($user, $actions, $minutes);
     }
 
     private function resetBroker(Model $user): PasswordBroker

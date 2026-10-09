@@ -125,7 +125,7 @@ jobs:
       - run: composer update --prefer-dist --no-interaction
       - run: composer lint
       - run: composer audit
-      - run: vendor/bin/phpunit --coverage-filter src --coverage-clover coverage.xml
+      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --coverage-clover coverage.xml
         env:
           XDEBUG_MODE: coverage
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

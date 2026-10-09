@@ -44,13 +44,7 @@ class AppearancePreferences
 
     public static function save(Model $user, array $data): void
     {
-        $fields = ['color' => 'user_card_color', 'gradient' => 'user_card_gradient'];
-        if (self::strengthAvailable($user)) {
-            $fields['gradient_strength'] = 'user_card_gradient_strength';
-        }
-        if (self::darkAvailable($user)) {
-            $fields += ['dark_color' => 'user_card_dark_color', 'dark_gradient' => 'user_card_dark_gradient', 'dark_gradient_strength' => 'user_card_dark_gradient_strength'];
-        }
+        $fields = self::fields($user);
         if (!self::available($user) || !array_intersect(array_keys($data), $fields)) {
             return;
         }
@@ -64,9 +58,23 @@ class AppearancePreferences
         }
         if (count(array_filter($values, fn ($value) => $value !== null)) === 0) {
             $query->whereKey($key)->delete();
-        } else {
-            $query->updateOrCreate(['user_key' => $key], $values);
+
+            return;
         }
+        $query->updateOrCreate(['user_key' => $key], $values);
+    }
+
+    private static function fields(Model $user): array
+    {
+        $fields = ['color' => 'user_card_color', 'gradient' => 'user_card_gradient'];
+        if (self::strengthAvailable($user)) {
+            $fields['gradient_strength'] = 'user_card_gradient_strength';
+        }
+        if (self::darkAvailable($user)) {
+            $fields += ['dark_color' => 'user_card_dark_color', 'dark_gradient' => 'user_card_dark_gradient', 'dark_gradient_strength' => 'user_card_dark_gradient_strength'];
+        }
+
+        return $fields;
     }
 
     public static function listing(iterable $users): array

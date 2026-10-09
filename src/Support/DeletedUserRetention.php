@@ -6,6 +6,7 @@ namespace jeremykenedy\laravelusers\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use RuntimeException;
 
 class DeletedUserRetention
 {
@@ -26,7 +27,7 @@ class DeletedUserRetention
         $amount = filter_var(config('laravelusers.cleanup.amount', 180), FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 10000]]);
         $unit = config('laravelusers.cleanup.unit', 'days');
         if ($amount === false || !in_array($unit, ['immediately', 'minutes', 'hours', 'days', 'months', 'years'], true) || ($unit !== 'immediately' && $amount < 1)) {
-            throw new \RuntimeException('Invalid deleted-user cleanup retention settings. No users were deleted.');
+            throw new RuntimeException('Invalid deleted-user cleanup retention settings. No users were deleted.');
         }
         $amount *= $forward ? 1 : -1;
 

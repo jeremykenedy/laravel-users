@@ -3,6 +3,28 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 test.use({ timezoneId: 'America/Los_Angeles' });
 
+for (const framework of ['bootstrap5', 'tailwind']) {
+    test(`${framework}: theme control works while later assets are still loading`, async ({ page }) => {
+        let releaseAsset;
+        const pendingAsset = new Promise(resolve => { releaseAsset = resolve; });
+        await page.route('**/vendor/laravelusers/releases/*/users.js', async route => {
+            await pendingAsset;
+            await route.continue();
+        });
+        await page.goto(`/__browser/${framework}?published-assets=1`, { waitUntil: 'commit' });
+        try {
+            const toggle = page.locator('#lu-theme');
+            await expect(toggle).toBeVisible();
+            expect(await page.evaluate(() => document.readyState)).toBe('loading');
+            await toggle.click();
+            await expect(toggle.locator('svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'light');
+        } finally {
+            releaseAsset();
+            await page.waitForLoadState('domcontentloaded');
+        }
+    });
+}
+
 test('goodbye email options collapse and expand in settings', async ({page}) => {
     await page.goto('/__browser/bootstrap5?settings=1&soft-deletes=1&account-links=1');
     await page.goto('/users/settings#emails');
@@ -506,6 +528,33 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.locator(framework === 'bootstrap4' ? '#confirmSave #confirm' : '#lu-confirm-submit').click();
         await openEditSection(page, 'Appearance');
         await expect(page.getByLabel('Avatar source', { exact: true })).toHaveValue('inherit');
+    });
+
+    test(`${framework}: closing an email dialog keeps a newly focused search field active`, async ({ page }) => {
+        await page.goto(`/__browser/${framework}`);
+        const row = page.locator(framework === 'bootstrap4' ? '#users_table tr' : '#lu-users tr').filter({ hasText: 'Alex Rivers' });
+        await row.locator('[data-lu-select]').check();
+        await page.locator('#lu-bulk-action').selectOption('message');
+        await page.locator('#lu-bulk-submit').click();
+        await expect(page.locator('#lu-email-dialog')).toBeVisible();
+        await page.getByLabel('Subject', { exact: true }).fill('Discard this draft');
+        await page.evaluate(() => {
+            const modal = document.querySelector('#lu-email-dialog');
+            const search = document.querySelector('#user_search_box');
+            modal.addEventListener('close', () => search.focus(), { capture: true, once: true });
+            modal.close();
+        });
+        await expect(page.locator('#user_search_box')).toBeFocused();
+        await expect(page.locator('#lu-email-dialog')).toBeHidden();
+        await page.locator('#user_search_box').fill('user1@example.com');
+        await page.locator('#user_search_box').press('Enter');
+        const result = page.locator(framework === 'bootstrap4' ? '#search_results tr' : '#lu-results tr');
+        await expect(result).toHaveCount(1);
+        await expect(page.locator('#lu-email-dialog')).toBeHidden();
+        await result.locator('.lu-email-toggle').click();
+        await result.getByRole('button', { name: 'Send user an email', exact: true }).click();
+        await expect(page.getByLabel('Subject', { exact: true })).toHaveValue('');
+        await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
     });
 
     test(`${framework}: bulk email recipient chips remove users and scroll`, async ({ page }) => {

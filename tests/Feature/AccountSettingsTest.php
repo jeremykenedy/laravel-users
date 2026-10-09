@@ -133,6 +133,28 @@ class AccountSettingsTest extends TestCase
         $this->putJson('/users/account', $data)->assertForbidden();
     }
 
+    public function test_non_string_passwords_are_rejected_before_account_actions_run(): void
+    {
+        $this->enable();
+        Notification::fake();
+        $user = $this->user();
+        $this->actingAs($user);
+        $invalid = ['current_password' => ['password']];
+
+        $this->putJson('/users/account', $invalid + ['section' => 'password', 'password' => 'replacement123', 'password_confirmation' => 'replacement123'])
+            ->assertUnprocessable()->assertJsonValidationErrors('current_password');
+        $this->putJson('/users/account', $invalid + ['section' => 'email', 'email' => 'changed@example.com'])
+            ->assertUnprocessable()->assertJsonValidationErrors('current_password');
+        $this->deleteJson('/users/account', $invalid + ['confirmation' => 'delete'])
+            ->assertUnprocessable()->assertJsonValidationErrors('current_password');
+
+        $this->assertSame($user->email, $user->fresh()->email);
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
+        $this->assertDatabaseCount('laravelusers_email_changes', 0);
+        Notification::assertNothingSent();
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_email_requires_both_addresses_and_links_are_encrypted_single_use_and_bound_to_the_user(): void
     {
         $this->enable();

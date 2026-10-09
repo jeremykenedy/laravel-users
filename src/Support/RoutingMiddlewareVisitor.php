@@ -16,20 +16,28 @@ class RoutingMiddlewareVisitor extends NodeVisitorAbstract
 {
     public function leaveNode(Node $node): ?Node
     {
-        if (!$this->isRouteCall($node) || !$node->name instanceof Node\Identifier || empty($node->args[0])) {
+        if (!$this->isRouteCall($node) || !$node->name instanceof Node\Identifier || !($node->args[0] ?? null) instanceof Node\Arg) {
             return null;
         }
         if ($node->name->toString() === 'middleware') {
             $node->args[0]->value = $this->withGuard($node->args[0]->value);
-        } elseif ($node->name->toString() === 'group' && $node->args[0]->value instanceof Expr\Array_) {
-            foreach ($node->args[0]->value->items as $item) {
-                if ($item?->key instanceof String_ && $item->key->value === 'middleware') {
-                    $item->value = $this->withGuard($item->value);
-                }
-            }
+        } elseif ($node->name->toString() === 'group') {
+            $this->visitGroup($node->args[0]->value);
         }
 
         return $node;
+    }
+
+    private function visitGroup(Expr $value): void
+    {
+        if (!$value instanceof Expr\Array_) {
+            return;
+        }
+        foreach ($value->items as $item) {
+            if ($item?->key instanceof String_ && $item->key->value === 'middleware') {
+                $item->value = $this->withGuard($item->value);
+            }
+        }
     }
 
     private function isRouteCall(Node $node): bool
@@ -53,11 +61,7 @@ class RoutingMiddlewareVisitor extends NodeVisitorAbstract
         $items = $value instanceof Expr\Array_ ? $value->items : [new Expr\ArrayItem($value)];
         foreach ($items as $item) {
             $entry = $item?->value;
-            $reference = $entry ? (new NodeFinder())->findFirst($entry, fn ($node) => $node instanceof Expr\ClassConstFetch && $node->class instanceof Name && $node->class->getAttribute('resolvedName', $node->class)->toString() === VerifyImpersonationState::class) : null;
-            if ($reference) {
-                return $value;
-            }
-            if ($entry instanceof String_ && ltrim($entry->value, '\\') === VerifyImpersonationState::class) {
+            if ($entry && $this->containsGuard($entry)) {
                 return $value;
             }
         }
@@ -75,5 +79,20 @@ class RoutingMiddlewareVisitor extends NodeVisitorAbstract
         }
 
         return new Expr\Array_($items, ['kind' => Expr\Array_::KIND_SHORT]);
+    }
+
+    private function containsGuard(Expr $value): bool
+    {
+        if ($value instanceof String_ && ltrim($value->value, '\\') === VerifyImpersonationState::class) {
+            return true;
+        }
+
+        return (new NodeFinder())->findFirst($value, fn ($node) => $this->isGuardReference($node)) !== null;
+    }
+
+    private function isGuardReference(Node $node): bool
+    {
+        return $node instanceof Expr\ClassConstFetch && $node->class instanceof Name
+            && $node->class->getAttribute('resolvedName', $node->class)->toString() === VerifyImpersonationState::class;
     }
 }

@@ -34,7 +34,7 @@ if (is_file('composer-fails')) {
     exit(1);
 }
 $packages = $argv[1] === 'require' || is_file('package-remains') ? [['name' => $argv[2]]] : [];
-file_put_contents('vendor/composer/installed.json', json_encode(['packages' => $packages]));
+file_put_contents('vendor/composer/installed.json', is_file('manifest-payload') ? file_get_contents('manifest-payload') : json_encode(['packages' => $packages]));
 PHP);
         chmod($this->fixturePath.'/bin/composer', 0700);
         File::put($this->fixturePath.'/artisan', <<<'PHP'
@@ -103,5 +103,19 @@ PHP);
         $commands = File::get(base_path('commands.jsonl'));
         $this->assertStringNotContainsString('queue:restart', $commands);
         $this->assertFileExists(base_path('composer.json'));
+    }
+
+    public function test_invalid_installed_metadata_cannot_report_removal_or_refresh_application_caches(): void
+    {
+        $composer = new ComposerPackages();
+        foreach (['{', 'null', 'false', '"unexpected"', '{"packages":null}', '{"packages":false}', '{"packages":[{"version":"1.0.0"}]}'] as $payload) {
+            File::put(base_path('manifest-payload'), $payload);
+
+            $this->assertFalse($composer->changeFromSettings('remove', 'jeremykenedy/laravel-toast'));
+            $this->assertFileExists(base_path('bootstrap/cache/packages.php'));
+            $this->assertFileExists(base_path('bootstrap/cache/services.php'));
+        }
+        $this->assertStringNotContainsString('package:discover', File::get(base_path('commands.jsonl')));
+        $this->assertStringNotContainsString('queue:restart', File::get(base_path('commands.jsonl')));
     }
 }

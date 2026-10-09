@@ -16,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Models\EmailChange;
 use jeremykenedy\laravelusers\Notifications\ConfirmEmailChange;
 use JsonException;
+use RuntimeException;
 
 class EmailChanges
 {
@@ -57,44 +58,51 @@ class EmailChanges
             return null;
         }
 
-        return $user->getConnection()->transaction(function () use ($user, $credentials) {
-            $locked = $user->newQuery()->whereKey($user->getKey())->lockForUpdate()->first();
-            $change = $this->query($user)->whereKey($credentials['id'])->lockForUpdate()->first();
-            if (!$locked || !AccountPreferences::editable($locked) || !$this->valid($locked, $change, $credentials)) {
-                return null;
+        return $user->getConnection()->transaction(fn () => $this->confirmLocked($user, $credentials), 3);
+    }
+
+    private function confirmLocked(Model $user, array $credentials): ?string
+    {
+        $locked = $user->newQuery()->whereKey($user->getKey())->lockForUpdate()->first();
+        $change = $this->query($user)->whereKey($credentials['id'])->lockForUpdate()->first();
+        if (!$locked || !AccountPreferences::editable($locked) || !$this->valid($locked, $change, $credentials)) {
+            return null;
+        }
+        $column = $credentials['side'].'_confirmed_at';
+        if ($this->query($user)->whereKey($change->id)->whereNull($column)->update([$column => now()->timestamp]) !== 1) {
+            return null;
+        }
+        $change->$column = now()->timestamp;
+        if (!$change->old_confirmed_at || !$change->new_confirmed_at) {
+            return 'pending';
+        }
+        $this->updateEmail($locked, $change);
+        $change->delete();
+
+        return 'complete';
+    }
+
+    private function updateEmail(Model $user, EmailChange $change): void
+    {
+        if ($user->newQueryWithoutScopes()->where('email', $change->new_email)->where($user->getKeyName(), '!=', $user->getKey())->exists()) {
+            throw ValidationException::withMessages(['email' => trans('laravelusers::ui.account_email_taken')]);
+        }
+        $user->email = $change->new_email;
+        if ($user->getConnection()->getSchemaBuilder()->hasColumn($user->getTable(), 'email_verified_at')) {
+            $user->email_verified_at = now();
+        }
+
+        try {
+            if (!$user->save()) {
+                throw new RuntimeException('Email change was rejected.');
             }
-            $column = $credentials['side'].'_confirmed_at';
-            if ($this->query($user)->whereKey($change->id)->whereNull($column)->update([$column => now()->timestamp]) !== 1) {
-                return null;
-            }
-            $change->$column = now()->timestamp;
-            if (!$change->old_confirmed_at || !$change->new_confirmed_at) {
-                return 'pending';
-            }
-            $duplicates = $locked->newQueryWithoutScopes()->where('email', $change->new_email)->where($locked->getKeyName(), '!=', $locked->getKey())->exists();
-            if ($duplicates) {
+        } catch (QueryException $exception) {
+            if (in_array($exception->errorInfo[0] ?? null, ['23000', '23505'], true)) {
                 throw ValidationException::withMessages(['email' => trans('laravelusers::ui.account_email_taken')]);
             }
-            $locked->email = $change->new_email;
-            if ($locked->getConnection()->getSchemaBuilder()->hasColumn($locked->getTable(), 'email_verified_at')) {
-                $locked->email_verified_at = now();
-            }
 
-            try {
-                if (!$locked->save()) {
-                    throw new \RuntimeException('Email change was rejected.');
-                }
-            } catch (QueryException $exception) {
-                if (in_array($exception->errorInfo[0] ?? null, ['23000', '23505'], true)) {
-                    throw ValidationException::withMessages(['email' => trans('laravelusers::ui.account_email_taken')]);
-                }
-
-                throw $exception;
-            }
-            $change->delete();
-
-            return 'complete';
-        }, 3);
+            throw $exception;
+        }
     }
 
     public function pending(Model $user): ?EmailChange
@@ -130,8 +138,14 @@ class EmailChanges
             return null;
         }
 
-        return is_array($value) && isset($value['id'], $value['side'], $value['secret']) && is_string($value['id']) && Str::isUuid($value['id'])
-            && in_array($value['side'], ['old', 'new'], true) && is_string($value['secret']) && preg_match('/^[a-f0-9]{64}$/D', $value['secret']) ? $value : null;
+        return is_array($value) && $this->validCredentials($value) ? $value : null;
+    }
+
+    private function validCredentials(array $value): bool
+    {
+        return is_string($value['id'] ?? null) && Str::isUuid($value['id'])
+            && in_array($value['side'] ?? null, ['old', 'new'], true)
+            && is_string($value['secret'] ?? null) && preg_match('/^[a-f0-9]{64}$/D', $value['secret']);
     }
 
     private function fingerprint(Model $user): string

@@ -21,11 +21,19 @@ GitHub Actions runs the compatibility matrix, optional integration tests, Pint, 
 
 The quality job exports coverage for inspection. It does not yet enforce the requested 100% coverage target. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations. Local results also do not confirm GitHub Actions or external quality ratings for an unpublished commit.
 
+`phpunit.coverage.xml` is the PHPUnit 12 coverage configuration used by that job. It includes all package PHP logic, configuration, routes and migrations, including uncovered files. It excludes `src/resources`, which contains template sources, generated assets and translation data. Blade executes through compiled templates, so counting its source as unexecuted PHP gives a misleading report. Browser behavior is checked separately by Playwright. The ordinary `phpunit.xml` remains compatible with the older PHPUnit versions in the Laravel matrix.
+
+With PHPUnit 12 and Xdebug installed, generate the same report locally:
+
+```sh
+XDEBUG_MODE=coverage vendor/bin/phpunit --configuration phpunit.coverage.xml --coverage-clover coverage.xml
+```
+
 Codacy excludes dependency directories, temporary browser data, and generated Tailwind output. PHP analyzers inspect package PHP rather than treating Blade templates as standalone PHP files. `phpmd.xml` permits Laravel facades and the package's existing stateless helpers while retaining complexity and unused-code checks. `.markdownlint.json` allows the banner, badges, and screenshot tables required by this README. Tool configuration files must be enabled in Codacy after they are available on its default analysis branch.
 
 Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Default listing metadata excludes login IP and agent details. Bundled tables request those fields explicitly when the login-details column is enabled. Listing tests check one query for login records rather than a query per row.
 
-Command tests cover native Laravel Prompts with simulated key presses as well as the older console fallback. Publication tests verify real asset hashes, idempotent releases, preserved custom files, failed staging, malformed manifests, and rejected symbolic links. AST tests preserve route aliases, namespaces, comments, dynamic expressions, and concurrent host edits. Invalid PHP stops setup before configuration or assets are written.
+Command tests cover native Laravel Prompts with simulated key presses as well as the older console fallback. Publication tests verify real asset hashes, idempotent releases, preserved custom files, failed staging, malformed manifests, and rejected symbolic links. AST tests preserve route aliases, namespaces, comments, first-class route callables, dynamic expressions, and concurrent host edits. Invalid PHP stops setup before configuration or assets are written.
 
 Impersonation tests reject modified or legacy session state before host routes execute, verify guard and target binding, restore the actor on revoked access, retain the exit route after expiration, and suppress package login activity on both transitions. Ordinary host requests remain unchanged when the feature is disabled.
 
@@ -45,7 +53,7 @@ Legacy search regression tests cover both `application/json` responses decoded b
 
 The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Tailwind loads its bundled stylesheet. Browser artifacts are uploaded on CI failure. Tests that only pass on retry also fail CI.
 
-Published-asset browser tests verify CSS and JavaScript content types, working tabs and search, and the `.laravel-users-main-card` boundary at 375x812, 768x1024, and 1440x900. The fixture uses the checked-out package views so stale Testbench publications cannot mask a source change.
+Published-asset browser tests verify CSS and JavaScript content types, working tabs and search, and the `.laravel-users-main-card` boundary at 375x812, 768x1024, and 1440x900. Theme controls must work while a later JavaScript asset is still loading. Closing an email dialog must clear its draft and preserve focus when the user moves to search. The fixture uses the checked-out package views so stale Testbench publications cannot mask a source change.
 
 ## Asset builds
 
@@ -83,4 +91,4 @@ The presentation integration matrix installs actual DiceBear core/styles and Lar
 
 Standalone component browser tests render an application-owned page without `#laravelusers`, check theme persistence and synchronized controls, and verify outside-click/Escape behavior. Long-name/email tests cover bounded horizontal scrolling, keyboard access, preserved mail links and mobile card wrapping in all three frameworks. Settings browser tests include color/gradient resets, sliders, persistence, small-screen overflow and modern accessibility.
 
-Composer process tests use disposable application directories and local executable fixtures. They check fixed command arguments, disabled scripts/plugins, manifest refresh, graceful worker restart, failed commands, and dependencies that remain installed. They never change the working application's Composer files.
+Composer process tests use disposable application directories and local executable fixtures. They check fixed command arguments, disabled scripts/plugins, manifest refresh, malformed installed metadata, graceful worker restart, failed commands, and dependencies that remain installed. They never change the working application's Composer files. Account tests reject non-string current passwords before dispatching mail or changing an account. Navigation tests verify that host gate changes hide the management link and malformed ability names fail closed.

@@ -40,6 +40,7 @@ use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Support\UserPermissions;
 use jeremykenedy\laravelusers\Support\UserRoles;
 use jeremykenedy\laravelusers\Support\UserSettings;
+use RuntimeException;
 
 class UsersManagementController extends Controller
 {
@@ -296,7 +297,7 @@ class UsersManagementController extends Controller
         if (!$currentUser || (string) $currentUser->getAuthIdentifier() !== (string) $user->getKey()) {
             $user->getConnection()->transaction(function () use ($user, $data, $goodbye) {
                 if (!$user->delete()) {
-                    throw new \RuntimeException('User deletion was rejected.');
+                    throw new RuntimeException('User deletion was rejected.');
                 }
                 if ($goodbye) {
                     $goodbye->handle($user, $data);

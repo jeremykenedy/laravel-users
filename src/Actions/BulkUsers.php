@@ -7,6 +7,7 @@ namespace jeremykenedy\laravelusers\Actions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Support\DeletedUsers;
+use RuntimeException;
 
 class BulkUsers
 {
@@ -26,7 +27,7 @@ class BulkUsers
             $method = ['delete' => 'delete', 'restore' => 'restore', 'force_delete' => 'forceDelete'][$data['action']];
             foreach ($users as $user) {
                 if (!$user->$method()) {
-                    throw new \RuntimeException('The user action was rejected. No users were changed.');
+                    throw new RuntimeException('The user action was rejected. No users were changed.');
                 }
             }
             if ($data['action'] === 'delete') {

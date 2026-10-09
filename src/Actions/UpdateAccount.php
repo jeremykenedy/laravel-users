@@ -12,6 +12,7 @@ use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\AppearancePreferences;
 use jeremykenedy\laravelusers\Support\AvatarPreferences;
 use jeremykenedy\laravelusers\Support\EmailChanges;
+use RuntimeException;
 
 class UpdateAccount
 {
@@ -53,7 +54,7 @@ class UpdateAccount
     private function save(Model $user): void
     {
         if (!$user->save()) {
-            throw new \RuntimeException('Account changes were rejected.');
+            throw new RuntimeException('Account changes were rejected.');
         }
     }
 }

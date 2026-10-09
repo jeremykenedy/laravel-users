@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Reject malformed current passwords before changing or deleting an account.
+- Preserve first-class route callables during middleware setup.
+- Verify Composer installed metadata before reporting package changes as completed.
+- Make theme controls available during asset loading and preserve search focus when email dialogs close.
+- Report executable PHP coverage separately from templates, generated assets and translation data.
 - Add versioned public assets to install, update, switch, and standalone publish commands, with staging, hash verification, publication locks, and a bundled fallback.
 - Use native Laravel Prompts for supported interactive environments while preserving current defaults and the older console fallback.
 - Protect impersonation on host web routes with encrypted session proofs, current authorization checks, configurable expiration, and session rotation.

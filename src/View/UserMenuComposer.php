@@ -7,6 +7,7 @@ namespace jeremykenedy\laravelusers\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use jeremykenedy\laravelusers\Models\LoginActivity;
 use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Support\UserAccess;
@@ -25,20 +26,35 @@ class UserMenuComposer
         $user = Auth::user();
         $avatar = $user instanceof Model ? $this->avatars->forUser($user) : null;
         $lastLogin = $user instanceof Model ? $this->activity->lastLogin($user) : null;
-        $icons = ['ip_address' => 'network', 'device' => 'device', 'os' => 'device', 'browser' => 'browser'];
-        if ($lastLogin) {
-            $os = mb_strtolower((string) $lastLogin->os);
-            $browser = mb_strtolower((string) $lastLogin->browser);
-            $icons['os'] = str_contains($os, 'windows') ? 'windows' : (str_contains($os, 'mac') || str_contains($os, 'ios') ? 'apple' : (str_contains($os, 'android') ? 'android' : (str_contains($os, 'linux') ? 'linux' : 'device')));
-            $icons['browser'] = str_contains($browser, 'edge') ? 'edge' : (str_contains($browser, 'firefox') ? 'firefox' : (str_contains($browser, 'chrome') ? 'chrome' : (str_contains($browser, 'safari') ? 'safari' : 'browser')));
-        }
         if ($avatar) {
             $avatar['size'] = 28;
         }
         $view->with('navigationAvatar', $avatar);
         $view->with('navigationLastLogin', $lastLogin);
-        $view->with('navigationLoginIcons', $icons);
+        $view->with('navigationLoginIcons', $this->activityIcons($lastLogin));
         $view->with('accountPageEnabled', $user instanceof Model && AccountPreferences::enabled($user));
         $view->with('canManageUsers', $user instanceof Model && UserAccess::canManageUsers($user));
+    }
+
+    private function activityIcons(?LoginActivity $login): array
+    {
+        return [
+            'ip_address' => 'network',
+            'device'     => 'device',
+            'os'         => $this->platformIcon($login?->os, ['windows' => 'windows', 'mac' => 'apple', 'ios' => 'apple', 'android' => 'android', 'linux' => 'linux'], 'device'),
+            'browser'    => $this->platformIcon($login?->browser, ['edge' => 'edge', 'firefox' => 'firefox', 'chrome' => 'chrome', 'safari' => 'safari'], 'browser'),
+        ];
+    }
+
+    private function platformIcon(?string $name, array $icons, string $fallback): string
+    {
+        $name = mb_strtolower($name ?? '');
+        foreach ($icons as $platform => $icon) {
+            if (str_contains($name, $platform)) {
+                return $icon;
+            }
+        }
+
+        return $fallback;
     }
 }

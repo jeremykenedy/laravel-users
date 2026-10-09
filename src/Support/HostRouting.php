@@ -8,6 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 use jeremykenedy\laravelusers\App\Http\Middleware\VerifyImpersonationState;
 use PhpParser\Error;
 use PhpParser\Lexer\Emulative;
+use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Identifier;
@@ -79,14 +80,7 @@ class HostRouting
 
     private function registerGuard(array $statements): array
     {
-        $registered = (new NodeFinder())->findFirst($statements, function ($node) {
-            return $node instanceof Expr\StaticCall && $node->name instanceof Identifier
-                && $node->name->toString() === 'pushMiddlewareToGroup'
-                && ($node->args[0]->value ?? null) instanceof String_ && $node->args[0]->value->value === 'web'
-                && ($node->args[1]->value ?? null) instanceof Expr\ClassConstFetch
-                && $node->args[1]->value->class instanceof Name
-                && $node->args[1]->value->class->getAttribute('resolvedName', $node->args[1]->value->class)->toString() === VerifyImpersonationState::class;
-        });
+        $registered = (new NodeFinder())->findFirst($statements, fn ($node) => $this->isGuardRegistration($node));
         if ($registered) {
             return $statements;
         }
@@ -99,6 +93,23 @@ class HostRouting
         }
 
         return $this->insertRegistration($statements);
+    }
+
+    private function isGuardRegistration(Node $node): bool
+    {
+        if (!$node instanceof Expr\StaticCall || !$node->name instanceof Identifier || $node->name->toString() !== 'pushMiddlewareToGroup') {
+            return false;
+        }
+        $group = $node->args[0]->value ?? null;
+        $middleware = $node->args[1]->value ?? null;
+
+        return $group instanceof String_ && $group->value === 'web' && $this->isGuardReference($middleware);
+    }
+
+    private function isGuardReference(?Expr $value): bool
+    {
+        return $value instanceof Expr\ClassConstFetch && $value->class instanceof Name
+            && $value->class->getAttribute('resolvedName', $value->class)->toString() === VerifyImpersonationState::class;
     }
 
     private function insertRegistration(array $statements): array

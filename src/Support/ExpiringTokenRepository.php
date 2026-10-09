@@ -47,8 +47,15 @@ class ExpiringTokenRepository implements TokenRepositoryInterface
         if (!is_string($token) || !str_starts_with($token, 'lu1.')) {
             return $this->repository->exists($user, $token);
         }
+        $data = $this->decode($token);
+
+        return $data !== null && $this->validOptions($data) && ($this->forExpiry)($data['minutes'])->exists($user, $data['token']);
+    }
+
+    private function decode(string $token): ?array
+    {
         if (strlen($token) > 4096 || !preg_match('/^lu1\.[A-Za-z0-9_-]+$/D', $token)) {
-            return false;
+            return null;
         }
 
         try {
@@ -56,14 +63,17 @@ class ExpiringTokenRepository implements TokenRepositoryInterface
             $payload = strtr($payload, '-_', '+/').str_repeat('=', (4 - strlen($payload) % 4) % 4);
             $data = json_decode($this->encrypter->decrypt($payload, false), true, 4, JSON_THROW_ON_ERROR);
         } catch (DecryptException|JsonException $exception) {
-            return false;
-        }
-        if (!is_array($data) || !is_string($data['token'] ?? null) || !is_int($data['minutes'] ?? null) || $data['minutes'] < 0 || $data['minutes'] > 525600 || ($data['provider'] ?? null) !== $this->provider
-            || ($data['minutes'] === 0 && !config('laravelusers.emails.reset_allow_never_expire', true))) {
-            return false;
+            return null;
         }
 
-        return ($this->forExpiry)($data['minutes'])->exists($user, $data['token']);
+        return is_array($data) ? $data : null;
+    }
+
+    private function validOptions(array $data): bool
+    {
+        return is_string($data['token'] ?? null) && is_int($data['minutes'] ?? null)
+            && $data['minutes'] >= 0 && $data['minutes'] <= 525600 && ($data['provider'] ?? null) === $this->provider
+            && ($data['minutes'] !== 0 || config('laravelusers.emails.reset_allow_never_expire', true));
     }
 
     public function recentlyCreatedToken(CanResetPassword $user): bool

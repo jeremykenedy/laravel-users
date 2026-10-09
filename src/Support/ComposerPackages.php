@@ -54,13 +54,56 @@ class ComposerPackages
 
             return false;
         }
-        $installed = json_decode((string) file_get_contents(base_path('vendor/composer/installed.json')), true);
-        $present = in_array($package, array_column($installed['packages'] ?? $installed ?? [], 'name'), true);
+        if (!$this->verifyChange($action, $package)) {
+            return false;
+        }
+
+        return $this->refreshApplication($package);
+    }
+
+    private function verifyChange(string $action, string $package): bool
+    {
+        $installed = $this->installedPackages();
+        if ($installed === null) {
+            Log::error('Composer installed metadata could not be verified.', ['package' => $package]);
+
+            return false;
+        }
+        $present = in_array($package, array_column($installed, 'name'), true);
         if ($present !== ($action === 'install')) {
             Log::error('Package remains required by another dependency.', ['package' => $package]);
 
             return false;
         }
+
+        return true;
+    }
+
+    private function installedPackages(): ?array
+    {
+        $path = base_path('vendor/composer/installed.json');
+        if (!is_file($path)) {
+            return null;
+        }
+        $installed = json_decode((string) file_get_contents($path), true);
+        if (!is_array($installed)) {
+            return null;
+        }
+        $packages = array_key_exists('packages', $installed) ? $installed['packages'] : $installed;
+        if (!is_array($packages)) {
+            return null;
+        }
+        foreach ($packages as $package) {
+            if (!is_array($package) || !is_string($package['name'] ?? null)) {
+                return null;
+            }
+        }
+
+        return $packages;
+    }
+
+    private function refreshApplication(string $package): bool
+    {
         foreach (['packages.php', 'services.php'] as $file) {
             $path = base_path('bootstrap/cache/'.$file);
             if (is_file($path) && !unlink($path)) {

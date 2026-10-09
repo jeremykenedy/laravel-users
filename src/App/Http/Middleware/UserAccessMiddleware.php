@@ -31,13 +31,18 @@ class UserAccessMiddleware
         }
         abort_if($action && !UserAccess::allows($action), 403);
         if (in_array($method, ['email', 'previewEmail'], true)) {
-            $emailAction = $request->input('action');
-            abort_if(is_string($emailAction) && in_array($emailAction, ['message', 'reset', 'welcome'], true) && !UserAccess::email($emailAction, $request->boolean('deleted')), 403);
-            abort_if($request->boolean('include_restore') && !UserAccess::allows('restore_users'), 403);
-            abort_if($request->boolean('include_force_delete') && !UserAccess::allows('force_delete'), 403);
+            $this->authorizeEmail($request);
         }
         $request->attributes->set('laravelusers.access', array_combine(UserAccess::ACTIONS, array_map(fn ($action) => UserAccess::allows($action), UserAccess::ACTIONS)));
 
         return $next($request);
+    }
+
+    private function authorizeEmail(Request $request): void
+    {
+        $action = $request->input('action');
+        abort_if(is_string($action) && in_array($action, ['message', 'reset', 'welcome'], true) && !UserAccess::email($action, $request->boolean('deleted')), 403);
+        abort_if($request->boolean('include_restore') && !UserAccess::allows('restore_users'), 403);
+        abort_if($request->boolean('include_force_delete') && !UserAccess::allows('force_delete'), 403);
     }
 }

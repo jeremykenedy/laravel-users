@@ -213,6 +213,8 @@ npm run test:browser
 
 CI covers PHP and Laravel compatibility, optional roles and presentation integrations, code style, dependency audit, coverage collection, and browser tests. See [testing and CI](docs/testing.md) for the matrix and fixture details. The browser fixture uses an isolated temporary database and sample users.
 
+PHP coverage uses `phpunit.coverage.xml` with PHPUnit 12 and Xdebug. It includes package logic, routes, configuration and migrations. Blade templates and generated assets are checked by the browser suite. The requested 100% coverage target has not yet been reached.
+
 ## Screenshots
 
 These screenshots use sample accounts from the isolated preview application. The pages below are captured from the current Bootstrap 5 interface. The Bootstrap 4 and Tailwind directories are also shown for comparison.
@@ -277,6 +279,8 @@ src/
 docs/                      Setup, feature, and upgrade guides
 art/                       Theme banners and browser screenshots
 tests/                     Feature, integration, and browser tests
+phpunit.xml                Tests across the supported Laravel versions
+phpunit.coverage.xml       PHP coverage configuration for PHPUnit 12
 ```
 
 ## Documentation

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace jeremykenedy\laravelusers\App\Http\Middleware;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use jeremykenedy\laravelusers\Support\ImpersonationSession;
 use jeremykenedy\laravelusers\Support\UserAccess;
@@ -29,12 +30,18 @@ class VerifyImpersonationState
             abort(403);
         }
         $this->settings->load();
-        if (!$request->routeIs('users.impersonation.stop') && ($state['expires_at'] <= now()->getTimestamp() || !UserAccess::canImpersonate($target, $actor))) {
+        if ($this->mustRestore($request, $state, $target, $actor)) {
             $returnTo = $this->sessions->restore($request, $state, $actor);
 
             return redirect()->to($returnTo)->with('warning', trans('laravelusers::ui.impersonation_expired'));
         }
 
         return $next($request);
+    }
+
+    private function mustRestore(Request $request, array $state, Model $target, Model $actor): bool
+    {
+        return !$request->routeIs('users.impersonation.stop')
+            && ($state['expires_at'] <= now()->getTimestamp() || !UserAccess::canImpersonate($target, $actor));
     }
 }

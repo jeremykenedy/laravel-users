@@ -59,12 +59,7 @@ class Avatar
     private function url(Model $user, string $source, int $size): ?string
     {
         if ($source === 'gravatar' || in_array($source, self::GRAVATAR_STYLES, true)) {
-            if (!config('laravelusers.avatar.remote_enabled', true)) {
-                return null;
-            }
-            $default = $source === 'gravatar' ? '404' : $source;
-
-            return 'https://www.gravatar.com/avatar/'.hash('sha256', mb_strtolower(trim((string) $user->email))).'?s='.$size.'&d='.$default.'&r=g'.($source === 'gravatar' ? '' : '&f=y');
+            return $this->gravatar($user, $source, $size);
         }
         if (in_array($source, ['dicebear', 'ui-avatars'], true)) {
             $seed = hash_hmac('sha256', implode('|', [get_class($user), $user->getConnectionName() ?? config('database.default'), $user->getTable(), $user->getKey()]), (string) config('app.key'));
@@ -77,6 +72,16 @@ class Avatar
         $url = $user->getAttribute(config('laravelusers.avatar.attribute', 'avatar'));
 
         return is_string($url) && $this->safeUrl($url) ? $url : null;
+    }
+
+    private function gravatar(Model $user, string $source, int $size): ?string
+    {
+        if (!config('laravelusers.avatar.remote_enabled', true)) {
+            return null;
+        }
+        $default = $source === 'gravatar' ? '404' : $source;
+
+        return 'https://www.gravatar.com/avatar/'.hash('sha256', mb_strtolower(trim((string) $user->email))).'?s='.$size.'&d='.$default.'&r=g'.($source === 'gravatar' ? '' : '&f=y');
     }
 
     private function safeUrl(string $url): bool

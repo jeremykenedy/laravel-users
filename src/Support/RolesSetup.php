@@ -34,6 +34,12 @@ class RolesSetup
         if ($choice === 'none') {
             return ['rolesEnabled' => false];
         }
+
+        return $this->enable($command, $choice, $interactive);
+    }
+
+    private function enable(Command $command, string $choice, bool $interactive): array|false
+    {
         $package = self::PACKAGES[$choice];
         if (!class_exists($package['model'])) {
             return $this->install($command, $choice, $package, $interactive);
@@ -115,6 +121,12 @@ class RolesSetup
 
             return false;
         }
+
+        return $this->registeredMiddleware($command, $middleware);
+    }
+
+    private function registeredMiddleware(Command $command, array|string $middleware): array|string|false
+    {
         foreach ((array) $middleware as $entry) {
             $alias = explode(':', $entry, 2)[0];
             if (!isset($this->router->getMiddleware()[$alias]) && !isset($this->router->getMiddlewareGroups()[$alias]) && !class_exists($alias)) {

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\EmailChanges;
+use RuntimeException;
 
 class DeleteAccount
 {
@@ -26,7 +27,7 @@ class DeleteAccount
             }
             $this->emails->cancel($locked);
             if (!$locked->delete()) {
-                throw new \RuntimeException('Account deletion was rejected.');
+                throw new RuntimeException('Account deletion was rejected.');
             }
             $this->goodbye->handle($locked, []);
         }, 3);

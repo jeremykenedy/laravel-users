@@ -46,7 +46,8 @@ class SwitchCommand extends InstallCommand
 
     public function handle(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer, PublicAssets $assets, HostRouting $routing): int
     {
-        if (!$this->option('framework') && !$this->option('css') && !$this->option('theme') && !$this->option('views') && !$this->option('roles') && !$this->option('avatar') && !$this->option('toast') && !$this->option('notifications') && !$this->option('setup-packages')) {
+        $options = ['framework', 'css', 'theme', 'views', 'roles', 'avatar', 'toast', 'notifications', 'setup-packages'];
+        if (!array_filter($options, fn ($option) => $this->option($option))) {
             $this->error('Choose --framework, --css, --theme, --views, --roles, --avatar, --toast or --notifications.');
 
             return self::FAILURE;

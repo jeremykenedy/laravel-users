@@ -21,8 +21,17 @@ class RoleAccess
         if (!$spatie && !in_array('jeremykenedy\\LaravelRoles\\Traits\\HasRoleAndPermission', $traits, true)) {
             return false;
         }
+        if (!self::modelTablesAvailable($user, $spatie ? 'permission' : 'roles')) {
+            return false;
+        }
+
+        return self::relationTablesAvailable($user, ['roles', $spatie ? 'permissions' : 'userPermissions']);
+    }
+
+    private static function modelTablesAvailable(Model $user, string $prefix): bool
+    {
         foreach (['role', 'permission'] as $type) {
-            $model = config(($spatie ? 'permission' : 'roles').'.models.'.$type);
+            $model = config($prefix.'.models.'.$type);
             if (!is_string($model) || !is_subclass_of($model, Model::class)) {
                 return false;
             }
@@ -31,7 +40,13 @@ class RoleAccess
                 return false;
             }
         }
-        foreach (['roles', $spatie ? 'permissions' : 'userPermissions'] as $name) {
+
+        return true;
+    }
+
+    private static function relationTablesAvailable(Model $user, array $names): bool
+    {
+        foreach ($names as $name) {
             $relation = $user->$name();
             if (!$relation->getQuery()->getConnection()->getSchemaBuilder()->hasTable($relation->getTable())) {
                 return false;
@@ -67,12 +82,25 @@ class RoleAccess
 
     public static function matches(Model $user, array $rule): bool
     {
+        return self::matchesRoles($user, $rule)
+            || self::matchesPermissions($user, $rule)
+            || (isset($rule['level']) && method_exists($user, 'level') && $user->level() >= (int) $rule['level']);
+    }
+
+    private static function matchesRoles(Model $user, array $rule): bool
+    {
         $roles = empty($rule['roles']) ? [] : self::query($user, 'role')->whereKey($rule['roles'])->get();
         foreach ($roles as $role) {
             if ($user->hasRole(method_exists($user, 'hasPermissionTo') ? $role : $role->getKey())) {
                 return true;
             }
         }
+
+        return false;
+    }
+
+    private static function matchesPermissions(Model $user, array $rule): bool
+    {
         $permissions = empty($rule['permissions']) ? [] : self::query($user, 'permission')->whereKey($rule['permissions'])->get();
         foreach ($permissions as $permission) {
             if (method_exists($user, 'hasPermissionTo') ? $user->hasPermissionTo($permission) : $user->hasPermission($permission->getKey())) {
@@ -80,6 +108,6 @@ class RoleAccess
             }
         }
 
-        return isset($rule['level']) && method_exists($user, 'level') && $user->level() >= (int) $rule['level'];
+        return false;
     }
 }

@@ -222,7 +222,10 @@
     }, true);
     root.addEventListener('submit', function (event) { if (event.target.id === 'lu-bulk') bulk(event); }, true);
     modal.querySelectorAll('[data-lu-email-dismiss]').forEach(button => button.addEventListener('click', () => modal.close()));
-    modal.addEventListener('close', () => { discard(); if (previousFocus?.isConnected) previousFocus.focus(); });
+    modal.addEventListener('close', () => {
+        discard();
+        if (previousFocus?.isConnected && (document.activeElement === document.body || modal.contains(document.activeElement))) previousFocus.focus();
+    });
     modal.addEventListener('click', event => { if (event.target === modal) { const bounds = modal.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) modal.close(); } });
     form.addEventListener('submit', function (event) { if (!recipients.length) event.preventDefault(); else form.querySelector('[type="submit"]').disabled = true; });
     document.addEventListener('click', event => { root.querySelectorAll('.lu-email-menu[open]').forEach(menu => { if (!menu.contains(event.target)) menu.removeAttribute('open'); }); });

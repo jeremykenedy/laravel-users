@@ -32,6 +32,11 @@ class LocalAvatars
             return null;
         }
 
+        return $this->diceBear($style, $seed, $size);
+    }
+
+    private function diceBear(string $style, string $seed, int $size): ?string
+    {
         try {
             if (!isset($this->styles[$style])) {
                 $path = InstalledVersions::getInstallPath('dicebear/styles').'/src/'.$style.'.json';

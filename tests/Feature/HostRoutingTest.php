@@ -94,4 +94,26 @@ PHP;
         }
         $this->assertSame($custom, file_get_contents(base_path('routes/web.php')));
     }
+
+    public function test_first_class_route_callables_are_preserved_during_setup(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+use Illuminate\Support\Facades\Route as Web;
+
+$middleware = Web::middleware(...);
+$group = Web::group(...);
+Web::middleware('auth')->group(fn () => null);
+PHP;
+        file_put_contents(base_path('routes/web.php'), $source);
+        $routing = $this->app->make(HostRouting::class);
+        $routing->write($routing->prepare());
+        $updated = file_get_contents(base_path('routes/web.php'));
+
+        $this->assertStringContainsString('$middleware = Web::middleware(...);', $updated);
+        $this->assertStringContainsString('$group = Web::group(...);', $updated);
+        $this->assertStringContainsString("Web::middleware(['auth', ...", $updated);
+        $this->assertSame($updated, $routing->prepare()['updated']);
+    }
 }

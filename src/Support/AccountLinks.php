@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Models\AccountLink;
 use JsonException;
+use RuntimeException;
 
 class AccountLinks
 {
@@ -90,24 +91,27 @@ class AccountLinks
             return null;
         }
 
-        return $link->getConnection()->transaction(function () use ($credentials, $link) {
-            $user = $this->deleted->query()->whereKey($link->user_id)->lockForUpdate()->first();
-            $locked = $this->query()->whereKey($link->id)->lockForUpdate()->first();
-            if (!$user || !$this->valid($locked, $credentials['secret']) || !hash_equals($locked->deleted_fingerprint, $this->fingerprint($user))) {
-                return null;
-            }
-            $claimed = $this->query()->whereKey($locked->id)->whereNull('consumed_at')->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()->timestamp))->update(['consumed_at' => now()->timestamp]);
-            if ($claimed !== 1) {
-                return null;
-            }
-            $result = $locked->action === 'restore' ? $user->restore() : $user->forceDelete();
-            if (!$result) {
-                throw new \RuntimeException('The account action could not be completed.');
-            }
-            $this->invalidate($user);
+        return $link->getConnection()->transaction(fn () => $this->consumeLocked($link, $credentials['secret']), 3);
+    }
 
-            return $locked->action;
-        }, 3);
+    private function consumeLocked(AccountLink $link, string $secret): ?string
+    {
+        $user = $this->deleted->query()->whereKey($link->user_id)->lockForUpdate()->first();
+        $locked = $this->query()->whereKey($link->id)->lockForUpdate()->first();
+        if (!$user || !$this->valid($locked, $secret) || !hash_equals($locked->deleted_fingerprint, $this->fingerprint($user))) {
+            return null;
+        }
+        $claimed = $this->query()->whereKey($locked->id)->whereNull('consumed_at')->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()->timestamp))->update(['consumed_at' => now()->timestamp]);
+        if ($claimed !== 1) {
+            return null;
+        }
+        $result = $locked->action === 'restore' ? $user->restore() : $user->forceDelete();
+        if (!$result) {
+            throw new RuntimeException('The account action could not be completed.');
+        }
+        $this->invalidate($user);
+
+        return $locked->action;
     }
 
     public function invalidate(Model $user): void
@@ -143,7 +147,13 @@ class AccountLinks
             return null;
         }
 
-        return is_array($data) && isset($data['id'], $data['secret']) && is_string($data['id']) && Str::isUuid($data['id']) && is_string($data['secret']) && preg_match('/^[a-f0-9]{64}$/D', $data['secret']) ? $data : null;
+        return is_array($data) && $this->validCredentials($data) ? $data : null;
+    }
+
+    private function validCredentials(array $data): bool
+    {
+        return is_string($data['id'] ?? null) && Str::isUuid($data['id'])
+            && is_string($data['secret'] ?? null) && preg_match('/^[a-f0-9]{64}$/D', $data['secret']);
     }
 
     private function fingerprint(Model $user): string

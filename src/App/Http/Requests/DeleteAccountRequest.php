@@ -21,7 +21,7 @@ class DeleteAccountRequest extends FormRequest
     {
         return [
             'confirmation'     => ['required', Rule::in(['delete'])],
-            'current_password' => ['required', 'string', function ($attribute, $value, $fail) {
+            'current_password' => ['bail', 'required', 'string', function ($attribute, $value, $fail) {
                 if (!Hash::check($value, $this->user()->getAuthPassword())) {
                     $fail(trans('laravelusers::ui.account_password_invalid'));
                 }
