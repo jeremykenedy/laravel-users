@@ -58,8 +58,21 @@ export async function request(url, runtime, csrf, options = {}) {
         throw new Error('The application returned an unexpected response.');
     }
     const payload = await response.json();
-    if (!response.ok && !payload.screen && response.status !== 422) throw new Error(payload.message || `Request failed (${response.status}).`);
+    if (!response.ok && !payload.screen && response.status !== 422) {
+        const error = new Error(payload.message || `Request failed (${response.status}).`);
+        error.status = response.status;
+        throw error;
+    }
     return { response, payload };
+}
+
+export function statusIcon(status) {
+    return {
+        queued: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2',
+        running: 'M21 12a9 9 0 1 1-9-9',
+        completed: 'm5 12 4 4L19 6',
+        failed: 'm12 3 10 18H2L12 3m0 6v5m0 3v1',
+    }[status] ?? '';
 }
 
 export function cellText(user, column) {

@@ -1,0 +1,25 @@
+{
+  "name": "laravel-users-native-frontends",
+  "private": true,
+  "type": "module",
+  "author": "Jeremy Kenedy",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "svelte": "^5.57.2",
+    "vue": "^3.5.43"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "terser": "^5.51.2",
+    "vite": "^8.3.4"
+  }
+}

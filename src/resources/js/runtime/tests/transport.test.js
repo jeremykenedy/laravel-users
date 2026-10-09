@@ -1,0 +1,112 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { formData, formReady, sameOriginUrl, setValue } from '../shared.js';
+import { createNativeStore } from '../store.js';
+
+function environment(t) {
+    const previousWindow = globalThis.window;
+    const previousDocument = globalThis.document;
+    globalThis.window = {
+        location: { href: 'https://example.test/users', assign: value => { window.location.href = value; } },
+        history: { pushState: (_, __, value) => { window.location.href = value; }, replaceState: (_, __, value) => { window.location.href = value; } },
+        addEventListener() {}, scrollTo() {}, localStorage: { setItem() {} },
+    };
+    globalThis.document = { title: '', getElementById: () => ({ dataset: {} }), querySelector: () => null };
+    t.after(() => { globalThis.window = previousWindow; globalThis.document = previousDocument; });
+}
+
+function page() {
+    return {
+        screen: 'users', title: 'Users', framework: 'bootstrap4', theme: 'light', csrf: 'session-token',
+        urls: { users: 'https://example.test/users' }, labels: {}, flash: [],
+        features: { search: true, search_debounce: null, sorting: true, filtering: true, columns: true, view_toggle: true, bulk: true, bulk_actions: [{ name: 'delete', form: 'bulk-delete' }] },
+        data: {
+            form_ids: [], navigation: [], columns: [{ key: 'id' }, { key: 'name' }],
+            users: [{ id: 2, name: 'Target', selectable: true, actions: [{ name: 'delete', form: 'delete-user', url: 'https://example.test/users/2' }] }],
+        },
+        forms: {
+            'delete-user': { id: 'delete-user', action: null, method: 'DELETE', fields: [], values: {}, errors: {} },
+            'bulk-delete': { id: 'bulk-delete', action: 'https://example.test/users/bulk', method: 'POST', fields: [{ key: 'action', name: 'action', type: 'hidden' }, { key: 'ids', name: 'ids[]', type: 'hidden', multiple: true }], values: { action: 'delete', ids: [] }, errors: {} },
+            account: { id: 'account', action: 'https://example.test/users/account', method: 'PUT', fields: [{ key: 'email', name: 'email', type: 'email', section: 'profile' }, { key: 'current_password', name: 'current_password', type: 'password', section: 'profile' }], values: { email: 'current@example.test', current_password: '' }, errors: {} },
+        },
+    };
+}
+
+test('form transport preserves nested names and method spoofing while omitting unlisted and disabled data', () => {
+    const form = { method: 'PUT', fields: [
+        { key: 'templates.welcome.subject', name: 'templates[welcome][subject]', type: 'text' },
+        { key: 'access.edit.roles', name: 'access[edit][roles][]', type: 'select', multiple: true },
+        { key: 'enabled', name: 'enabled', type: 'checkbox' },
+        { key: 'disabled', name: 'disabled', type: 'text', disabled: true },
+        { key: 'confirmation', name: 'confirmation', type: 'text', when: { key: 'enabled', equals: true } },
+    ] };
+    const values = { templates: { welcome: { subject: 'Welcome' } }, access: { edit: { roles: ['2', '3'] } }, enabled: false, disabled: 'private', confirmation: 'continue', injected: 'unexpected' };
+    assert.deepEqual([...formData(form, values, 'csrf')], [['_token', 'csrf'], ['_method', 'PUT'], ['templates[welcome][subject]', 'Welcome'], ['access[edit][roles][]', '2'], ['access[edit][roles][]', '3'], ['enabled', '0']]);
+});
+
+test('security confirmation is exact and conditional, without validating business fields', () => {
+    const form = { fields: [{ key: 'enabled', type: 'checkbox' }, { key: 'confirmation', type: 'text', required_text: 'permanently delete', when: { key: 'enabled', equals: true } }] };
+    assert.equal(formReady(form, { enabled: false, confirmation: '' }), true);
+    assert.equal(formReady(form, { enabled: true, confirmation: 'Permanently delete' }), false);
+    assert.equal(formReady(form, { enabled: true, confirmation: 'permanently delete' }), true);
+    assert.throws(() => setValue({}, '__proto__.polluted', true));
+    assert.equal({}.polluted, undefined);
+});
+
+test('transport rejects cross-origin and executable action URLs before fetching', t => {
+    environment(t);
+    assert.equal(sameOriginUrl('/users').href, 'https://example.test/users');
+    assert.throws(() => sameOriginUrl('https://external.test/users'));
+    assert.throws(() => sameOriginUrl('javascript:alert(1)'));
+    assert.throws(() => sameOriginUrl('//external.test/users'));
+});
+
+test('row and bulk dialogs accept only offered actions and known selectable users', t => {
+    environment(t);
+    const store = createNativeStore(page(), 'react');
+    store.openUserAction('delete', '999');
+    assert.equal(store.getSnapshot().activeForm, null);
+    store.openUserAction('unlisted', 2);
+    assert.equal(store.getSnapshot().activeForm, null);
+    store.openUserAction('delete', 2);
+    assert.equal(store.activeForm().action, 'https://example.test/users/2');
+    store.closeDialog();
+    store.getSnapshot().table.selected = ['2', '999'];
+    store.openBulkAction('delete');
+    assert.deepEqual(store.getSnapshot().values['bulk-delete'].ids, ['2']);
+});
+
+test('existing mutation URLs receive CSRF and backend validation errors remain attached to the form', async t => {
+    environment(t);
+    t.mock.method(globalThis, 'fetch', async (url, options) => {
+        assert.equal(url.href, 'https://example.test/users/account');
+        assert.equal(options.headers['X-LaravelUsers-Runtime'], 'vue');
+        assert.equal(options.headers['X-CSRF-TOKEN'], 'session-token');
+        assert.equal(options.credentials, 'same-origin');
+        assert.equal(options.body.get('_method'), 'PUT');
+        assert.equal(options.body.get('email'), 'invalid-address');
+        return Response.json({ message: 'Invalid fields.', errors: { email: ['The email must be valid.'] } }, { status: 422 });
+    });
+    const store = createNativeStore(page(), 'vue');
+    store.setValue('account', 'email', 'invalid-address');
+    await store.submit('account');
+    assert.deepEqual(store.getSnapshot().errors.account.email, ['The email must be valid.']);
+    assert.equal(store.value('account', 'email'), 'invalid-address');
+    assert.equal(store.getSnapshot().busy, false);
+});
+
+test('search navigates the existing native GET contract and updates browser history', async t => {
+    environment(t);
+    t.mock.method(globalThis, 'fetch', async (url, options) => {
+        assert.equal(url.pathname, '/users');
+        assert.equal(url.searchParams.get('user_search_box'), 'A & B');
+        assert.equal(options.headers.Accept, 'application/json');
+        assert.equal(options.headers['X-LaravelUsers-Runtime'], 'svelte');
+        return Response.json(page());
+    });
+    const store = createNativeStore(page(), 'svelte');
+    store.setSearch(' A & B ');
+    await store.search();
+    assert.equal(new URL(window.location.href).searchParams.get('user_search_box'), 'A & B');
+    assert.equal(document.title, 'Users');
+});
