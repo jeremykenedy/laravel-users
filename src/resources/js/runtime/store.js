@@ -56,6 +56,48 @@ function previewAvatarData(payload) {
     return Object.fromEntries(['profile', 'edit', 'profile_dark', 'edit_dark'].filter(kind => getOwnValue(payload.avatars, kind)).map(kind => [kind, getOwnValue(payload.avatars, kind)]));
 }
 
+function createTableControls(getState, emit, activate) {
+    return {
+        openBulkAction(name) {
+            const state = getState();
+            const action = state.page.features.bulk_actions.find(action => action.name === name);
+            const ids = state.table.selected.filter(id => state.page.data.users.some(user => String(user.id) === String(id) && user.selectable));
+            if (state.page.features.bulk && action && ids.length) activate({ ...action, values: { ids } });
+        },
+        setFilter(value) { const state = getState(); state.table.filter = value; emit(); },
+        sortBy(key) {
+            const state = getState();
+            if (!state.page.features.sorting || !state.page.data.columns.some(column => column.key === key && column.sortable !== false)) return;
+            state.table.direction = state.table.sort === key && state.table.direction === 'asc' ? 'desc' : 'asc';
+            state.table.sort = key;
+            emit();
+        },
+        setMode(mode) { const state = getState(); if (state.page.features.view_toggle && ['table', 'cards'].includes(mode)) { state.table.mode = mode; emit(); } },
+        toggleColumn(key) {
+            const state = getState();
+            const hidden = state.table.hiddenColumns;
+            if (!state.page.features.columns || !state.page.data.columns.some(column => column.key === key)) return;
+            if (hidden.includes(key)) state.table.hiddenColumns = hidden.filter(item => item !== key);
+            else if (state.page.data.columns.length - hidden.length > 1) hidden.push(key);
+            emit();
+        },
+        select(id, checked) {
+            const state = getState();
+            const user = state.page.data.users?.find(user => String(user.id) === String(id));
+            if (!state.page.features.bulk || !user?.selectable) return;
+            state.table.selected = checked ? [...new Set([...state.table.selected, String(id)])] : state.table.selected.filter(item => item !== String(id));
+            emit();
+        },
+        selectAll() {
+            const state = getState();
+            if (!state.page.features.bulk) return;
+            const ids = displayUsers(state.page, state.table).filter(user => user.selectable).map(user => String(user.id));
+            state.table.selected = ids.every(id => state.table.selected.includes(id)) ? state.table.selected.filter(id => !ids.includes(id)) : [...new Set([...state.table.selected, ...ids])];
+            emit();
+        },
+    };
+}
+
 export function createNativeStore(page, runtime) {
     let state = initialState(page);
     let searchTimer;
@@ -190,11 +232,6 @@ export function createNativeStore(page, runtime) {
             const action = state.page.data.settings_actions?.find(action => action.name === name);
             if (action) activate(action);
         },
-        openBulkAction(name) {
-            const action = state.page.features.bulk_actions.find(action => action.name === name);
-            const ids = state.table.selected.filter(id => state.page.data.users.some(user => String(user.id) === String(id) && user.selectable));
-            if (state.page.features.bulk && action && ids.length) activate({ ...action, values: { ids } });
-        },
         closeDialog() {
             const form = store.activeForm();
             for (const field of form?.fields ?? []) {
@@ -207,33 +244,7 @@ export function createNativeStore(page, runtime) {
             state.preview = null;
             emit();
         },
-        setFilter(value) { state.table.filter = value; emit(); },
-        sortBy(key) {
-            if (!state.page.features.sorting || !state.page.data.columns.some(column => column.key === key && column.sortable !== false)) return;
-            state.table.direction = state.table.sort === key && state.table.direction === 'asc' ? 'desc' : 'asc';
-            state.table.sort = key;
-            emit();
-        },
-        setMode(mode) { if (state.page.features.view_toggle && ['table', 'cards'].includes(mode)) { state.table.mode = mode; emit(); } },
-        toggleColumn(key) {
-            const hidden = state.table.hiddenColumns;
-            if (!state.page.features.columns || !state.page.data.columns.some(column => column.key === key)) return;
-            if (hidden.includes(key)) state.table.hiddenColumns = hidden.filter(item => item !== key);
-            else if (state.page.data.columns.length - hidden.length > 1) hidden.push(key);
-            emit();
-        },
-        select(id, checked) {
-            const user = state.page.data.users?.find(user => String(user.id) === String(id));
-            if (!state.page.features.bulk || !user?.selectable) return;
-            state.table.selected = checked ? [...new Set([...state.table.selected, String(id)])] : state.table.selected.filter(item => item !== String(id));
-            emit();
-        },
-        selectAll() {
-            if (!state.page.features.bulk) return;
-            const ids = displayUsers(state.page, state.table).filter(user => user.selectable).map(user => String(user.id));
-            state.table.selected = ids.every(id => state.table.selected.includes(id)) ? state.table.selected.filter(id => !ids.includes(id)) : [...new Set([...state.table.selected, ...ids])];
-            emit();
-        },
+        ...createTableControls(() => state, emit, activate),
         setSearch(value) {
             state.search = value;
             clearTimeout(searchTimer);

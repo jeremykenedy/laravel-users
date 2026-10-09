@@ -238,11 +238,7 @@ class RoleIntegrationsTest extends TestCase
         $this->exerciseImpersonationSettings();
         $target = $actor->newInstance(['name' => 'Temporary Account', 'email' => 'temporary@example.com', 'password' => bcrypt('password')]);
         $target->save();
-        if (method_exists($target, 'assignRole')) {
-            $target->assignRole($role);
-        } else {
-            $target->attachRole($role);
-        }
+        method_exists($target, 'assignRole') ? $target->assignRole($role) : $target->attachRole($role);
         $unprivileged = $actor->newInstance(['name' => 'Unprivileged Account', 'email' => 'unprivileged@example.com', 'password' => bcrypt('password')]);
         $unprivileged->save();
 

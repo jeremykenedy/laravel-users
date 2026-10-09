@@ -1,6 +1,10 @@
 const { test, expect } = require('@playwright/test');
 
-async function rejectInvalidPermissionsAndClearSelection(page, edit, target) {
+async function rejectInvalidPermissionsAndClearSelection(page, edit, user) {
+    const {target, name, email, runtime, administrator, editor, inherited} = user;
+    const selectedRoles = edit.locator('select[name="role[]"]');
+    const selectedPermissions = edit.locator('select[name="permissions[]"]');
+    const confirmation = page.getByRole('dialog');
     const invalid = await page.evaluate(async ({ target, name, email, runtime, administrator }) => {
         const body = new URLSearchParams({ _token: document.querySelector('meta[name="csrf-token"]').content, _method: 'PUT', name: name + 'Invalid', email, role: administrator, permissions_present: '1', 'permissions[]': '99999999' });
         const response = await fetch(`/users/${target}`, { method: 'POST', headers: { Accept: 'application/json', 'X-LaravelUsers-Runtime': runtime }, body });
@@ -57,7 +61,7 @@ async function createRoleUser(page, runtime, integration) {
     await expect(page.locator('.lu-profile-body')).toContainText('Administrator');
     await expect(page.locator('.lu-profile-body')).toContainText('Direct permission');
     await expect(page.locator('.lu-profile-body')).not.toContainText('Direct permissions: Inherited permission');
-    return {name, administrator, editor, direct, inherited};
+    return {name, email, administrator, editor, direct, inherited};
 }
 
 for (const integration of ['laravel-roles', 'spatie']) {
@@ -69,7 +73,7 @@ for (const integration of ['laravel-roles', 'spatie']) {
             await context.addCookies([{ name: 'lu-native-roles', value: integration, url: 'http://127.0.0.1:19855' }]);
             await page.goto(`/__browser/bootstrap5?runtime=${runtime}&soft-deletes=1&search-debounce=0`);
             await expect(page.locator('#laravelusers')).toHaveAttribute('data-lu-runtime', runtime);
-            const {name, administrator, editor, direct, inherited} = await createRoleUser(page, runtime, integration);
+            const {name, email, administrator, editor, direct, inherited} = await createRoleUser(page, runtime, integration);
             const target = Number(new URL(page.url()).pathname.split('/').pop());
             await page.getByRole('link', { name: 'Edit', exact: true }).click();
             await expect(page.locator('[data-lu-native-screen="edit-user"]')).toBeVisible();
@@ -95,7 +99,7 @@ for (const integration of ['laravel-roles', 'spatie']) {
             await page.reload();
             await expect(selectedRoles).toHaveValues([administrator, editor]);
             await expect(selectedPermissions).toHaveValues([inherited]);
-            await rejectInvalidPermissionsAndClearSelection(page, edit, target);
+            await rejectInvalidPermissionsAndClearSelection(page, edit, {target, name, email, runtime, administrator, editor, inherited});
             await context.addCookies([{ name: 'lu-native-permissions-denied', value: '1', url: 'http://127.0.0.1:19855' }]);
             await page.reload();
             const forbidden = await page.evaluate(async ({ target, name, email, runtime, administrator, direct }) => {

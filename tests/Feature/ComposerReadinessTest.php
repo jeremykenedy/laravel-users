@@ -47,6 +47,33 @@ class ComposerReadinessTest extends TestCase
         $this->assertNull((new ComposerPackages())->readiness());
     }
 
+    public function test_external_shared_vendor_directories_cannot_be_changed_from_settings(): void
+    {
+        $external = $this->directory.'-shared-vendor';
+        rename(base_path('vendor'), $external);
+        symlink($external, base_path('vendor'));
+        $manifest = File::get(base_path('composer.json'));
+
+        try {
+            $composer = new ComposerPackages();
+            $this->assertSame('laravelusers::ui.package_composer_vendor', $composer->readiness());
+            $this->assertFalse($composer->changeFromSettings('remove', 'jeremykenedy/laravel-toast'));
+            $this->assertSame($manifest, File::get(base_path('composer.json')));
+            $this->assertFileExists($external.'/composer/installed.json');
+        } finally {
+            unlink(base_path('vendor'));
+            rename($external, base_path('vendor'));
+        }
+    }
+
+    public function test_vendor_symlinks_inside_the_application_remain_ready(): void
+    {
+        rename(base_path('vendor'), base_path('vendor-local'));
+        symlink(base_path('vendor-local'), base_path('vendor'));
+
+        $this->assertNull((new ComposerPackages())->readiness());
+    }
+
     public function test_missing_composer_is_reported_before_any_application_files_are_changed(): void
     {
         File::delete(base_path('bin/composer'));

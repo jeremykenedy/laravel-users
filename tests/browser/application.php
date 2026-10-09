@@ -68,9 +68,11 @@ if (!$preview) {
     if (!is_file($host.'/artisan')) {
         $files->put($host.'/artisan', '<?php $_SERVER[\'SERVER_PORT\'] = 19847; require '.var_export(__DIR__.'/artisan.php', true).';');
     }
-    if (!is_dir($host.'/vendor')) {
-        $files->link(dirname(__DIR__, 2).'/vendor', $host.'/vendor');
+    if (is_link($host.'/vendor')) {
+        $files->delete($host.'/vendor');
     }
+    $files->ensureDirectoryExists($host.'/vendor/composer');
+    $files->copy(dirname(__DIR__, 2).'/vendor/composer/installed.json', $host.'/vendor/composer/installed.json');
 }
 if (is_file($host.'/composer.json')) {
     $app->setBasePath($host);

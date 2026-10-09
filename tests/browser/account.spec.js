@@ -127,7 +127,7 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
             await security.locator('#password').fill('password');
             await security.locator('#password_confirmation').fill('password');
             await submitAccount(page, security);
-    
+
         });
 
         const admin = await section(page, 'admin');

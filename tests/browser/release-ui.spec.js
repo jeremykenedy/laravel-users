@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
-async function assertHeaderMeasurement(page, header, title, icon, icons, measurements, path, theme, width) {
+async function assertHeaderMeasurement(page, context) {
+    const {header, title, icon, icons, measurements, path, theme, width} = context;
     const bounds = await header.boundingBox();
     const titleBox = await title.boundingBox();
     const textStyle = await title.evaluate(element => {
@@ -58,7 +59,7 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                     if (await toggle.locator('svg:not([hidden])').getAttribute('data-theme-icon') !== theme) await toggle.click();
                     for (const width of [320, 390, 768, 1440]) {
                         await page.setViewportSize({ width, height: 1000 });
-                        await assertHeaderMeasurement(page, header, title, icon, icons, measurements, path, theme, width);
+                        await assertHeaderMeasurement(page, {header, title, icon, icons, measurements, path, theme, width});
                     }
                 }
             }

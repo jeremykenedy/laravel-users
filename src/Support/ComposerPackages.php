@@ -43,7 +43,16 @@ class ComposerPackages
 
     private function vendorReady(): bool
     {
-        return is_dir(base_path('vendor')) && is_writable(base_path('vendor')) && $this->installedPackages() !== null;
+        return $this->vendorOwned() && is_dir(base_path('vendor')) && is_writable(base_path('vendor')) && $this->installedPackages() !== null;
+    }
+
+    private function vendorOwned(): bool
+    {
+        $application = realpath(base_path());
+        $vendor = realpath(base_path('vendor'));
+
+        return $application !== false && $vendor !== false
+            && str_starts_with($vendor, rtrim($application, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
     }
 
     private function applicationReady(): bool
@@ -95,7 +104,7 @@ class ComposerPackages
             return false;
         }
         $composer = (new ExecutableFinder())->find('composer');
-        if (!$composer || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
+        if (!$composer || !$this->vendorOwned() || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
             return false;
         }
         $process = new Process([$composer, $action === 'install' ? 'require' : 'remove', $package, '--no-interaction', '--no-scripts', '--no-plugins'], base_path(), null, null, 300);

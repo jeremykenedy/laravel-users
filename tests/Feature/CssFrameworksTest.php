@@ -51,9 +51,10 @@ class CssFrameworksTest extends TestCase
                 $this->assertCount(1, $scripts);
                 $this->assertSame('module', $scripts->item(0)->getAttribute('type'));
                 $this->assertTrue($scripts->item(0)->hasAttribute('data-navigate-once'));
-            } else {
-                $response->assertDontSee(PublicAssets::url('material3.js'), false);
+
+                continue;
             }
+            $response->assertDontSee(PublicAssets::url('material3.js'), false);
         }
     }
 

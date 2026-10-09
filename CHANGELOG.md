@@ -4,6 +4,30 @@ This is the canonical release history. The [documentation changelog](docs/change
 
 Published dates below are GitHub release dates in UTC. Entries marked **tag only** use the tagged commit's UTC date because no GitHub release record is available for that tag. Historical notes are checked against the published release descriptions and tagged source differences. Versions are listed by version number, including early tags whose commit dates are out of order.
 
+<a id="v6-0-2"></a>
+
+## 6.0.2 - 2026-10-09
+
+### Fixed
+
+- Protect runtime form values and dotted updates from prototype-property names while retaining existing fields and nested values.
+- Keep search rendering, validation feedback, package polling, and optional runtime forms behavior consistent after separating their responsibilities.
+- Preserve installer choices, environment-file permissions, atomic writes, configuration, routes, and published view overrides while separating validation and configuration handling.
+
+### Maintenance
+
+- Correct quality-provider configuration for verified upstream stylesheets, generated bundles, Laravel facade conventions, and framework-required interfaces. Authored code remains analyzed.
+- Simplify authored framework adapters, native page-data builders, and optional runtime renderers without changing the supported release interfaces or configuration defaults.
+- Add real optional Laravel Toast browser checks to CI and wait for navigation animations and worker verification to finish before subsequent assertions.
+- Retain concurrent single-use account-link, authorization, role, permission, and browser regression assertions in focused test scenarios.
+
+### Documentation
+
+- Refresh maintained mobile, tablet, and desktop interface screenshots.
+- Publish this patch's upgrade guidance and verification in the GitHub release notes.
+
+[Release](https://github.com/jeremykenedy/laravel-users/releases/tag/v6.0.2) | [Changes](https://github.com/jeremykenedy/laravel-users/compare/v6.0.1...v6.0.2)
+
 <a id="v6-0-1"></a>
 
 ## 6.0.1 - 2026-10-09

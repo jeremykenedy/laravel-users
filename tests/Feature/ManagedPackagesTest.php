@@ -252,11 +252,7 @@ class ManagedPackagesTest extends TestCase
             $job = Bus::dispatched(ChangeManagedPackage::class)->last();
             $composer = \Mockery::mock(ComposerPackages::class);
             $composer->shouldReceive('changeFromSettings')->once()->andReturn($installed);
-            if ($installed) {
-                $composer->shouldReceive('setup')->once()->andReturnFalse();
-            } else {
-                $composer->shouldNotReceive('setup');
-            }
+            $composer->shouldReceive('setup')->times($installed ? 1 : 0)->andReturnFalse();
             $job->handle($packages, $composer, new UserSettings());
             $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
             $lock = Cache::lock('laravelusers.packages', 10);

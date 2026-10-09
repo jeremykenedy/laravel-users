@@ -148,10 +148,11 @@ class WelcomeTest extends TestCase
             if ($url) {
                 $this->assertStringContainsString(trans('laravelusers::ui.reset_notice'), $html);
                 $this->assertStringContainsString(trans('laravelusers::ui.reset_expiry', ['minutes' => config('auth.passwords.users.expire')]), $text);
-            } else {
-                $this->assertStringContainsString(route('login'), $html);
-                $this->assertStringNotContainsString(trans('laravelusers::ui.reset_notice'), $text);
+
+                continue;
             }
+            $this->assertStringContainsString(route('login'), $html);
+            $this->assertStringNotContainsString(trans('laravelusers::ui.reset_notice'), $text);
         }
     }
 }

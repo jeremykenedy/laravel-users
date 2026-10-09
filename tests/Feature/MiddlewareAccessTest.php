@@ -270,7 +270,8 @@ class MiddlewareAccessTest extends TestCase
                 $table->string('slug');
                 if ($name === 'roles') {
                     $table->integer('level')->default(1);
-                } else {
+                }
+                if ($name === 'permissions') {
                     $table->string('description')->nullable();
                     $table->string('model')->nullable();
                 }
@@ -298,12 +299,10 @@ class MiddlewareAccessTest extends TestCase
         $this->app->register(PermissionServiceProvider::class);
         config(['permission.testing' => true]);
         $this->app->make(PermissionRegistrar::class)->initializeCache();
-        if (class_exists('CreatePermissionTables', false)) {
-            (new CreatePermissionTables())->up();
-        } else {
-            $migration = require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
-            (is_object($migration) ? $migration : new CreatePermissionTables())->up();
-        }
+        $migration = class_exists('CreatePermissionTables', false)
+            ? new CreatePermissionTables()
+            : require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
+        (is_object($migration) ? $migration : new CreatePermissionTables())->up();
         Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
 
         return SpatieRoleUser::findOrFail($this->user()->id);

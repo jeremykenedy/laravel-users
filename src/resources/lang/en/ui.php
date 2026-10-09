@@ -214,7 +214,7 @@ return [
     'package_worker_not_verified'        => 'The package worker did not verify the application requirements. Start the configured worker, then verify again.',
     'package_composer_missing'           => 'Composer and PHP process support are required to install or remove packages. Enable them on the application server, then verify the requirements again.',
     'package_composer_manifest'          => 'The application composer.json is missing, invalid or not writable. Correct its permissions and verify the requirements again.',
-    'package_composer_vendor'            => 'The application vendor directory or Composer metadata is missing or not writable. Run composer install for this application, then verify the requirements again.',
+    'package_composer_vendor'            => 'The application vendor directory or Composer metadata is missing or not writable. Use a vendor directory owned by this application, run composer install, then verify the requirements again. Shared external vendor directories cannot be changed from settings.',
     'package_composer_application'       => 'The application Artisan entry point, bootstrap/cache directory or composer.lock is unavailable or not writable. Correct the application setup and verify the requirements again.',
     'package_running'                    => 'Changing the package. Please wait.',
     'package_status_failed'              => 'Cannot read the package status. Refresh settings before retrying.',
