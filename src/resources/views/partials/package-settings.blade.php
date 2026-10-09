@@ -2,7 +2,7 @@
 @php($operation = $packageOperation ?? null)
 @php($operationState = $operation['status'] ?? '')
 @php($requirementsState = $packageQueueReady ? 'verified' : (($packageRequirements['status'] ?? '') === 'checking' ? 'running' : 'failed'))
-@php($workerCommand = 'php artisan queue:work '.(config('laravelusers.settings.packages.connection') ?? config('queue.default')).' --queue='.config('laravelusers.settings.packages.queue', 'default').' --timeout=360')
+@php($workerCommand = $packageRequirements['worker_command'] ?? 'php artisan queue:work '.(config('laravelusers.settings.packages.connection') ?? config('queue.default')).' --queue='.config('laravelusers.settings.packages.queue', 'default').' --timeout=360')
 <section class="lu-package-settings" aria-labelledby="lu-packages-title">
     <h2 id="lu-packages-title" class="lu-title-heading"><span class="lu-title-icon">@include('laravelusers::partials.icon', ['name' => 'package'])</span><span>{{ __('laravelusers::ui.settings_packages') }}</span></h2>
     <p class="lu-muted text-muted">{{ __('laravelusers::ui.packages_hint') }}</p>

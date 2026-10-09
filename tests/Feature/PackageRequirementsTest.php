@@ -105,6 +105,27 @@ class PackageRequirementsTest extends TestCase
         $this->assertSame(1, DB::table('laravelusers_package_jobs')->count());
     }
 
+    public function test_gui_setup_returns_the_new_worker_connection_and_queue_before_verification(): void
+    {
+        $this->enable();
+        config(['queue.default' => 'database', 'laravelusers.settings.packages.queue' => 'managed-packages']);
+        $command = 'php artisan queue:work laravelusers-packages --queue=managed-packages --timeout=360';
+
+        $this->actingAs($this->user())->postJson('/users/settings/packages', $this->setupPayload())
+            ->assertOk()->assertJsonPath('queue_ready', false)->assertJsonPath('worker_command', $command);
+        $this->assertSame('database', config('queue.default'));
+        $this->assertSame('managed-packages', DB::table('laravelusers_package_jobs')->value('queue'));
+        $this->postJson('/users/settings/packages/verify', $this->verifyPayload())
+            ->assertOk()->assertJsonPath('queue_ready', false)->assertJsonPath('worker_command', $command);
+        foreach (['bootstrap4', 'bootstrap5'] as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $this->get('/users/settings')->assertOk()->assertSee('<code>'.$command.'</code>', false);
+        }
+        $this->work();
+        $this->postJson('/users/settings/packages/verify', $this->verifyPayload())
+            ->assertOk()->assertJsonPath('queue_ready', true)->assertJsonPath('worker_command', $command);
+    }
+
     public function test_all_css_frameworks_render_verified_state_only_after_worker_confirmation(): void
     {
         $this->enable();
@@ -141,7 +162,7 @@ class PackageRequirementsTest extends TestCase
             ->assertOk()->assertJsonPath('status', 'not_ready')->assertJsonPath('queue_ready', false)
             ->assertJsonPath('message', trans('laravelusers::ui.package_composer_vendor'));
 
-        $this->assertEqualsCanonicalizing(['status', 'queue_ready', 'message'], array_keys($response->json()));
+        $this->assertEqualsCanonicalizing(['status', 'queue_ready', 'message', 'worker_command'], array_keys($response->json()));
         $this->assertFalse(PackageWorker::verified());
         $this->assertSame(0, DB::table('laravelusers_package_jobs')->count());
     }

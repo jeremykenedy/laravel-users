@@ -90,7 +90,12 @@ PHP);
 
     private function result(bool $ready, string $message, string $status = 'not_ready'): array
     {
-        return ['status' => $ready ? 'completed' : $status, 'queue_ready' => $ready, 'message' => trans($message)];
+        return [
+            'status'         => $ready ? 'completed' : $status,
+            'queue_ready'    => $ready,
+            'message'        => trans($message),
+            'worker_command' => 'php artisan queue:work '.(config('laravelusers.settings.packages.connection') ?? config('queue.default')).' --queue='.config('laravelusers.settings.packages.queue', 'default').' --timeout=360',
+        ];
     }
 
     public static function load(): void

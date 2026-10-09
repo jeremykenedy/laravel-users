@@ -32,6 +32,10 @@
     function setRequirementsStatus(message, verified = false, state = verified ? 'verified' : '') {
         setStatus(message, verified, state, requirementsStatus);
     }
+    function updateWorkerCommand(result) {
+        const command = root.querySelector('[data-lu-package-worker] code');
+        if (command && typeof result.worker_command === 'string') command.textContent = result.worker_command;
+    }
     function updateButtons() {
         root.querySelectorAll('[data-lu-package]').forEach(button => {
             button.disabled = busy || (button.dataset.luPackage === 'requirements' && queueReady) || button.hasAttribute('data-lu-package-blocked') || (!queueReady && button.dataset.luPackage !== 'requirements');
@@ -96,6 +100,7 @@
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || @json(__('laravelusers::ui.package_status_failed')));
+            updateWorkerCommand(result);
             setRequirementsStatus(result.message, result.queue_ready === true);
             queueReady = result.queue_ready === true;
             if (result.status === 'checking' && ++verificationAttempts < 15) {
@@ -159,6 +164,7 @@
             const result = await response.json();
             if (!response.ok) throw new Error(Object.values(result.errors || {}).flat().join(' ') || result.message || @json(__('laravelusers::ui.package_failed')));
             if (typeof result.queue_ready === 'boolean') {
+                updateWorkerCommand(result);
                 busy = false; dialog.close(); setRequirementsStatus(result.message, result.queue_ready === true);
                 queueReady = result.queue_ready;
                 updateButtons();
