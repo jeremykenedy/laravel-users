@@ -107,6 +107,7 @@
     #laravelusers .lu-account-card .lu-appearance-mode h2 { margin: 0 0 16px; font-size: .875rem; }
     #laravelusers .lu-account-card .lu-user-appearance > .lu-muted { margin-top: 16px; font-size: .75rem; }
     #laravelusers .lu-account-danger h2 { color: #b42332; }
+    #laravelusers[data-lu-theme="dark"] .lu-account-danger :is(h2, p) { color: #fff; }
     #laravelusers .lu-account-danger { margin-top: 20px; padding: 20px; border: 1px solid color-mix(in srgb, #b42332 28%, var(--lu-border, #ced4da)); border-radius: 8px; background: color-mix(in srgb, #b42332 4%, var(--lu-bg, #fff)); }
     #laravelusers [data-lu-account-panel="admin"] { padding: 16px 0 24px; }
     #laravelusers [data-lu-account-panel="admin"] .lu-account-danger { margin: 0; padding: 24px; border-bottom: 1px solid color-mix(in srgb, #b42332 28%, var(--lu-border, #ced4da)); }
