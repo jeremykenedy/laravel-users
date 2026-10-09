@@ -201,6 +201,18 @@
     color: var(--lu-text);
     font-weight: 600;
 }
+#laravelusers[data-lu-runtime] .lu-setup-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+#laravelusers[data-lu-runtime] .lu-setup-completed .lu-icon {
+    color: var(--lu-success, #087748);
+}
+#laravelusers[data-lu-runtime][data-lu-theme="dark"] .lu-setup-completed .lu-icon {
+    color: var(--lu-success, #8ddcb5);
+}
 #laravelusers .lu-native-package-status {
     display: flex;
     align-items: flex-start;

@@ -147,6 +147,18 @@ body:has(#laravelusers.lu-public-page[data-lu-theme="dark"]) {
     cursor: not-allowed;
     opacity: .55;
 }
+@media (max-width: 640px) {
+    #laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"])[data-lu-responsive-buttons="true"] .lu-profile :is(.lu-profile-header, .lu-form-actions) .lu-button {
+        justify-content: center;
+        gap: 0;
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+        font-size: 0;
+        line-height: 1;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     #laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) * {
         animation: none;

@@ -104,6 +104,47 @@ for (const framework of frameworks) {
         await expect(page.getByRole('dialog')).toBeHidden();
     });
 
+    test(framework + ': responsive profile actions honor icons and button preferences', async ({ page }) => {
+        await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&published-assets=1');
+        await page.goto('/users/1/edit');
+        const actions = page.locator('.lu-profile-header .lu-button, .lu-profile .lu-form-actions .lu-button');
+        await expect(actions).toHaveCount(4);
+        await expect(page.locator('#laravelusers')).toHaveAttribute('data-lu-responsive-buttons', 'true');
+        for (const width of [390, 768]) {
+            await page.setViewportSize({width, height: 900});
+            for (const button of await actions.all()) {
+                await expect(button).toHaveAccessibleName(/\S/);
+                await expect(button.locator('.lu-icon')).toBeVisible();
+                if (width === 390) {
+                    await expect(button).toHaveCSS('font-size', '0px');
+                    await expect(button).toHaveCSS('width', '40px');
+                    await expect(button).toHaveCSS('height', '40px');
+                } else {
+                    expect(await button.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThan(0);
+                    expect((await button.boundingBox()).width).toBeGreaterThan(40);
+                }
+            }
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        }
+        await page.setViewportSize({width: 390, height: 900});
+        await page.getByRole('button', {name: 'Save changes', exact: true}).click();
+        await expect(page.locator('#lu-confirmation')).toBeVisible();
+        await page.locator('#lu-confirmation .lu-modal-footer').getByRole('button', {name: 'Cancel', exact: true}).click();
+        await expect(page.locator('#lu-confirmation')).toBeHidden();
+        for (const preference of ['responsive-buttons=0', 'icons=0']) {
+            await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&published-assets=1&' + preference);
+            await page.goto('/users/1/edit');
+            await expect(page.locator('#laravelusers')).toHaveAttribute('data-lu-responsive-buttons', 'false');
+            for (const button of await actions.all()) {
+                await expect(button).toHaveAccessibleName(/\S/);
+                expect(await button.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThan(0);
+                expect((await button.boundingBox()).width).toBeGreaterThan(40);
+            }
+            await expect(actions.locator('.lu-icon')).toHaveCount(preference === 'icons=0' ? 0 : 4);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+        }
+    });
+
     test(framework + ': account, deleted-user and public confirmation pages fit both appearances', async ({ page }) => {
         await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&soft-deletes=1&published-assets=1');
         await enableBreadcrumbs(page);
