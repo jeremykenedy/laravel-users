@@ -36,12 +36,16 @@
 - [Configuration](#configuration)
 - [Changing Frameworks](#changing-frameworks)
 - [Artisan Commands](#artisan-commands)
+  - [Install Options](#install-options)
 - [Routes](#routes)
 - [Optional Integrations](#optional-integrations)
-- [Testing](#testing)
 - [Project Layout](#project-layout)
-- [Screenshots](#screenshots)
+- [Testing](#testing)
 - [Documentation](#documentation)
+- [Screenshots](#screenshots)
+  - [Mobile](#mobile)
+  - [Tablet](#tablet)
+  - [Desktop](#desktop)
 - [License](#license)
 
 ## Framework Support
@@ -106,7 +110,13 @@ Sign in with an account authorized by the host application's middleware, then op
 <a href="{{ route('users') }}">Manage users</a>
 ```
 
-Vue, React, Svelte, and Livewire applications can link to the Blade routes, but the package does not currently ship native screens or frontend components for those frameworks. See [standalone navigation components](docs/navigation-components.md) for the Blade components that can be embedded in a host layout.
+Livewire navigation can use the same Blade link. Vue, React, and Svelte navigation can link directly to the default package URL:
+
+```html
+<a href="/users">Manage users</a>
+```
+
+These links open the package's Blade pages. Native screens and frontend components for those runtimes are still pending. See [standalone navigation components](docs/navigation-components.md) for the Blade components that can be embedded in a host layout.
 
 ## Features
 
@@ -174,18 +184,31 @@ The package includes its modern CSS assets. Run `npm run build` only when changi
 
 ## Artisan Commands
 
-| Command | Purpose |
-| --- | --- |
-| `laravelusers:install` | Configure the package and select optional integrations. |
-| `laravelusers:update` | Refresh view choices and optional integration setup while preserving config. |
-| `laravelusers:switch` | Apply explicit CSS, theme, view, avatar, role, or notification choices. |
-| `laravelusers:publish` | Publish configuration, views, translations and versioned public assets; `laravel-users:publish` is an alias. |
-| `laravelusers:setup-accounts` | Publish optional account, avatar, and appearance migrations; `--migrate` runs them. |
-| `laravelusers:setup-package` | Configure an installed Toast or roles package. |
-| `laravelusers:prune-deleted` | Permanently remove soft-deleted users when scheduled cleanup is enabled. |
-| `laravelusers:prune-account-links` | Remove expired account-link records. |
+| Command | Purpose | Options |
+| --- | --- | --- |
+| `laravelusers:install` | Configure the package and select optional integrations. | [Setup options](#install-options) and [integration flags](docs/commands.md) |
+| `laravelusers:update` | Refresh view choices and optional integration setup while preserving config. | Same setup flags as install |
+| `laravelusers:switch` | Apply explicit CSS, theme, view, avatar, role, or notification choices. | Same setup flags as install; pass choices explicitly |
+| `laravelusers:publish` | Publish configuration, views, translations and versioned public assets; `laravel-users:publish` is an alias. | No package-specific flags |
+| `laravelusers:setup-accounts` | Publish optional account, avatar, and appearance migrations. | `--migrate` |
+| `laravelusers:setup-package` | Configure an installed Toast or roles package. | `package` argument, `--framework`, `--migrate` |
+| `laravelusers:prune-deleted` | Permanently remove soft-deleted users when scheduled cleanup is enabled. | No package-specific flags |
+| `laravelusers:prune-account-links` | Remove expired account-link records. | No package-specific flags |
 
-All setup commands share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for install, update, and switch. `--no-interaction` uses current settings and does not prompt. `--force` backs up published views before replacement. Setup commands publish versioned assets and register the impersonation-state guard in an existing host web routes file. The full option list, publishing safeguards, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
+Install, update, and switch share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for those commands. These three commands publish versioned assets and register the impersonation-state guard in an existing host web routes file. The full option list, publishing safeguards, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
+
+### Install Options
+
+| Option | Values | Purpose |
+| --- | --- | --- |
+| `--framework` / `--css` | `bootstrap4`, `bootstrap5`, `tailwind` | Select the bundled view style. |
+| `--frontend` | `blade` | Choose the bundled screen implementation. |
+| `--theme` | `light`, `dark`, `system` | Set the initial theme. |
+| `--views` | `package`, `publish` | Use bundled views or publish missing templates. |
+| `--force` | flag | Back up and replace published views when `--views=publish` is selected. |
+| `--no-interaction` | flag | Use current settings or explicit choices without prompts. |
+
+Optional package installation and migration flags are documented in the [complete command reference](docs/commands.md).
 
 ## Routes
 
@@ -198,6 +221,25 @@ Management routes use authentication and the configured package middleware. Auth
 The package has no required Laravel Collective HTML or roles package dependency. Supported optional integrations include [Laravel Roles](https://github.com/jeremykenedy/laravel-roles), [Spatie Laravel Permission](https://github.com/spatie/laravel-permission), [Laravel Toast](https://github.com/jeremykenedy/laravel-toast), local DiceBear libraries, and host-provided avatar, UI, dark-mode, IP-capture, and seed services.
 
 The install and update commands can show setup instructions and configure supported optional packages. The settings page can manage package installation or removal only when the queue, worker, cache, and authorization requirements are met. A second roles package cannot be installed alongside an already detected roles integration. Read [integrations](docs/integrations.md), [roles](docs/roles.md), and [package settings](docs/settings.md) before making dependency changes.
+
+## Project Layout
+
+```text
+src/
+  Actions/                 Account, email, and user operations
+  App/Http/                Controllers, middleware, and requests
+  App/Console/Commands/    Install, update, switch and publish commands
+  Console/                 Compatible command classes and maintenance commands
+  Support/                 Package integrations and configuration
+  database/                Opt-in package migrations
+  resources/views/         Blade screens, components, and email templates
+  routes/                  Package routes
+docs/                      Setup, feature, and upgrade guides
+art/                       Theme banners and browser screenshots
+tests/                     Feature, integration, and browser tests
+phpunit.xml                Tests across the supported Laravel versions
+phpunit.coverage.xml       PHP coverage configuration for PHPUnit 12
+```
 
 ## Testing
 
@@ -215,9 +257,28 @@ CI covers PHP and Laravel compatibility, optional roles and presentation integra
 
 PHP coverage uses `phpunit.coverage.xml` with PHPUnit 12 and Xdebug. It includes package logic, routes, configuration and migrations. Blade templates and generated assets are checked by the browser suite. The requested 100% coverage target has not yet been reached.
 
+## Documentation
+
+All guides are available in the [`docs/` folder](docs/index.md):
+
+- [Activity tracking and online status](docs/activity.md)
+- [Avatar sources and local generators](docs/avatars.md)
+- [Artisan commands, install, update, and package setup](docs/commands.md)
+- [Configuration and environment variables](docs/configuration.md)
+- [Email templates, previews, expiration, and account recovery](docs/emails.md)
+- [Optional integrations](docs/integrations.md)
+- [User impersonation and session security](docs/impersonation.md)
+- [Standalone navigation components](docs/navigation-components.md)
+- [Roles, permissions, and middleware](docs/roles.md)
+- [Routes and authorization](docs/routes.md)
+- [Global settings and access rules](docs/settings.md)
+- [Testing and CI](docs/testing.md)
+- [Upgrade and rollback guide](docs/upgrading.md)
+- [Version history](CHANGELOG.md)
+
 ## Screenshots
 
-These screenshots use sample accounts from the isolated preview application. The pages below are captured from the current Bootstrap 5 interface. The Bootstrap 4 and Tailwind directories are also shown for comparison.
+These screenshots use sample accounts from the isolated preview application. The pages below are captured from the current Bootstrap 5 interface.
 
 ### Mobile
 
@@ -263,44 +324,6 @@ These screenshots use sample accounts from the isolated preview application. The
     <td colspan="2"><img src="art/screenshots/desktop-account-link.jpg" alt="Invalid or expired account link confirmation page"></td>
   </tr>
 </table>
-
-## Project Layout
-
-```text
-src/
-  Actions/                 Account, email, and user operations
-  App/Http/                Controllers, middleware, and requests
-  App/Console/Commands/    Install, update, switch and publish commands
-  Console/                 Compatible command classes and maintenance commands
-  Support/                 Package integrations and configuration
-  database/                Opt-in package migrations
-  resources/views/         Blade screens, components, and email templates
-  routes/                  Package routes
-docs/                      Setup, feature, and upgrade guides
-art/                       Theme banners and browser screenshots
-tests/                     Feature, integration, and browser tests
-phpunit.xml                Tests across the supported Laravel versions
-phpunit.coverage.xml       PHP coverage configuration for PHPUnit 12
-```
-
-## Documentation
-
-All guides are available in the [`docs/` folder](docs/index.md):
-
-- [Activity tracking and online status](docs/activity.md)
-- [Avatar sources and local generators](docs/avatars.md)
-- [Artisan commands, install, update, and package setup](docs/commands.md)
-- [Configuration and environment variables](docs/configuration.md)
-- [Email templates, previews, expiration, and account recovery](docs/emails.md)
-- [Optional integrations](docs/integrations.md)
-- [User impersonation and session security](docs/impersonation.md)
-- [Standalone navigation components](docs/navigation-components.md)
-- [Roles, permissions, and middleware](docs/roles.md)
-- [Routes and authorization](docs/routes.md)
-- [Global settings and access rules](docs/settings.md)
-- [Testing and CI](docs/testing.md)
-- [Upgrade and rollback guide](docs/upgrading.md)
-- [Version history](CHANGELOG.md)
 
 ## License
 
