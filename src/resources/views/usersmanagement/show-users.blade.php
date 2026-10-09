@@ -27,12 +27,11 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="card-header lu-page-heading">
+                        <div class="lu-page-heading-content">
 
                             <span id="card_title" class="lu-list-title">
-                                @include('laravelusers::partials.icon', ['name' => 'users'])
-                                {!! trans('laravelusers::laravelusers.showing-all-users') !!}
+                                @include('laravelusers::partials.icon', ['name' => 'users']) <span class="lu-title-text">{!! trans('laravelusers::laravelusers.showing-all-users') !!}</span>
                             </span>
 
                             <div class="lu-header-actions">

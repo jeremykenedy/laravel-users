@@ -9,8 +9,8 @@
         $columns = 4 + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) $onlineColumn + (int) $loginColumn + (int) $loginDetailsColumn;
     @endphp
     <section class="lu-panel {{ \jeremykenedy\laravelusers\Support\Frontend::classes('panel') }}" aria-label="{{ __('laravelusers::app.nav.users') }}">
-        <header class="lu-heading lu-card-heading">
-            <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'users']) {{ __('laravelusers::laravelusers.showing-all-users') }}</h1>
+        <header class="lu-heading lu-card-heading lu-page-heading">
+            <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'users']) <span class="lu-title-text">{{ __('laravelusers::laravelusers.showing-all-users') }}</span></h1>
             <div class="lu-actions">
             @if(($hasDeletedUsers ?? false) && \jeremykenedy\laravelusers\Support\UserAccess::allows('view_deleted'))<a class="lu-button lu-secondary" href="{{ route('users.deleted') }}">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::laravelusers.show-deleted-users') }}</a>@endif
             @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('create_users'))<a class="lu-button lu-secondary" href="{{ route('users.create') }}">@include('laravelusers::partials.icon', ['name' => 'add-user']) {{ __('laravelusers::laravelusers.create-new-user') }}</a>@endif

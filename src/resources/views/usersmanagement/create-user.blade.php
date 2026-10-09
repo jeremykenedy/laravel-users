@@ -27,9 +27,9 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'add-user']) {!! trans('laravelusers::laravelusers.create-new-user') !!}</span>
+                    <div class="card-header lu-page-heading">
+                        <div class="lu-page-heading-content">
+                            <span class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'add-user']) <span class="lu-title-text">{!! trans('laravelusers::laravelusers.create-new-user') !!}</span></span>
                             <div class="pull-right">
                                 <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))

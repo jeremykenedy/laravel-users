@@ -2,7 +2,7 @@
 @section('template_title', __('laravelusers::laravelusers.show-deleted-users'))
 @section('users_content')
     <section class="lu-panel{{ \jeremykenedy\laravelusers\Support\Frontend::stylesheet() ? ' '.\jeremykenedy\laravelusers\Support\Frontend::classes('panel') : '' }}">
-        <header class="lu-heading lu-card-heading"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::laravelusers.show-deleted-users') }}</h1><a class="lu-button lu-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
+        <header class="lu-heading lu-card-heading lu-page-heading"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'delete']) <span class="lu-title-text">{{ __('laravelusers::laravelusers.show-deleted-users') }}</span></h1><a class="lu-button lu-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
         @include('laravelusers::partials.bulk-actions', ['modern' => true, 'deleted' => true])
         <div class="lu-scroll{{ \jeremykenedy\laravelusers\Support\Frontend::stylesheet() ? ' '.\jeremykenedy\laravelusers\Support\Frontend::classes('scroll') : '' }}">
             <table data-lu-view="deleted" @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet()) class="{{ \jeremykenedy\laravelusers\Support\Frontend::classes('table') }}" @endif data-lu-table>

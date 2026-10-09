@@ -238,7 +238,7 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
     abort_unless(in_array($framework, Frontend::FRAMEWORKS, true), 404);
     Auth::login(SoftUser::findOrFail(1));
     if ((int) ($_SERVER['SERVER_PORT'] ?? 0) !== 19849) {
-        foreach (['laravelusers-settings-write', 'laravelusers-packages-write', 'laravelusers-packages-verify'] as $limiter) {
+        foreach (['laravelusers-settings-write', 'laravelusers-packages-write', 'laravelusers-packages-verify', 'laravelusers-account-write', 'laravelusers-account-delete'] as $limiter) {
             RateLimiter::clear($limiter.sha1('1'));
         }
     }

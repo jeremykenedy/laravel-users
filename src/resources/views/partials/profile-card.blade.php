@@ -1,6 +1,6 @@
 <section class="lu-profile" aria-label="{{ __('laravelusers::ui.profile') }}" @include('laravelusers::partials.appearance-attributes', ['appearance' => $profileAppearance ?? null])>
-    <header class="lu-profile-header">
-        <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) }}</h1>
+    <header class="lu-profile-header lu-page-heading">
+        <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) <span class="lu-title-text">{{ __('laravelusers::laravelusers.showing-user-title', ['name' => $user->name]) }}</span></h1>
         <a class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-info' }}" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a>
     </header>
     <div class="lu-profile-body">

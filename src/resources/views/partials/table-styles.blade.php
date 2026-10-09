@@ -1,5 +1,17 @@
 <style>
     #laravelusers .lu-list-title { display: inline-flex; align-items: center; gap: 8px; }
+    #laravelusers .lu-page-heading { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 16px; height: 74px; padding: 16px 24px; }
+    #laravelusers .lu-page-heading-content { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-width: 0; }
+    #laravelusers .lu-page-heading .lu-list-title { flex: 1; min-width: 0; margin: 0; font-size: 20px; line-height: 25px; font-weight: 600; }
+    #laravelusers .lu-page-heading .lu-list-title > .lu-icon { flex-shrink: 0; margin: 0; }
+    #laravelusers .lu-page-heading .lu-title-text { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #laravelusers .lu-page-heading :is(.lu-actions, .lu-header-actions, .pull-right) { flex-shrink: 0; flex-wrap: nowrap; }
+    #laravelusers .lu-page-heading :is(.lu-button, .btn) { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; height: 40px; min-height: 40px; }
+    @media (max-width: 640px) {
+        #laravelusers .lu-page-heading { padding: 16px; }
+        #laravelusers .lu-page-heading .lu-list-title { font-size: 16px; line-height: 20px; }
+        #laravelusers .lu-page-heading .lu-title-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
+    }
     #laravelusers .lu-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
     #laravelusers .lu-header-actions .btn { color: inherit; border-color: var(--lu-border, #ced4da); white-space: nowrap; }
     @media (max-width: 640px) {
