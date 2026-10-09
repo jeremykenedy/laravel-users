@@ -7,12 +7,22 @@ let page;
 let root;
 let actor;
 let packageTracker;
+let packageOperation;
 let requirementsTracker;
 let previewRequestId = 0;
 let previewSource;
 const feedbackTimers = new WeakMap();
 
+function reloadSettings() {
+    const url = sameOriginUrl(page.urls.settings ?? window.location.href);
+    url.hash = 'packages';
+    window.history.replaceState({}, '', url.href);
+    window.location.reload();
+}
+
 function renderPackageStatus(operation) {
+    const previous = packageOperation;
+    packageOperation = operation;
     const output = root?.querySelector('[data-lu-native-package-status]');
     if (!output) return;
     output.hidden = !operation;
@@ -26,6 +36,7 @@ function renderPackageStatus(operation) {
     error.hidden = !operation.transport_error;
     error.textContent = operation.transport_error ?? '';
     output.querySelector('[data-lu-native-package-refresh]').hidden = !['completed', 'failed'].includes(operation.status);
+    if (operation.status === 'completed' && previous?.id === operation.id && ['queued', 'running'].includes(previous.status)) queueMicrotask(reloadSettings);
 }
 
 function initialize() {
@@ -36,6 +47,7 @@ function initialize() {
     const nextActor = page.data.current_user?.id;
     if (!packageTracker || nextActor !== actor) {
         packageTracker?.stop();
+        packageOperation = page.data.package_operation;
         packageTracker = createPackageOperationTracker('livewire', () => page.csrf, page.data.package_operation, renderPackageStatus);
     } else if (page.data.package_operation) packageTracker.update(page.data.package_operation);
     actor = nextActor;
@@ -202,6 +214,7 @@ document.addEventListener('laravelusers-native-submit', event => {
 });
 
 document.addEventListener('click', async event => {
+    if (event.target.closest('[data-lu-native-package-refresh]')) { event.preventDefault(); reloadSettings(); return; }
     if (event.target.closest('[data-lu-native-verify-requirements]')) { requirementsTracker.verify(); return; }
     const button = event.target.closest('button[data-lu-native-preview],button[data-lu-preview-edit]');
     const form = button?.closest('form[data-lu-preview-url]');

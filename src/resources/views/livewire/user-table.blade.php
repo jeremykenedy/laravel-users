@@ -16,7 +16,7 @@
     </div>
     @if($features['bulk'] ?? false)
         <div class="lu-pad lu-actions"><span role="status">{{ str_replace(':count', (string) count($selected), $labels['selected'] ?? __('laravelusers::ui.selected', ['count' => ':count'])) }}</span>
-            @foreach($features['bulk_actions'] ?? [] as $action)<button type="button" class="lu-button {{ $action['class'] ?? 'lu-secondary' }}" wire:click="requestBulkAction('{{ $action['name'] }}')" @if(!$selected) disabled @endif>{{ $action['label'] }}</button>@endforeach
+            @foreach($features['bulk_actions'] ?? [] as $action)<button type="button" class="lu-button {{ $action['class'] ?? 'lu-secondary' }}" wire:click="requestBulkAction('{{ $action['name'] }}')" @if(!$selected) disabled @endif><x-laravelusers::livewire.icon :action="$action['name']"/><span>{{ $action['label'] }}</span></button>@endforeach
         </div>
     @endif
     @if($mode === 'cards' && ($features['view_toggle'] ?? false))

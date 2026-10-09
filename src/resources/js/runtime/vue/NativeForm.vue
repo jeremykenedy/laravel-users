@@ -4,6 +4,8 @@ import { fieldVisible, formSections, labelSection } from '../store.js';
 import { passwordFeedback } from '../shared.js';
 import NativeField from './NativeField.vue';
 import AppearancePreview from './AppearancePreview.vue';
+import NativeIcon from './NativeIcon.vue';
+import { submitAction } from '../icons.js';
 const props = defineProps({ form: Object, state: Object, store: Object, dialog: Boolean });
 const sections = computed(() => formSections(props.form));
 const feedback = computed(() => passwordFeedback(props.state.values[props.form.id]?.password ?? '', props.state.values[props.form.id]?.password_confirmation ?? '', props.state.page.data.password));
@@ -21,8 +23,8 @@ const feedback = computed(() => passwordFeedback(props.state.values[props.form.i
             <div v-if="state.page.features.password_meter && feedback && state.values[form.id]?.password" class="lu-password-meter"><p>{{ state.page.labels.password_strength }}: <strong>{{ feedback.label }}</strong></p><meter min="0" max="4" :value="feedback.score" :aria-label="state.page.labels.password_strength"></meter></div>
             <p v-if="state.page.features.password_feedback && state.passwordMismatch[form.id]" class="lu-password-confirmation-error" role="status">{{ state.page.labels.password_mismatch }}</p>
         </fieldset>
-        <section v-if="state.preview?.form === form.id"><button type="button" class="lu-button lu-secondary" @click="store.editPreview">{{ state.page.labels.email_back_editing }}</button><p class="lu-muted">{{ state.preview.recipient }}</p><iframe :title="state.page.labels.email_preview_frame" sandbox="" referrerpolicy="no-referrer" :srcdoc="state.preview.html"></iframe></section>
-        <button v-if="form.preview && state.preview?.form !== form.id" type="button" class="lu-button lu-secondary" :disabled="state.busy" @click="store.preview(form.id)">{{ state.page.labels.email_preview }}</button>
-        <div class="lu-actions lu-form-actions"><button type="submit" :class="['lu-button', form.danger ? 'lu-danger' : 'lu-success']" :disabled="state.busy || !store.ready(form.id)">{{ form.submit }}</button><button v-if="dialog" type="button" class="lu-button lu-secondary" :disabled="state.busy" @click="store.closeDialog">{{ state.page.labels.cancel }}</button></div>
+        <section v-if="state.preview?.form === form.id"><button type="button" class="lu-button lu-secondary" @click="store.editPreview"><NativeIcon action="back" :enabled="state.page.features.icons"/><span>{{ state.page.labels.email_back_editing }}</span></button><p class="lu-muted">{{ state.preview.recipient }}</p><iframe :title="state.page.labels.email_preview_frame" sandbox="" referrerpolicy="no-referrer" :srcdoc="state.preview.html"></iframe></section>
+        <button v-if="form.preview && state.preview?.form !== form.id" type="button" class="lu-button lu-secondary" :disabled="state.busy" @click="store.preview(form.id)"><NativeIcon action="preview" :enabled="state.page.features.icons"/><span>{{ state.page.labels.email_preview }}</span></button>
+        <div class="lu-actions lu-form-actions"><button type="submit" :class="['lu-button', form.danger ? 'lu-danger' : 'lu-success']" :disabled="state.busy || !store.ready(form.id)"><NativeIcon :action="submitAction(form)" :enabled="state.page.features.icons"/><span>{{ form.submit }}</span></button><button v-if="dialog" type="button" class="lu-button lu-secondary" :disabled="state.busy" @click="store.closeDialog"><NativeIcon action="cancel" :enabled="state.page.features.icons"/><span>{{ state.page.labels.cancel }}</span></button></div>
     </form>
 </template>

@@ -3,6 +3,8 @@
     import { passwordFeedback } from '../shared.js';
     import NativeField from './NativeField.svelte';
     import AppearancePreview from './AppearancePreview.svelte';
+    import NativeIcon from './NativeIcon.svelte';
+    import { submitAction } from '../icons.js';
     let { form, state, store, dialog = false } = $props();
     const sections = $derived(formSections(form));
     const feedback = $derived(passwordFeedback(state.values[form.id]?.password ?? '', state.values[form.id]?.password_confirmation ?? '', state.page.data.password));
@@ -17,7 +19,7 @@
         {#if state.page.features.password_meter && feedback && state.values[form.id]?.password}<div class="lu-password-meter"><p>{state.page.labels.password_strength}: <strong>{feedback.label}</strong></p><meter min="0" max="4" value={feedback.score} aria-label={state.page.labels.password_strength}></meter></div>{/if}
         {#if state.page.features.password_feedback && state.passwordMismatch[form.id]}<p class="lu-password-confirmation-error" role="status">{state.page.labels.password_mismatch}</p>{/if}
     </fieldset>
-    {#if state.preview?.form === form.id}<section><button type="button" class="lu-button lu-secondary" onclick={store.editPreview}>{state.page.labels.email_back_editing}</button><p class="lu-muted">{state.preview.recipient}</p><iframe title={state.page.labels.email_preview_frame} sandbox="" referrerpolicy="no-referrer" srcdoc={state.preview.html}></iframe></section>{/if}
-    {#if form.preview && state.preview?.form !== form.id}<button type="button" class="lu-button lu-secondary" disabled={state.busy} onclick={() => store.preview(form.id)}>{state.page.labels.email_preview}</button>{/if}
-    <div class="lu-actions lu-form-actions"><button type="submit" class={'lu-button ' + (form.danger ? 'lu-danger' : 'lu-success')} disabled={state.busy || !store.ready(form.id)}>{form.submit}</button>{#if dialog}<button type="button" class="lu-button lu-secondary" disabled={state.busy} onclick={store.closeDialog}>{state.page.labels.cancel}</button>{/if}</div>
+    {#if state.preview?.form === form.id}<section><button type="button" class="lu-button lu-secondary" onclick={store.editPreview}><NativeIcon action="back" enabled={state.page.features.icons}/><span>{state.page.labels.email_back_editing}</span></button><p class="lu-muted">{state.preview.recipient}</p><iframe title={state.page.labels.email_preview_frame} sandbox="" referrerpolicy="no-referrer" srcdoc={state.preview.html}></iframe></section>{/if}
+    {#if form.preview && state.preview?.form !== form.id}<button type="button" class="lu-button lu-secondary" disabled={state.busy} onclick={() => store.preview(form.id)}><NativeIcon action="preview" enabled={state.page.features.icons}/><span>{state.page.labels.email_preview}</span></button>{/if}
+    <div class="lu-actions lu-form-actions"><button type="submit" class={'lu-button ' + (form.danger ? 'lu-danger' : 'lu-success')} disabled={state.busy || !store.ready(form.id)}><NativeIcon action={submitAction(form)} enabled={state.page.features.icons}/><span>{form.submit}</span></button>{#if dialog}<button type="button" class="lu-button lu-secondary" disabled={state.busy} onclick={store.closeDialog}><NativeIcon action="cancel" enabled={state.page.features.icons}/><span>{state.page.labels.cancel}</span></button>{/if}</div>
 </form>

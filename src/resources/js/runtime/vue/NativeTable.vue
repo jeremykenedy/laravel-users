@@ -4,6 +4,7 @@ import { displayUsers, visibleColumns } from '../store.js';
 import NativeAvatar from './NativeAvatar.vue';
 import NativeCell from './NativeCell.vue';
 import NativeActions from './NativeActions.vue';
+import NativeIcon from './NativeIcon.vue';
 const props = defineProps({ state: Object, store: Object });
 const users = computed(() => displayUsers(props.state.page, props.state.table));
 const columns = computed(() => visibleColumns(props.state));
@@ -16,7 +17,7 @@ const columns = computed(() => visibleColumns(props.state));
             <div v-if="state.page.features.view_toggle" class="lu-actions" role="group" :aria-label="state.page.labels.view"><button v-for="mode in ['table', 'cards']" :key="mode" type="button" class="lu-button lu-secondary" :aria-pressed="state.table.mode === mode" @click="store.setMode(mode)">{{ state.page.labels[mode] }}</button></div>
             <details v-if="state.page.features.columns" class="lu-column-controls"><summary>{{ state.page.labels.columns }}</summary><div class="lu-pad"><label v-for="column in state.page.data.columns" :key="column.key" class="lu-check"><input type="checkbox" :checked="!state.table.hiddenColumns.includes(column.key)" @change="store.toggleColumn(column.key)"><span>{{ column.label }}</span></label></div></details>
         </div>
-        <div v-if="state.page.features.bulk" class="lu-pad lu-actions"><span role="status">{{ state.page.labels.selected.replace(':count', state.table.selected.length) }}</span><button v-for="action in state.page.features.bulk_actions" :key="action.name" type="button" :class="['lu-button', action.class ?? 'lu-secondary']" :disabled="!state.table.selected.length || action.disabled || state.busy" @click="store.openBulkAction(action.name)">{{ action.label }}</button></div>
+        <div v-if="state.page.features.bulk" class="lu-pad lu-actions"><span role="status">{{ state.page.labels.selected.replace(':count', state.table.selected.length) }}</span><button v-for="action in state.page.features.bulk_actions" :key="action.name" type="button" :class="['lu-button', action.class ?? 'lu-secondary']" :disabled="!state.table.selected.length || action.disabled || state.busy" @click="store.openBulkAction(action.name)"><NativeIcon :action="action.name" :enabled="state.page.features.icons"/><span>{{ action.label }}</span></button></div>
         <div v-if="state.table.mode === 'cards' && state.page.features.view_toggle" class="lu-native-cards lu-pad">
             <article v-for="user in users" :key="user.id" :class="['lu-panel lu-pad lu-native-user-card', state.page.classes.panel]">
                 <header class="lu-heading"><NativeAvatar :avatar="user.avatar"/><h2><a v-if="user.urls?.show" :href="user.urls.show" @click.prevent="store.navigate(user.urls.show)">{{ user.name }}</a><span v-else>{{ user.name }}</span></h2><label v-if="state.page.features.bulk" class="lu-check"><input type="checkbox" :value="user.id" :checked="state.table.selected.includes(String(user.id))" :disabled="!user.selectable" @change="store.select(user.id, $event.target.checked)"><span class="lu-sr-only">{{ state.page.labels.select_user.replace(':name', user.name) }}</span></label></header>

@@ -179,6 +179,7 @@ class NativePageData
             'bulk'                     => (bool) config('laravelusers.bulkActions', false) && UserAccess::selectable($screen === 'deleted-users'),
             'show_count'               => (bool) config('laravelusers.showUserCount', false),
             'avatar'                   => (bool) config('laravelusers.avatar.enabled', false),
+            'icons'                    => (bool) config('laravelusers.iconsEnabled', true),
             'theme_toggle'             => (bool) config('laravelusers.themeToggle', true),
             'notifications'            => (bool) config('laravelusers.enablePackageBootstapAlerts', true),
             'notification_driver'      => UserNotifications::useToast() ? config('laravelusers.notifications.driver', 'toast') : 'alert',
@@ -206,6 +207,8 @@ class NativePageData
             $labels[$key] = __('laravelusers::ui.'.$key);
         }
 
+        $labels['package_requirements_reverify'] = __('laravelusers::ui.package_requirements_reverify');
+        $labels['package_setup_completed'] = __('laravelusers::ui.package_setup_completed');
         $labels['theme_light'] = __('laravelusers::ui.themes.light');
         $labels['theme_dark'] = __('laravelusers::ui.themes.dark');
         foreach (['logout', 'manage_users', 'account_menu_label', 'login_details'] as $key) {
@@ -345,11 +348,11 @@ class NativePageData
         }
         if (!$deleted) {
             $row['urls']['show'] = route('users.show', $user->getKey());
-            $row['links'][] = ['label' => __('laravelusers::ui.show'), 'url' => $row['urls']['show'], 'class' => 'lu-success'];
+            $row['links'][] = ['name' => 'show', 'label' => __('laravelusers::ui.show'), 'url' => $row['urls']['show'], 'class' => 'lu-success'];
         }
         if (UserAccess::allows($deleted ? 'edit_deleted' : 'edit_users') && (!$deleted || config('laravelusers.settings.enabled', false))) {
             $row['urls']['edit'] = route($deleted ? 'users.deleted.edit' : 'users.edit', $user->getKey());
-            $row['links'][] = ['label' => __('laravelusers::ui.edit'), 'url' => $row['urls']['edit']];
+            $row['links'][] = ['name' => 'edit', 'label' => __('laravelusers::ui.edit'), 'url' => $row['urls']['edit']];
         }
         $self = (string) auth()->id() === (string) $user->getKey();
         if (!$deleted && !$self && UserAccess::allows('delete_users')) {
@@ -739,12 +742,13 @@ class NativePageData
             $requiresQueue = $package !== 'requirements';
             $blocked = $conflict || $unsupported;
             $disabled = $blocked || ($requiresQueue && !($data['packageQueueReady'] ?? false));
+            $setupCompleted = $package === 'toast' && $installed && (bool) ($data['managedPackageSetup']['toast'] ?? false);
             $page['forms'][$id] = $this->form($id, $label, route('users.settings.packages'), 'POST', $fields, $request) + ['dialog' => true, 'async' => true, 'disabled' => $disabled, 'blocked' => $blocked, 'requires_queue' => $requiresQueue, 'danger' => $operation === 'remove', 'help' => $operation === 'remove' ? __('laravelusers::ui.packages_remove_roles_warning') : __('laravelusers::ui.packages_acknowledgement')];
             $page['data']['settings_actions'][] = ['name' => $id, 'label' => $label.' ('.$operation.')', 'form' => $id, 'disabled' => $disabled || ($package === 'requirements' && ($data['packageQueueReady'] ?? false))];
             if ($package !== 'requirements') {
-                $page['data']['packages']['choices'][] = ['name' => $id, 'package' => $package, 'label' => $label, 'installed' => $installed, 'operation' => $operation, 'blocked' => $blocked, 'disabled' => $disabled, 'reason' => $conflict ? __('laravelusers::ui.packages_roles_conflict') : ($unsupported ? __('laravelusers::ui.packages_toast_unsupported') : null), 'hint' => $package === 'toast' ? __('laravelusers::ui.packages_toast_hint') : null, 'setup_hint' => $installed ? __('laravelusers::ui.'.($package === 'toast' ? 'package_toast_managed_setup' : 'package_roles_setup')) : null, 'configure_name' => $installed ? $id.'-configure' : null];
+                $page['data']['packages']['choices'][] = ['name' => $id, 'package' => $package, 'label' => $label, 'installed' => $installed, 'operation' => $operation, 'blocked' => $blocked, 'disabled' => $disabled, 'reason' => $conflict ? __('laravelusers::ui.packages_roles_conflict') : ($unsupported ? __('laravelusers::ui.packages_toast_unsupported') : null), 'hint' => $package === 'toast' ? __('laravelusers::ui.packages_toast_hint') : null, 'setup_hint' => $installed && !$setupCompleted ? __('laravelusers::ui.'.($package === 'toast' ? 'package_toast_managed_setup' : 'package_roles_setup')) : null, 'setup_completed' => $setupCompleted, 'configure_name' => $installed && !$setupCompleted ? $id.'-configure' : null];
             }
-            if ($installed && $package !== 'requirements') {
+            if ($installed && !$setupCompleted && $package !== 'requirements') {
                 $configureId = $id.'-configure';
                 $configureFields = [$this->field('package', '', 'hidden', $package), $this->field('operation', '', 'hidden', 'configure')];
                 if ($package !== 'toast') {

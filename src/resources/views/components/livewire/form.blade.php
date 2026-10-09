@@ -52,12 +52,12 @@
     </fieldset>
     </div>
     @if($form['preview'] ?? null)
-        <section data-lu-native-preview hidden><button type="button" class="lu-button lu-secondary" data-lu-preview-edit>{{ __('laravelusers::ui.email_back_editing') }}</button><p data-lu-preview-recipient class="lu-muted"></p><iframe title="{{ __('laravelusers::ui.email_preview_frame') }}" sandbox="" referrerpolicy="no-referrer" data-lu-preview-frame></iframe></section>
+        <section data-lu-native-preview hidden><button type="button" class="lu-button lu-secondary" data-lu-preview-edit><x-laravelusers::livewire.icon action="back"/><span>{{ __('laravelusers::ui.email_back_editing') }}</span></button><p data-lu-preview-recipient class="lu-muted"></p><iframe title="{{ __('laravelusers::ui.email_preview_frame') }}" sandbox="" referrerpolicy="no-referrer" data-lu-preview-frame></iframe></section>
         <p data-lu-preview-error role="alert" hidden></p>
-        <button type="button" class="lu-button lu-secondary" data-lu-native-preview>{{ __('laravelusers::ui.email_preview') }}</button>
+        <button type="button" class="lu-button lu-secondary" data-lu-native-preview><x-laravelusers::livewire.icon action="preview"/><span>{{ __('laravelusers::ui.email_preview') }}</span></button>
     @endif
     <div class="lu-actions lu-form-actions">
-        <button type="submit" class="lu-button {{ ($form['danger'] ?? false) ? 'lu-danger' : 'lu-success' }}" wire:loading.attr="disabled" @if(!$ready || ($form['disabled'] ?? false)) disabled @endif>{{ $form['submit'] }}</button>
-        @if($dialog)<button type="button" class="lu-button lu-secondary" wire:click="closeDialog">{{ __('laravelusers::forms.cancel') }}</button>@endif
+        <button type="submit" class="lu-button {{ ($form['danger'] ?? false) ? 'lu-danger' : 'lu-success' }}" wire:loading.attr="disabled" @if(!$ready || ($form['disabled'] ?? false)) disabled @endif><x-laravelusers::livewire.icon :action="\jeremykenedy\laravelusers\Support\NativeIcons::submitAction($form)"/><span>{{ $form['submit'] }}</span></button>
+        @if($dialog)<button type="button" class="lu-button lu-secondary" wire:click="closeDialog"><x-laravelusers::livewire.icon action="cancel"/><span>{{ __('laravelusers::forms.cancel') }}</span></button>@endif
     </div>
 </form>

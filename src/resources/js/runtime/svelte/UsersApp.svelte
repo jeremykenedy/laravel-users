@@ -7,6 +7,7 @@
     import NativeAvatar from './NativeAvatar.svelte';
     import NativeCell from './NativeCell.svelte';
     import NativeActions from './NativeActions.svelte';
+    import NativeIcon from './NativeIcon.svelte';
     import NativeTable from './NativeTable.svelte';
     import NativeForm from './NativeForm.svelte';
     import PackageStatus from './PackageStatus.svelte';
@@ -24,7 +25,7 @@
     <NativeNavigation {state} {store}/>
     <NativeNotifications {state} {store}/>
     <NativeToasts {state}/>
-    <PackageStatus operation={state.packageOperation} {state}/>
+    <PackageStatus operation={state.packageOperation} {state} {store}/>
     {#if state.page.data.banner}<div class="lu-alert" role="status">{state.page.data.banner.message}<button type="button" class="lu-button lu-secondary" disabled={state.busy} onclick={store.submitBanner}>{state.page.data.banner.label}</button></div>{/if}
     <section class={'lu-panel ' + state.page.classes.panel}>
         <header class="lu-heading lu-card-heading"><h1 tabindex="-1" data-lu-native-heading>{state.page.title}</h1><div class="lu-actions">{#each state.page.data.navigation as link (link.url)}<a href={link.url} class="lu-button lu-secondary" onclick={event => { event.preventDefault(); store.navigate(link.url); }}>{link.label}</a>{/each}</div></header>
@@ -41,7 +42,7 @@
         {/if}
         {#each state.page.data.form_ids as id (id)}<NativeForm form={state.page.forms[id]} {state} {store}/>{/each}
         <PackageSettings {state} {store}/>
-        {#if state.page.data.settings_actions?.some(action => !action.name.startsWith('package-'))}<div class="lu-pad lu-actions">{#each state.page.data.settings_actions.filter(action => !action.name.startsWith('package-')) as action (action.name)}<button type="button" class={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onclick={() => store.openSettingsAction(action.name)}>{action.label}</button>{/each}</div>{/if}
+        {#if state.page.data.settings_actions?.some(action => !action.name.startsWith('package-'))}<div class="lu-pad lu-actions">{#each state.page.data.settings_actions.filter(action => !action.name.startsWith('package-')) as action (action.name)}<button type="button" class={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onclick={() => store.openSettingsAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>{/each}</div>{/if}
     </section>
     {#if activeForm}<div class="lu-native-dialog-backdrop"><div class="lu-email-dialog lu-native-dialog" role="dialog" aria-modal="true" aria-labelledby="lu-native-action-title" tabindex="-1" data-lu-native-dialog><header class="lu-email-heading"><h2 id="lu-native-action-title">{activeForm.title}</h2><button type="button" class="lu-email-close" aria-label={state.page.labels.close} disabled={state.busy} onclick={store.closeDialog}>{state.page.labels.close}</button></header><div class="lu-email-body"><NativeForm form={activeForm} {state} {store} dialog={true}/></div></div></div>{/if}
 </div>

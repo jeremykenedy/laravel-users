@@ -32,7 +32,12 @@ export function createNativeStore(page, runtime) {
     const listeners = new Set();
     const emit = () => { state = { ...state }; listeners.forEach(listener => listener(state)); };
     const report = error => { state.notice = { type: 'error', message: error.message }; state.dismissedMessages = []; };
-    const packageTracker = createPackageOperationTracker(runtime, () => state.page.csrf, page.data.package_operation, value => { state.packageOperation = value; emit(); });
+    const packageTracker = createPackageOperationTracker(runtime, () => state.page.csrf, page.data.package_operation, value => {
+        const previous = state.packageOperation;
+        state.packageOperation = value;
+        emit();
+        if (value?.status === 'completed' && previous?.id === value.id && ['queued', 'running'].includes(previous.status)) queueMicrotask(() => store.reloadPage());
+    });
     let requirementsTracker;
     const trackRequirements = payload => {
         requirementsTracker?.stop();
@@ -174,6 +179,12 @@ export function createNativeStore(page, runtime) {
             return store.navigate(url.href);
         },
         clearSearch() { state.search = ''; return store.search(); },
+        reloadPage() {
+            const url = sameOriginUrl(state.page.urls.settings ?? window.location.href);
+            url.hash = 'packages';
+            window.history.replaceState({}, '', url.href);
+            window.location.reload();
+        },
         async navigate(value, historyMode = 'push') {
             clearTimeout(searchTimer);
             const id = ++requestId;
@@ -216,7 +227,7 @@ export function createNativeStore(page, runtime) {
                     return;
                 }
                 if (payload.redirect) { await store.navigate(payload.redirect); return; }
-                if (form.async && payload.status === 'completed') { await store.navigate(window.location.href, 'replace'); return; }
+                if (form.async && payload.status === 'completed') { store.reloadPage(); return; }
                 store.closeDialog();
                 state.notice = { type: 'success', message: payload.message ?? '' };
             } catch (error) { report(error); }

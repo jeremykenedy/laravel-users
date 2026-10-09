@@ -8,6 +8,7 @@ import NativeTable from './NativeTable.vue';
 import NativeAvatar from './NativeAvatar.vue';
 import NativeCell from './NativeCell.vue';
 import NativeActions from './NativeActions.vue';
+import NativeIcon from './NativeIcon.vue';
 import NativeForm from './NativeForm.vue';
 import PackageStatus from './PackageStatus.vue';
 import PackageSettings from './PackageSettings.vue';
@@ -44,7 +45,7 @@ onUnmounted(() => { unsubscribe(); disconnect?.(); disconnectToasts?.(); });
             </div>
             <NativeForm v-for="id in state.page.data.form_ids" :key="id" :form="state.page.forms[id]" :state="state" :store="store"/>
             <PackageSettings :state="state" :store="store"/>
-            <div v-if="state.page.data.settings_actions?.some(action => !action.name.startsWith('package-'))" class="lu-pad lu-actions"><button v-for="action in state.page.data.settings_actions.filter(action => !action.name.startsWith('package-'))" :key="action.name" type="button" :class="['lu-button', action.class ?? 'lu-secondary']" :disabled="action.disabled || state.busy" @click="store.openSettingsAction(action.name)">{{ action.label }}</button></div>
+            <div v-if="state.page.data.settings_actions?.some(action => !action.name.startsWith('package-'))" class="lu-pad lu-actions"><button v-for="action in state.page.data.settings_actions.filter(action => !action.name.startsWith('package-'))" :key="action.name" type="button" :class="['lu-button', action.class ?? 'lu-secondary']" :disabled="action.disabled || state.busy" @click="store.openSettingsAction(action.name)"><NativeIcon :action="action.name" :enabled="state.page.features.icons"/><span>{{ action.label }}</span></button></div>
         </section>
         <div v-if="store.activeForm()" class="lu-native-dialog-backdrop"><div class="lu-email-dialog lu-native-dialog" role="dialog" aria-modal="true" aria-labelledby="lu-native-action-title" tabindex="-1" data-lu-native-dialog><header class="lu-email-heading"><h2 id="lu-native-action-title">{{ store.activeForm().title }}</h2><button type="button" class="lu-email-close" :aria-label="state.page.labels.close" :disabled="state.busy" @click="store.closeDialog">{{ state.page.labels.close }}</button></header><div class="lu-email-body"><NativeForm :form="store.activeForm()" :state="state" :store="store" :dialog="true"/></div></div></div>
     </div>

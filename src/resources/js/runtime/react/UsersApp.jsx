@@ -3,6 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { cellText, dateLabel, displayValue, observeDialogs, passwordFeedback, statusIcon } from '../shared.js';
 import { previewStyle, profileStyle } from '../appearance.js';
 import { displayUsers, fieldVisible, formSections, getValue, labelSection, visibleColumns } from '../store.js';
+import { iconForAction, submitAction } from '../icons.js';
+
+function NativeIcon({ action, enabled }) {
+    const icon = enabled ? iconForAction(action) : null;
+    return icon && <svg data-lu-icon={icon.name} className="lu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{icon.shapes.map((shape, index) => React.createElement(shape.tag, { ...shape.attributes, key: index }))}</svg>;
+}
 
 function NativeAvatar({ avatar }) {
     if (!avatar) return null;
@@ -28,8 +34,8 @@ function NativeCell({ user, column, state, store }) {
 
 function NativeActions({ user, state, store }) {
     return <div className="lu-actions">
-        {(user.links ?? []).map(link => <a key={link.url} href={link.url} className={'lu-button ' + (link.class ?? 'lu-secondary')} onClick={event => { event.preventDefault(); store.navigate(link.url); }}>{link.label}</a>)}
-        {(user.actions ?? []).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openUserAction(action.name, user.id)}>{action.label}</button>)}
+        {(user.links ?? []).map(link => <a key={link.url} href={link.url} className={'lu-button ' + (link.class ?? 'lu-secondary')} onClick={event => { event.preventDefault(); store.navigate(link.url); }}><NativeIcon action={link.name} enabled={state.page.features.icons}/><span>{link.label}</span></a>)}
+        {(user.actions ?? []).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openUserAction(action.name, user.id)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}
     </div>;
 }
 
@@ -46,7 +52,7 @@ function NativeTable({ state, store }) {
             {state.page.features.view_toggle && <div className="lu-actions" role="group" aria-label={state.page.labels.view}>{['table', 'cards'].map(mode => <button key={mode} type="button" className="lu-button lu-secondary" aria-pressed={state.table.mode === mode} onClick={() => store.setMode(mode)}>{state.page.labels[mode]}</button>)}</div>}
             {state.page.features.columns && <details className="lu-column-controls"><summary>{state.page.labels.columns}</summary><div className="lu-pad">{state.page.data.columns.map(column => <label key={column.key} className="lu-check"><input type="checkbox" checked={!state.table.hiddenColumns.includes(column.key)} onChange={() => store.toggleColumn(column.key)}/><span>{column.label}</span></label>)}</div></details>}
         </div>
-        {state.page.features.bulk && <div className="lu-pad lu-actions"><span role="status">{state.page.labels.selected.replace(':count', state.table.selected.length)}</span>{state.page.features.bulk_actions.map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={!state.table.selected.length || action.disabled || state.busy} onClick={() => store.openBulkAction(action.name)}>{action.label}</button>)}</div>}
+        {state.page.features.bulk && <div className="lu-pad lu-actions"><span role="status">{state.page.labels.selected.replace(':count', state.table.selected.length)}</span>{state.page.features.bulk_actions.map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={!state.table.selected.length || action.disabled || state.busy} onClick={() => store.openBulkAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}</div>}
         {state.table.mode === 'cards' && state.page.features.view_toggle ? <div className="lu-native-cards lu-pad">
             {users.map(user => <article key={user.id} className={'lu-panel lu-pad lu-native-user-card ' + state.page.classes.panel}><header className="lu-heading"><NativeAvatar avatar={user.avatar}/><h2>{user.urls?.show ? <a href={user.urls.show} onClick={event => { event.preventDefault(); store.navigate(user.urls.show); }}>{user.name}</a> : user.name}</h2>{state.page.features.bulk && <UserSelection user={user} state={state} store={store}/>}</header><dl className="lu-details">{columns.map(column => <div key={column.key}><dt>{column.label}</dt><dd><NativeCell user={user} column={column} state={state} store={store}/></dd></div>)}</dl><NativeActions user={user} state={state} store={store}/></article>)}
             {!users.length && <p role="status">{state.page.labels.empty}</p>}
@@ -95,9 +101,9 @@ function NativeForm({ form, state, store, dialog = false }) {
             {state.page.features.password_meter && feedback && state.values[form.id]?.password && <div className="lu-password-meter"><p>{state.page.labels.password_strength}: <strong>{feedback.label}</strong></p><meter min="0" max="4" value={feedback.score} aria-label={state.page.labels.password_strength}/></div>}
             {state.page.features.password_feedback && state.passwordMismatch[form.id] && <p className="lu-password-confirmation-error" role="status">{state.page.labels.password_mismatch}</p>}
         </fieldset>
-        {state.preview?.form === form.id && <section><button type="button" className="lu-button lu-secondary" onClick={store.editPreview}>{state.page.labels.email_back_editing}</button><p className="lu-muted">{state.preview.recipient}</p><iframe title={state.page.labels.email_preview_frame} sandbox="" referrerPolicy="no-referrer" srcDoc={state.preview.html}/></section>}
-        {form.preview && state.preview?.form !== form.id && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={() => store.preview(form.id)}>{state.page.labels.email_preview}</button>}
-        <div className="lu-actions lu-form-actions"><button type="submit" className={'lu-button ' + (form.danger ? 'lu-danger' : 'lu-success')} disabled={state.busy || !store.ready(form.id)}>{form.submit}</button>{dialog && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.closeDialog}>{state.page.labels.cancel}</button>}</div>
+        {state.preview?.form === form.id && <section><button type="button" className="lu-button lu-secondary" onClick={store.editPreview}><NativeIcon action="back" enabled={state.page.features.icons}/><span>{state.page.labels.email_back_editing}</span></button><p className="lu-muted">{state.preview.recipient}</p><iframe title={state.page.labels.email_preview_frame} sandbox="" referrerPolicy="no-referrer" srcDoc={state.preview.html}/></section>}
+        {form.preview && state.preview?.form !== form.id && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={() => store.preview(form.id)}><NativeIcon action="preview" enabled={state.page.features.icons}/><span>{state.page.labels.email_preview}</span></button>}
+        <div className="lu-actions lu-form-actions"><button type="submit" className={'lu-button ' + (form.danger ? 'lu-danger' : 'lu-success')} disabled={state.busy || !store.ready(form.id)}><NativeIcon action={submitAction(form)} enabled={state.page.features.icons}/><span>{form.submit}</span></button>{dialog && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.closeDialog}><NativeIcon action="cancel" enabled={state.page.features.icons}/><span>{state.page.labels.cancel}</span></button>}</div>
     </form>;
 }
 
@@ -107,12 +113,12 @@ function NativeDialog({ state, store }) {
     return <div className="lu-native-dialog-backdrop"><section className="lu-email-dialog lu-native-dialog" role="dialog" aria-modal="true" aria-labelledby="lu-native-action-title" tabIndex="-1" data-lu-native-dialog><header className="lu-email-heading"><h2 id="lu-native-action-title">{form.title}</h2><button type="button" className="lu-email-close" aria-label={state.page.labels.close} disabled={state.busy} onClick={store.closeDialog}>{state.page.labels.close}</button></header><div className="lu-email-body"><NativeForm form={form} state={state} store={store} dialog/></div></section></div>;
 }
 
-function PackageStatus({ state }) {
+function PackageStatus({ state, store }) {
     const operation = state.packageOperation;
     if (!operation) return null;
     return <div className="lu-flash lu-native-package-status" role={operation.status === 'failed' ? 'alert' : 'status'} data-lu-package-state={operation.status}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={'lu-package-status-icon ' + (operation.status === 'running' ? 'lu-package-spinner' : '')}><path d={statusIcon(operation.status)} strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div><p>{operation.message}</p>{operation.transport_error && <p role="alert">{operation.transport_error}</p>}{['completed', 'failed'].includes(operation.status) && state.page.urls.settings && <a href={state.page.urls.settings} className="lu-button lu-secondary">{state.page.labels.package_refresh}</a>}</div>
+        <div><p>{operation.message}</p>{operation.transport_error && <p role="alert">{operation.transport_error}</p>}{['completed', 'failed'].includes(operation.status) && state.page.urls.settings && <a href={state.page.urls.settings + '#packages'} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.reloadPage(); }}>{state.page.labels.package_refresh}</a>}</div>
     </div>;
 }
 
@@ -124,13 +130,13 @@ function PackageSettings({ state, store }) {
     const packages = state.page.data.packages;
     if (!packages) return null;
     const requirements = state.packageRequirements;
-    return <section className="lu-package-settings lu-pad" aria-labelledby="lu-native-packages-title">
+    return <section id="packages" className="lu-package-settings lu-pad" aria-labelledby="lu-native-packages-title">
         <h2 id="lu-native-packages-title">{state.page.labels.settings_packages}</h2><p className="lu-muted">{state.page.labels.packages_hint}</p>
         {!packages.ready && <p>{state.page.labels.packages_queue_required}</p>}
-        <div className="lu-actions"><button type="button" className="lu-button lu-secondary" disabled={state.busy || packages.ready} onClick={() => store.openSettingsAction('package-requirements')}>{packages.ready ? state.page.labels.package_requirements_completed : state.page.labels.package_requirements_setup}</button><button type="button" className="lu-button lu-secondary" disabled={state.busy || requirements?.busy} onClick={store.verifyRequirements}>{state.page.labels.package_requirements_verify}</button></div>
+        <div className="lu-actions lu-native-package-actions" data-lu-native-requirement-actions><button type="button" className="lu-button lu-secondary" disabled={state.busy || packages.ready} onClick={() => store.openSettingsAction('package-requirements')}><NativeIcon action={packages.ready ? 'check' : 'settings'} enabled={state.page.features.icons}/><span>{packages.ready ? state.page.labels.package_requirements_completed : state.page.labels.package_requirements_setup}</span></button><button type="button" className="lu-button lu-secondary" disabled={state.busy || requirements?.busy} onClick={store.verifyRequirements}><NativeIcon action="verify" enabled={state.page.features.icons}/><span>{packages.ready ? state.page.labels.package_requirements_reverify : state.page.labels.package_requirements_verify}</span></button></div>
         {requirements && <div className="lu-native-package-status" role="status" data-lu-native-package-requirements><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={requirements.status === 'checking' ? 'lu-package-spinner' : ''}><path d={statusIcon(requirements.status === 'checking' ? 'running' : requirements.queue_ready ? 'completed' : 'failed')}/></svg><div><p>{requirements.message}</p>{requirements.transport_error && <p role="alert">{requirements.transport_error}</p>}</div></div>}
         <p className="lu-muted">{state.page.labels.package_requirements_hint}</p><div className="lu-actions">{packages.help.map(link => <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a>)}</div>
-        <div className="lu-settings-grid">{packages.choices.map(choice => <section className="lu-settings-choice" key={choice.name}><h3>{choice.label}</h3><p>{choice.installed ? state.page.labels.package_installed : state.page.labels.package_not_installed}</p>{choice.hint && <p className="lu-muted">{choice.hint}</p>}{choice.reason && <p className="lu-muted">{choice.reason}</p>}<button type="button" className="lu-button lu-secondary" disabled={choice.blocked || !packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.name)}>{choice.installed ? state.page.labels.package_remove : state.page.labels.package_install}</button>{choice.configure_name && <button type="button" className="lu-button lu-secondary" disabled={!packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.configure_name)}>{state.page.labels.package_configure}</button>}{choice.setup_hint && <p className="lu-muted">{choice.setup_hint}</p>}</section>)}</div>
+        <div className="lu-settings-grid">{packages.choices.map(choice => <section className="lu-settings-choice" key={choice.name}><h3>{choice.label}</h3><p>{choice.installed ? state.page.labels.package_installed : state.page.labels.package_not_installed}</p>{choice.hint && <p className="lu-muted">{choice.hint}</p>}{choice.reason && <p className="lu-muted">{choice.reason}</p>}<div className="lu-actions lu-native-package-actions"><button type="button" className="lu-button lu-secondary" disabled={choice.blocked || !packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.name)}><NativeIcon action={choice.installed ? 'remove' : 'install'} enabled={state.page.features.icons}/><span>{choice.installed ? state.page.labels.package_remove : state.page.labels.package_install}</span></button>{choice.configure_name && !choice.setup_completed && <button type="button" className="lu-button lu-secondary" disabled={!packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.configure_name)}><NativeIcon action="configure" enabled={state.page.features.icons}/><span>{state.page.labels.package_configure}</span></button>}</div>{choice.setup_completed && <p className="lu-setup-completed"><NativeIcon action="check" enabled={state.page.features.icons}/><span>{state.page.labels.package_setup_completed}</span></p>}{choice.setup_hint && <p className="lu-muted">{choice.setup_hint}</p>}</section>)}</div>
     </section>;
 }
 
@@ -163,7 +169,7 @@ export default function UsersApp({ store }) {
         <NativeNavigation state={state} store={store}/>
         <NativeNotifications state={state} store={store}/>
         <NativeToasts state={state}/>
-        <PackageStatus state={state}/>
+        <PackageStatus state={state} store={store}/>
         {page.data.banner && <div className="lu-alert" role="status">{page.data.banner.message}<button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.submitBanner}>{page.data.banner.label}</button></div>}
         <section className={'lu-panel ' + page.classes.panel}>
             <header className="lu-heading lu-card-heading"><h1 tabIndex="-1" data-lu-native-heading>{page.title}</h1><div className="lu-actions">{page.data.navigation.map(link => <a key={link.url} href={link.url} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(link.url); }}>{link.label}</a>)}</div></header>
@@ -176,7 +182,7 @@ export default function UsersApp({ store }) {
             {['show-user', 'account', 'edit-user'].includes(page.screen) && <div className="lu-profile-body"><header className="lu-profile-identity lu-native-profile" style={profileStyle(page, user, page.screen === 'edit-user', page.screen === 'edit-user' ? state.values.user : state.values['account-appearance'])}><NativeAvatar avatar={user.avatar}/><div><h2>{user.full_name ?? user.name}</h2><p>{user.email}</p></div></header>{user.pending_email && <p role="status">{page.labels.account_email_pending_to.replace(':email', user.pending_email)}</p>}{page.screen === 'show-user' && <><dl className="lu-profile-details">{page.data.columns.filter(column => column.type !== 'avatar').map(column => <div key={column.key} className="lu-detail"><dt>{column.label}</dt><dd><NativeCell user={user} column={column} state={state} store={store}/></dd></div>)}</dl>{Boolean(user.permissions?.length) && <p>{page.labels.direct_permissions}: {user.permissions.map(item => item.label).join(', ')}</p>}{Boolean(user.role_level) && <p>{page.labels.role_level.replace(':level', user.role_level)}</p>}<NativeActions user={user} state={state} store={store}/></>}</div>}
             {page.data.form_ids.map(id => <NativeForm key={id} form={page.forms[id]} state={state} store={store}/>)}
             <PackageSettings state={state} store={store}/>
-            {Boolean(page.data.settings_actions?.some(action => !action.name.startsWith('package-'))) && <div className="lu-pad lu-actions">{page.data.settings_actions.filter(action => !action.name.startsWith('package-')).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openSettingsAction(action.name)}>{action.label}</button>)}</div>}
+            {Boolean(page.data.settings_actions?.some(action => !action.name.startsWith('package-'))) && <div className="lu-pad lu-actions">{page.data.settings_actions.filter(action => !action.name.startsWith('package-')).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openSettingsAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}</div>}
         </section>
         <NativeDialog state={state} store={store}/>
     </div>;

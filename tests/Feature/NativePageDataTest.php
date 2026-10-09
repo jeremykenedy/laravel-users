@@ -215,6 +215,29 @@ class NativePageDataTest extends TestCase
         $this->assertTrue($page['forms']['package-spatie']['disabled']);
     }
 
+    public function test_completed_toast_setup_has_no_configure_action_while_roles_setup_remains_available(): void
+    {
+        $this->actingAs($this->user());
+        $data = ['settingsAvailable' => true, 'packageManagementAllowed' => true, 'packageQueueReady' => true, 'managedPackages' => ['toast' => true, 'laravel-roles' => true, 'spatie' => false], 'managedPackageSetup' => ['toast' => false]];
+        $page = $this->page('laravelusers::modern.settings', $data);
+        $this->assertArrayHasKey('package-toast-configure', $page['forms']);
+
+        $data['managedPackageSetup']['toast'] = true;
+        $page = $this->page('laravelusers::modern.settings', $data);
+        $toast = collect($page['data']['packages']['choices'])->firstWhere('package', 'toast');
+        $this->assertTrue($toast['setup_completed']);
+        $this->assertNull($toast['configure_name']);
+        $this->assertArrayNotHasKey('package-toast-configure', $page['forms']);
+        $this->assertNotContains('package-toast-configure', array_column($page['data']['settings_actions'], 'name'));
+        $this->assertSame('remove', $page['forms']['package-toast']['values']['operation']);
+        $this->assertArrayHasKey('package-laravel-roles-configure', $page['forms']);
+
+        $data['packageQueueReady'] = false;
+        $page = $this->page('laravelusers::modern.settings', $data);
+        $this->assertTrue($page['forms']['package-toast']['disabled']);
+        $this->assertTrue($page['forms']['package-laravel-roles-configure']['disabled']);
+    }
+
     private function page(string $view, array $data): array
     {
         return $this->app->make(NativePageData::class)->forView($view, $data, $this->request());

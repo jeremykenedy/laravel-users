@@ -7,7 +7,7 @@ function environment(t) {
     const previousWindow = globalThis.window;
     const previousDocument = globalThis.document;
     globalThis.window = {
-        location: { href: 'https://example.test/users', assign: value => { window.location.href = value; } },
+        location: { href: 'https://example.test/users', assign: value => { window.location.href = value; }, reload() {} },
         history: { pushState: (_, __, value) => { window.location.href = value; }, replaceState: (_, __, value) => { window.location.href = value; } },
         addEventListener() {}, scrollTo() {}, localStorage: { setItem() {} },
     };
@@ -164,4 +164,38 @@ test('search navigates the existing native GET contract and updates browser hist
     await store.search();
     assert.equal(new URL(window.location.href).searchParams.get('user_search_box'), 'A & B');
     assert.equal(document.title, 'Users');
+});
+
+test('a pending package completion reloads real settings once and retains the Packages fragment', async t => {
+    environment(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const payload = page();
+    payload.urls.settings = 'https://example.test/users/settings';
+    payload.data.package_operation = { id: 'setup-id', status_url: '/users/settings/packages/setup-id', status: 'queued', message: 'Waiting for the worker.' };
+    const reload = t.mock.method(window.location, 'reload');
+    const fetch = t.mock.method(globalThis, 'fetch', async () => Response.json({ ...payload.data.package_operation, status: 'completed', message: 'Setup completed.' }));
+    const store = createNativeStore(payload, 'vue');
+    assert.equal(reload.mock.calls.length, 0);
+    t.mock.timers.tick(2000);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(store.getSnapshot().packageOperation.status, 'completed');
+    assert.equal(reload.mock.calls.length, 1);
+    assert.equal(window.location.href, 'https://example.test/users/settings#packages');
+    t.mock.timers.tick(4000);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(fetch.mock.calls.length, 1);
+    assert.equal(reload.mock.calls.length, 1);
+});
+
+test('cached completed package status does not reload on mount and manual refresh still requests a reload', t => {
+    environment(t);
+    const payload = page();
+    payload.urls.settings = 'https://example.test/users/settings';
+    payload.data.package_operation = { id: 'setup-id', status_url: '/users/settings/packages/setup-id', status: 'completed', message: 'Setup completed.' };
+    const reload = t.mock.method(window.location, 'reload');
+    const store = createNativeStore(payload, 'react');
+    assert.equal(reload.mock.calls.length, 0);
+    store.reloadPage();
+    assert.equal(reload.mock.calls.length, 1);
+    assert.equal(window.location.href, 'https://example.test/users/settings#packages');
 });
