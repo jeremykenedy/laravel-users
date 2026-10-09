@@ -25,6 +25,7 @@ class PackageCompletionTest extends TestCase
         $this->directory = sys_get_temp_dir().'/laravelusers-package-completion-'.bin2hex(random_bytes(8));
         $this->app->setBasePath($this->directory);
         File::ensureDirectoryExists(config_path());
+        File::put(base_path('composer.json'), json_encode(['autoload' => ['psr-4' => ['App\\' => 'app/']]]));
         config(['laravelusers.settings.enabled' => true, 'laravelusers.settings.packages.enabled' => true]);
         Gate::define('manage-laravelusers-settings', fn () => true);
         Gate::define('manage-laravelusers-packages', fn () => true);
@@ -85,10 +86,16 @@ class PackageCompletionTest extends TestCase
         $message = 'Completed <img src=x onerror="alert(1)">';
         PackageOperations::remember($id, ['actor' => (string) $actor->getKey(), 'status' => 'completed', 'stage' => 'completed', 'message' => $message, 'lock_owner' => 'private-owner', 'command' => '/private/host/composer']);
         $this->actingAs($actor);
-        $status = $this->getJson('/users/settings/packages/'.$id)->assertOk()->assertJsonPath('status', 'completed');
+        $status = $this->getJson('/users/settings/packages/'.$id)->assertOk()->assertJsonPath('status', 'completed')->assertJsonPath('message', $message);
         $this->assertStringContainsString('no-store', $status->headers->get('Cache-Control'));
         $this->assertArrayNotHasKey('lock_owner', $status->json());
         $this->assertArrayNotHasKey('command', $status->json());
+        $document = $this->document($this->get('/users/settings')->assertOk()->getContent());
+        $this->assertSame(0, $document->query('//*[@data-lu-package-operation-status]//img | //*[@data-lu-package-operation-status]//*[@onerror]')->length);
+        $this->assertSame('Package change completed.', trim($document->query('//*[@data-lu-package-operation-status]')->item(0)->textContent));
+        $this->assertSame(0, $document->query('//a[@data-lu-package-refresh]')->length);
+
+        PackageOperations::remember($id, ['actor' => (string) $actor->getKey(), 'status' => 'failed', 'message' => $message]);
         $document = $this->document($this->get('/users/settings')->assertOk()->getContent());
         $this->assertSame(0, $document->query('//*[@data-lu-package-operation-status]//img | //*[@data-lu-package-operation-status]//*[@onerror]')->length);
         $this->assertStringContainsString($message, $document->query('//*[@data-lu-package-operation-status]')->item(0)->textContent);

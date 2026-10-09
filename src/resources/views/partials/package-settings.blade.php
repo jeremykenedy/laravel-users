@@ -31,7 +31,7 @@
         <span data-lu-package-status-icon="queued" @unless($operationState === 'queued') hidden @endunless>@include('laravelusers::partials.icon', ['name' => 'clock'])</span>
         <span data-lu-package-status-icon="running" class="lu-package-spinner" @unless($operationState === 'running') hidden @endunless>@include('laravelusers::partials.icon', ['name' => 'spinner'])</span>
         <span data-lu-package-status-icon="failed" @unless($operationState === 'failed') hidden @endunless>@include('laravelusers::partials.icon', ['name' => 'warning'])</span>
-        <span data-lu-package-status-message>{{ $operation['message'] ?? '' }}@if(($operation['status'] ?? '') === 'completed') <a href="{{ route('users.settings').'#packages' }}" data-lu-package-refresh>{{ __('laravelusers::ui.package_refresh') }}</a>@endif</span>
+        <span data-lu-package-status-message>{{ $operationState === 'completed' ? __('laravelusers::ui.package_change_completed') : ($operation['message'] ?? '') }}</span>
     </p>
     <p data-lu-package-worker @unless($operation && ($operation['stage'] ?? '') === 'queue') hidden @endunless><code>{{ $workerCommand }}</code></p>
     <button type="button" class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-outline-secondary btn-sm' }}" data-lu-package-status-retry hidden>@include('laravelusers::partials.icon', ['name' => 'verify']) {{ __('laravelusers::ui.package_status_retry') }}</button>

@@ -181,11 +181,11 @@ class PackageRequirementsTest extends TestCase
                 config(['laravelusers.frontend' => $framework]);
                 $response = $this->get('/users/settings')->assertOk()
                     ->assertSee('<span data-lu-package-status-message>'.trans('laravelusers::ui.package_requirements_verified').'</span>', false)
-                    ->assertSee('<span data-lu-package-status-message>'.$message, false)
+                    ->assertSee('<span data-lu-package-status-message>'.($state === 'completed' ? trans('laravelusers::ui.package_change_completed') : $message), false)
                     ->assertSee('data-lu-package-operation-status data-state="'.$state.'"', false)
                     ->assertSee('<span data-lu-package-verify-label>Re-Verify package requirements</span>', false);
                 if ($state === 'completed') {
-                    $response->assertSee('data-lu-package-refresh>Refresh settings</a>', false);
+                    $response->assertDontSee('data-lu-package-refresh>', false);
                 }
             }
         }

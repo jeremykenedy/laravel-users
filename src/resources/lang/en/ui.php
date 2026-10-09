@@ -191,6 +191,7 @@ return [
     'package_setup'                      => 'Setup instructions',
     'package_configure'                  => 'Complete setup',
     'package_setup_completed'            => 'Setup completed.',
+    'package_change_completed'           => 'Package change completed.',
     'package_toast_ready'                => 'Laravel Toast is ready to use. Select it under Notifications and save to use it for package messages.',
     'package_toast_install_warning'      => 'This installs Laravel Toast and completes its setup. Existing notification settings are preserved. Choose Toast under Notifications after installation.',
     'package_configuration_hint'         => 'Publish missing package configuration using the current framework. Existing configuration is preserved. Database migrations run only when selected.',
