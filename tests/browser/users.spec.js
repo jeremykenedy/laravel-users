@@ -803,6 +803,22 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(results.locator('.lu-login-details').first()).toContainText('127.0.0.1');
         await expect(results.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first()).toHaveAttribute('rel', 'noopener noreferrer');
         await expectStackedDetails(results.locator('.lu-login-details').first());
+        const device = '<img src=x onerror=alert(1)>';
+        await page.route('**/search-users', route => route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify({
+                users: [{ id: 2, name: 'Alex Rivers', email: 'user1@example.com' }],
+                activity: { 2: { device, os: 'Linux 6.8', browser: 'Firefox 143', ip_address: '198.51.100.2', extra: 'Unexpected login field' } }
+            })
+        }));
+        await page.locator('#user_search_box').fill('login metadata');
+        await page.locator('#user_search_box').press('Enter');
+        const loginDetails = results.locator('.lu-login-details');
+        await expect(loginDetails.locator('[data-lu-login-field]')).toHaveCount(4);
+        await expect(loginDetails.locator('[data-lu-login-field="device"]')).toHaveText(device);
+        await expect(loginDetails.locator('img')).toHaveCount(0);
+        await expect(loginDetails).not.toContainText('Unexpected login field');
+        await expect(loginDetails.locator('a')).toHaveAttribute('href', 'https://ipinfo.io/198.51.100.2');
         await page.goto('/users/1');
         await expect(page.locator('form[action*="/impersonate"]')).toHaveCount(0);
         await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();

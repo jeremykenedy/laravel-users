@@ -148,25 +148,30 @@
     }
     function loginDetailsCell(row, details) {
         if (!loginDetailsColumn) return;
-        const fields = ['device', 'os', 'browser', 'ip_address'];
+        const fields = [
+            ['device', details.device],
+            ['os', details.os],
+            ['browser', details.browser],
+            ['ip_address', details.ip_address]
+        ];
         const detail = document.createElement('span');
         detail.className = 'lu-login-details';
-        detail.title = fields.map(field => details[field]).filter(Boolean).join(' / ');
-        fields.forEach(field => {
-            if (!details[field]) return;
+        detail.title = fields.map(([, value]) => value).filter(Boolean).join(' / ');
+        fields.forEach(([field, value]) => {
+            if (!value) return;
             const item = document.createElement('span');
             item.dataset.luLoginField = field;
             if (field === 'ip_address') {
                 const link = document.createElement('a');
-                link.href = 'https://ipinfo.io/' + encodeURIComponent(details[field]);
+                link.href = 'https://ipinfo.io/' + encodeURIComponent(value);
                 link.target = '_blank';
                 link.rel = 'noopener noreferrer';
                 link.title = options.lookupIp;
-                link.setAttribute('aria-label', options.lookupIp + ': ' + details[field]);
-                link.textContent = details[field];
+                link.setAttribute('aria-label', options.lookupIp + ': ' + value);
+                link.textContent = value;
                 item.append(link);
             } else {
-                item.textContent = details[field];
+                item.textContent = value;
             }
             detail.append(item);
         });

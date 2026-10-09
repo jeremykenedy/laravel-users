@@ -41,8 +41,14 @@
                         $.each(jsonData, function(index, val) {
                             const userName = val.name;
                             let details = activity[val.id] || {};
-                            let loginFields = ['device', 'os', 'browser', 'ip_address'].map(field => escapeHtml(details[field])).filter(Boolean);
-                            let loginDetails = ['device', 'os', 'browser', 'ip_address'].filter(field => details[field]).map(field => '<span data-lu-login-field="' + field + '" title="' + (field === 'ip_address' ? @json(__('laravelusers::ui.lookup_ip')) : '') + '">' + (field === 'ip_address' ? '<a href="https://ipinfo.io/' + encodeURIComponent(details[field]) + '" target="_blank" rel="noopener noreferrer" aria-label="' + @json(__('laravelusers::ui.lookup_ip')) + ': ' + escapeHtml(details[field]) + '">' + escapeHtml(details[field]) + '</a>' : escapeHtml(details[field])) + '</span>').join('');
+                            const loginData = [
+                                ['device', details.device],
+                                ['os', details.os],
+                                ['browser', details.browser],
+                                ['ip_address', details.ip_address]
+                            ];
+                            let loginFields = loginData.map(([, value]) => escapeHtml(value)).filter(Boolean);
+                            let loginDetails = loginData.filter(([, value]) => value).map(([field, value]) => '<span data-lu-login-field="' + field + '" title="' + (field === 'ip_address' ? @json(__('laravelusers::ui.lookup_ip')) : '') + '">' + (field === 'ip_address' ? '<a href="https://ipinfo.io/' + encodeURIComponent(value) + '" target="_blank" rel="noopener noreferrer" aria-label="' + @json(__('laravelusers::ui.lookup_ip')) + ': ' + escapeHtml(value) + '">' + escapeHtml(value) + '</a>' : escapeHtml(value)) + '</span>').join('');
                             let avatar = avatars[val.id] || { initials: '?', size: 40, fallback: 'icon' };
                             let avatarHtml = '<span class="lu-avatar" style="width:' + Number(avatar.size) + 'px;height:' + Number(avatar.size) + 'px" aria-hidden="true">' +
                                 (avatar.fallback === 'initials' ? escapeHtml(avatar.initials) : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>') +

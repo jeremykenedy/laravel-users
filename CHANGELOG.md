@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Read only the four supported login-detail fields and verify escaping in live search results.
 - Verify optional package and account setup against real installers without running unrelated host migrations.
 - Cover package worker setup failures, explicit migration choices and operation lock ownership.
 - Combine core and optional integration coverage and align PHP_CodeSniffer with the existing Pint style.
