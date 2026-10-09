@@ -111,21 +111,24 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
         await page.reload();
         await expect(email.locator('#email')).toHaveValue(currentEmail);
 
-        const security = await section(page, 'security');
-        await security.locator('#password-current-password').fill('incorrect-password');
-        await security.locator('#password').fill('RejectedChange9!');
-        await security.locator('#password_confirmation').fill('RejectedChange9!');
-        await submitAccount(page, security, false);
-        await expect(security.locator('.lu-field-error')).toHaveText('Your current password is incorrect.');
-        await security.locator('#password-current-password').fill('password');
-        await security.locator('#password').fill('BrowserAccount9!');
-        await security.locator('#password_confirmation').fill('BrowserAccount9!');
-        await submitAccount(page, security);
-        await expect(page.locator('.lu-account-summary')).not.toContainText('unapproved-change@example.com');
-        await security.locator('#password-current-password').fill('BrowserAccount9!');
-        await security.locator('#password').fill('password');
-        await security.locator('#password_confirmation').fill('password');
-        await submitAccount(page, security);
+        await test.step('Reject incorrect current passwords and accept verified password changes', async () => {
+            const security = await section(page, 'security');
+            await security.locator('#password-current-password').fill('incorrect-password');
+            await security.locator('#password').fill('RejectedChange9!');
+            await security.locator('#password_confirmation').fill('RejectedChange9!');
+            await submitAccount(page, security, false);
+            await expect(security.locator('.lu-field-error')).toHaveText('Your current password is incorrect.');
+            await security.locator('#password-current-password').fill('password');
+            await security.locator('#password').fill('BrowserAccount9!');
+            await security.locator('#password_confirmation').fill('BrowserAccount9!');
+            await submitAccount(page, security);
+            await expect(page.locator('.lu-account-summary')).not.toContainText('unapproved-change@example.com');
+            await security.locator('#password-current-password').fill('BrowserAccount9!');
+            await security.locator('#password').fill('password');
+            await security.locator('#password_confirmation').fill('password');
+            await submitAccount(page, security);
+    
+        });
 
         const admin = await section(page, 'admin');
         await admin.locator('[data-lu-account-delete]').click();
