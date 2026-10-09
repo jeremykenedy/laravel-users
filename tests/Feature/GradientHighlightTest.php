@@ -13,10 +13,10 @@ use jeremykenedy\laravelusers\Test\TestCase;
 
 class GradientHighlightTest extends TestCase
 {
-    private function enableAppearance(bool $highlight = true): void
+    private function enableAppearance(array $excludedMigrations = []): void
     {
         foreach (glob(dirname(__DIR__, 2).'/src/database/appearance/*.php') as $path) {
-            if ($highlight || !str_contains($path, 'highlight_colors')) {
+            if (!in_array(basename($path), $excludedMigrations, true)) {
                 (require $path)->up();
             }
         }
@@ -96,7 +96,7 @@ class GradientHighlightTest extends TestCase
 
     public function test_missing_additive_columns_ignore_highlight_inputs_and_keep_existing_preferences(): void
     {
-        $this->enableAppearance(false);
+        $this->enableAppearance(['2026_10_09_043153_add_gradient_highlight_colors_to_laravelusers_appearance_preferences_table.php']);
         $user = $this->user();
         AppearancePreferences::save($user, ['user_card_color' => '#264e36']);
         $this->assertFalse(AppearancePreferences::formData($user)['appearanceHighlightAvailable']);
@@ -119,7 +119,7 @@ class GradientHighlightTest extends TestCase
 
     public function test_additive_migration_preserves_existing_values_and_rolls_back_only_its_columns(): void
     {
-        $this->enableAppearance(false);
+        $this->enableAppearance(['2026_10_09_043153_add_gradient_highlight_colors_to_laravelusers_appearance_preferences_table.php']);
         $user = $this->user();
         AppearancePreferences::save($user, ['user_card_color' => '#264e36', 'user_card_gradient' => 'off', 'user_card_gradient_strength' => 70]);
         $columns = Schema::getColumnListing('users');

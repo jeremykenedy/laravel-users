@@ -1,5 +1,30 @@
 const { test, expect } = require('@playwright/test');
 
+async function assertHeaderMeasurement(page, header, title, icon, icons, measurements, path, theme, width) {
+    const bounds = await header.boundingBox();
+    const titleBox = await title.boundingBox();
+    const textStyle = await title.evaluate(element => {
+        const style = getComputedStyle(element);
+        const result = { fontSize: style.fontSize, lineHeight: style.lineHeight };
+        return result;
+    });
+    const key = `${theme}:${width}`;
+    const measured = { height: bounds.height, textStyle, icon: icons ? await icon.boundingBox() : null };
+    if (measurements.has(key)) {
+        const reference = measurements.get(key);
+        expect(measured.height, `${path}, ${key}, header height`).toBeCloseTo(reference.height, 1);
+        expect(measured.textStyle, `${path}, ${key}, title typography`).toEqual(reference.textStyle);
+        if (icons) {
+            expect(measured.icon.width, `${path}, ${key}, icon width`).toBeCloseTo(reference.icon.width, 1);
+            expect(measured.icon.height, `${path}, ${key}, icon height`).toBeCloseTo(reference.icon.height, 1);
+        }
+    } else measurements.set(key, measured);
+    if (icons) {
+        expect(Math.abs(measured.icon.y + measured.icon.height / 2 - titleBox.y - titleBox.height / 2), `${path}, ${key}, icon alignment`).toBeLessThanOrEqual(1);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path}, ${key}, overflow`).toBeLessThanOrEqual(width);
+}
+
 for (const framework of ['bootstrap4', 'bootstrap5']) {
     for (const icons of [0, 1]) {
         test(`${framework}: page header heights and title icons match with icons ${icons}`, async ({ page }) => {
@@ -33,28 +58,7 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                     if (await toggle.locator('svg:not([hidden])').getAttribute('data-theme-icon') !== theme) await toggle.click();
                     for (const width of [320, 390, 768, 1440]) {
                         await page.setViewportSize({ width, height: 1000 });
-                        const bounds = await header.boundingBox();
-                        const titleBox = await title.boundingBox();
-                        const textStyle = await title.evaluate(element => {
-                            const style = getComputedStyle(element);
-                            const result = { fontSize: style.fontSize, lineHeight: style.lineHeight };
-                            return result;
-                        });
-                        const key = `${theme}:${width}`;
-                        const measured = { height: bounds.height, textStyle, icon: icons ? await icon.boundingBox() : null };
-                        if (measurements.has(key)) {
-                            const reference = measurements.get(key);
-                            expect(measured.height, `${path}, ${key}, header height`).toBeCloseTo(reference.height, 1);
-                            expect(measured.textStyle, `${path}, ${key}, title typography`).toEqual(reference.textStyle);
-                            if (icons) {
-                                expect(measured.icon.width, `${path}, ${key}, icon width`).toBeCloseTo(reference.icon.width, 1);
-                                expect(measured.icon.height, `${path}, ${key}, icon height`).toBeCloseTo(reference.icon.height, 1);
-                            }
-                        } else measurements.set(key, measured);
-                        if (icons) {
-                            expect(Math.abs(measured.icon.y + measured.icon.height / 2 - titleBox.y - titleBox.height / 2), `${path}, ${key}, icon alignment`).toBeLessThanOrEqual(1);
-                        }
-                        expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path}, ${key}, overflow`).toBeLessThanOrEqual(width);
+                        await assertHeaderMeasurement(page, header, title, icon, icons, measurements, path, theme, width);
                     }
                 }
             }

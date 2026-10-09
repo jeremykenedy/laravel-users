@@ -136,11 +136,9 @@ class UserActivity
     private function updatePresence(Repository $store, string $key, string $session, int $ttl, bool $logout): void
     {
         $sessions = array_filter($store->get($key, []), fn ($seen) => $seen > Carbon::now()->timestamp - $ttl);
-        if ($logout) {
-            unset($sessions[$session]);
-        } else {
-            $sessions[$session] = Carbon::now()->timestamp;
-        }
+        $sessions = $logout
+            ? array_diff_key($sessions, [$session => true])
+            : array_replace($sessions, [$session => Carbon::now()->timestamp]);
         if ($sessions) {
             $store->put($key, $sessions, $ttl);
 
