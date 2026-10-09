@@ -17,7 +17,10 @@
         syncHighlightInheritance();
         groups.forEach(group => {
             const color = group.querySelector('[data-lu-color]').value;
-            const strength = Number(group.querySelector('[data-lu-gradient-strength]').value) / 50;
+            const strengthInput = group.querySelector('[data-lu-gradient-strength]');
+            const strength = Number(strengthInput.value) / 50;
+            const output = group.querySelector('output[for="' + strengthInput.id + '"]');
+            if (output) output.value = strengthInput.value + '%';
             const highlight = group.querySelector('[data-lu-gradient-highlight-color]');
             const highlightChannels = (highlight?.value || '#ffffff').slice(1).match(/../g).map(channel => parseInt(channel, 16));
             const channels = color.slice(1).match(/../g).map(channel => {
@@ -53,12 +56,6 @@
         input.addEventListener('change', () => {
             const field = input.hasAttribute('data-lu-inherit-color') ? (input.dataset.luInheritColor || 'user-card-color') : (input.dataset.luInheritStrength || 'user-card-strength');
             document.getElementById(field).disabled = input.checked;
-        });
-    });
-    root?.querySelectorAll('[data-lu-gradient-strength]').forEach(input => {
-        input.addEventListener('input', () => {
-            const output = root.querySelector('output[for="' + input.id + '"]');
-            if (output) output.value = input.value + '%';
         });
     });
     root?.querySelectorAll('[data-lu-appearance-reset]').forEach(button => {
