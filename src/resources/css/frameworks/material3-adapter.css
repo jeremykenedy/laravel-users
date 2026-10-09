@@ -1,0 +1,96 @@
+#laravelusers[data-lu-css="material3"] {
+    --md-sys-color-primary: #6750a4;
+    --md-sys-color-on-primary: #fff;
+    --md-sys-color-primary-container: #eaddff;
+    --md-sys-color-on-primary-container: #21005d;
+    --md-sys-color-secondary: #625b71;
+    --md-sys-color-surface: #fffbfe;
+    --md-sys-color-surface-container: #f3edf7;
+    --md-sys-color-on-surface: #1c1b1f;
+    --md-sys-color-on-surface-variant: #49454f;
+    --md-sys-color-outline: #79747e;
+    --md-sys-color-outline-variant: #cac4d0;
+    --md-sys-color-error: #b3261e;
+    --md-sys-color-on-error: #fff;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+    --md-ref-typeface-plain: Roboto, "Segoe UI", sans-serif;
+    --lu-bg: var(--md-sys-color-surface);
+    --lu-text: var(--md-sys-color-on-surface);
+    --lu-muted: var(--md-sys-color-on-surface-variant);
+    --lu-border: var(--md-sys-color-outline-variant);
+    --lu-accent: var(--md-sys-color-primary);
+    --lu-soft: var(--md-sys-color-surface-container);
+    --lu-primary: var(--md-sys-color-primary);
+    --lu-on-primary: var(--md-sys-color-on-primary);
+    --lu-success: #386a20;
+    --lu-on-success: #fff;
+    --lu-danger: var(--md-sys-color-error);
+    --lu-on-danger: var(--md-sys-color-on-error);
+    --lu-control-radius: var(--md-sys-shape-corner-full);
+    --lu-field-radius: var(--md-sys-shape-corner-small);
+    --lu-panel-radius: var(--md-sys-shape-corner-large);
+    --md-focus-ring-color: var(--md-sys-color-primary);
+    font-family: var(--md-ref-typeface-plain);
+}
+#laravelusers[data-lu-css="material3"][data-lu-theme="dark"] {
+    --md-sys-color-primary: #d0bcff;
+    --md-sys-color-on-primary: #381e72;
+    --md-sys-color-primary-container: #4f378b;
+    --md-sys-color-on-primary-container: #eaddff;
+    --md-sys-color-secondary: #ccc2dc;
+    --md-sys-color-surface: #1c1b1f;
+    --md-sys-color-surface-container: #2b2930;
+    --md-sys-color-on-surface: #e6e1e5;
+    --md-sys-color-on-surface-variant: #cac4d0;
+    --md-sys-color-outline: #938f99;
+    --md-sys-color-outline-variant: #49454f;
+    --md-sys-color-error: #f2b8b5;
+    --md-sys-color-on-error: #601410;
+    --lu-success: #a1d789;
+    --lu-on-success: #113800;
+}
+#laravelusers[data-lu-css="material3"] .lu-panel {
+    box-shadow: 0 1px 3px #0002;
+}
+#laravelusers[data-lu-css="material3"] [data-lu-material-control] {
+    position: relative;
+    isolation: isolate;
+    --md-focus-ring-shape: var(--lu-control-radius);
+    --md-ripple-hover-color: currentColor;
+    --md-ripple-pressed-color: currentColor;
+}
+#laravelusers[data-lu-css="material3"] .lu-input-group[data-lu-material-control] {
+    border-radius: var(--lu-field-radius);
+    --md-focus-ring-shape: var(--lu-field-radius);
+}
+#laravelusers[data-lu-css="material3"] :is(.lu-settings-tabs, .lu-account-tabs) [data-lu-material-control] {
+    --md-focus-ring-shape: 4px;
+}
+#laravelusers[data-lu-css="material3"] .lu-email-choice[data-lu-material-control] {
+    --md-focus-ring-shape: 4px;
+}
+#laravelusers[data-lu-css="material3"] md-ripple,
+#laravelusers[data-lu-css="material3"] md-focus-ring {
+    border-radius: inherit;
+    pointer-events: none;
+}
+#laravelusers[data-lu-css="material3"] .lu-field-error {
+    color: var(--md-sys-color-error);
+}
+#laravelusers[data-lu-css="material3"] .lu-button:hover,
+#laravelusers[data-lu-css="material3"] .lu-button:focus {
+    filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    #laravelusers[data-lu-css="material3"] md-ripple {
+        display: none;
+    }
+    #laravelusers[data-lu-css="material3"] md-focus-ring {
+        animation: none;
+        --md-focus-ring-duration: 0ms;
+    }
+}

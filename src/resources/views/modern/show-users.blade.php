@@ -8,7 +8,7 @@
         $loginDetailsColumn = config('laravelusers.activity.login', false) && config('laravelusers.showLastLoginDetailsColumn', false);
         $columns = 4 + (int) config('laravelusers.bulkActions', false) + (int) config('laravelusers.avatar.enabled', false) + (int) config('laravelusers.showCreatedColumn', true) + (int) config('laravelusers.showUpdatedColumn', true) + (int) config('laravelusers.rolesEnabled') + (int) $onlineColumn + (int) $loginColumn + (int) $loginDetailsColumn;
     @endphp
-    <section class="lu-panel {{ $tailwind ? 'lu:rounded-xl lu:border lu:shadow-sm' : 'card' }}" aria-label="{{ __('laravelusers::app.nav.users') }}">
+    <section class="lu-panel {{ \jeremykenedy\laravelusers\Support\Frontend::classes('panel') }}" aria-label="{{ __('laravelusers::app.nav.users') }}">
         <header class="lu-heading lu-card-heading">
             <h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'users']) {{ __('laravelusers::laravelusers.showing-all-users') }}</h1>
             <div class="lu-actions">
@@ -22,15 +22,15 @@
                 @csrf
                 @if(config('laravelusers.avatar.enabled', false))<input type="hidden" name="include_avatar" value="1">@endif
                 @if($onlineColumn || $loginColumn || $loginDetailsColumn)<input type="hidden" name="include_activity" value="1">@if($loginDetailsColumn)<input type="hidden" name="include_login_details" value="1">@endif @endif
-                <div class="lu-search-field"><label for="user_search_box" class="lu-sr-only">{{ __('laravelusers::forms.search-users-ph') }}</label><div class="lu-input-group"><input class="lu-input {{ $tailwind ? 'lu:w-full lu:rounded-lg' : 'form-control' }}" type="search" id="user_search_box" name="user_search_box" placeholder="{{ __('laravelusers::forms.search-users-ph') }}" maxlength="255" required></div></div>
+                <div class="lu-search-field"><label for="user_search_box" class="lu-sr-only">{{ __('laravelusers::forms.search-users-ph') }}</label><div class="lu-input-group {{ \jeremykenedy\laravelusers\Support\Frontend::classes('control') }}"><input class="lu-input {{ \jeremykenedy\laravelusers\Support\Frontend::classes('input') }}" type="search" id="user_search_box" name="user_search_box" placeholder="{{ __('laravelusers::forms.search-users-ph') }}" maxlength="255" required></div></div>
                 <button class="lu-button" type="submit">@include('laravelusers::partials.icon', ['name' => 'search']) {{ __('laravelusers::ui.search') }}</button>
                 <button class="lu-button lu-secondary" type="reset" hidden>@include('laravelusers::partials.icon', ['name' => 'close']) {{ __('laravelusers::ui.clear') }}</button>
             </form>
             <p id="lu-search-status" class="lu-pad lu-muted" role="status" hidden></p>
         @endif
         @include('laravelusers::partials.bulk-actions', ['modern' => true, 'deleted' => false])
-        <div class="lu-scroll {{ $tailwind ? 'lu:overflow-x-auto' : 'table-responsive' }}">
-            <table data-lu-view="users" class="{{ $tailwind ? 'lu:w-full lu:text-left' : 'table' }}" data-lu-table>
+        <div class="lu-scroll {{ \jeremykenedy\laravelusers\Support\Frontend::classes('scroll') }}">
+            <table data-lu-view="users" class="{{ \jeremykenedy\laravelusers\Support\Frontend::classes('table') }}" data-lu-table>
                 <caption>{{ __('laravelusers::ui.directory') }}</caption>
                 <thead><tr>
                     @if(config('laravelusers.avatar.enabled', false) && (!config('laravelusers.bulkActions', false) || config('laravelusers.enabledDatatablesJs', false)))<th scope="col" data-lu-no-sort><span class="lu-sr-only sr-only">{{ __('laravelusers::ui.avatar') }}</span></th>@endif

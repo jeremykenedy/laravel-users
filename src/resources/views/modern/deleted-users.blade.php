@@ -1,11 +1,11 @@
 @extends('laravelusers::modern.page')
 @section('template_title', __('laravelusers::laravelusers.show-deleted-users'))
 @section('users_content')
-    <section class="lu-panel">
+    <section class="lu-panel{{ \jeremykenedy\laravelusers\Support\Frontend::stylesheet() ? ' '.\jeremykenedy\laravelusers\Support\Frontend::classes('panel') : '' }}">
         <header class="lu-heading lu-card-heading"><h1>{{ __('laravelusers::laravelusers.show-deleted-users') }}</h1><a class="lu-button lu-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
         @include('laravelusers::partials.bulk-actions', ['modern' => true, 'deleted' => true])
-        <div class="lu-scroll">
-            <table data-lu-view="deleted" data-lu-table>
+        <div class="lu-scroll{{ \jeremykenedy\laravelusers\Support\Frontend::stylesheet() ? ' '.\jeremykenedy\laravelusers\Support\Frontend::classes('scroll') : '' }}">
+            <table data-lu-view="deleted" @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet()) class="{{ \jeremykenedy\laravelusers\Support\Frontend::classes('table') }}" @endif data-lu-table>
                 <caption>{{ __('laravelusers::laravelusers.show-deleted-users') }}</caption>
                 <thead><tr>@if(config('laravelusers.avatar.enabled', false) && (!config('laravelusers.bulkActions', false) || config('laravelusers.enabledDatatablesJs', false)))<th data-lu-no-sort><span class="lu-sr-only sr-only">{{ __('laravelusers::ui.avatar') }}</span></th>@endif
                             @if(config('laravelusers.bulkActions', false))@include('laravelusers::partials.select-all')@endif<th scope="col">{{ __('laravelusers::laravelusers.users-table.id') }}</th><th scope="col">{{ __('laravelusers::laravelusers.users-table.name') }}</th><th scope="col">{{ __('laravelusers::laravelusers.users-table.email') }}</th>@if(config('laravelusers.rolesEnabled'))<th scope="col">{{ __('laravelusers::laravelusers.users-table.role') }}</th>@endif

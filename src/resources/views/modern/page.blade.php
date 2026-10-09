@@ -9,11 +9,12 @@
     @include('laravelusers::partials.user-menu-styles')
     @include('laravelusers::partials.settings-styles')
     @include('laravelusers::partials.notification-styles')
+    @include('laravelusers::modern.framework-styles')
 @endsection
 
 @section('content')
     @php($tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind')
-    <main id="laravelusers" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', false) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}" class="lu-shell laravel-users-main-card {{ $tailwind ? 'lu:mx-auto lu:max-w-6xl lu:px-6 lu:py-8' : 'container py-4' }}">
+    <main id="laravelusers" data-lu-css="{{ \jeremykenedy\laravelusers\Support\Frontend::framework() }}" data-lu-table-buttons-icon-only="{{ config('laravelusers.tableButtonsIconOnly', false) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" data-lu-responsive-table="{{ config('laravelusers.responsiveTable', false) ? 'true' : 'false' }}" data-lu-responsive-buttons="{{ config('laravelusers.responsiveButtons', false) && config('laravelusers.iconsEnabled', true) ? 'true' : 'false' }}" data-lu-full-width="{{ config('laravelusers.fullWidth', false) ? 'true' : 'false' }}" class="lu-shell laravel-users-main-card {{ \jeremykenedy\laravelusers\Support\Frontend::classes('shell') }}">
         @if(config('laravelusers.showHeader', true))
         @if(config('laravelusers.headerView'))
             @include(config('laravelusers.headerView'))
@@ -67,4 +68,5 @@
     @include('laravelusers::scripts.account')
     @include('laravelusers::scripts.account-tabs')
     @include('laravelusers::scripts.edit-tabs')
+    @include('laravelusers::partials.framework-module')
 @endsection

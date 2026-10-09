@@ -1,8 +1,8 @@
     @foreach($fields as $field => $label)
-        <div class="lu-field">
-            <label for="{{ $field }}">{{ __('laravelusers::forms.'.$label) }}</label>
-            <div class="lu-control"><div class="lu-input-group">
-            <input class="lu-input {{ $tailwind ? 'lu:block lu:w-full lu:rounded-lg' : 'form-control' }}" id="{{ $field }}" name="{{ $field }}"
+        <div class="lu-field {{ \jeremykenedy\laravelusers\Support\Frontend::classes('field') }}">
+            <label class="{{ \jeremykenedy\laravelusers\Support\Frontend::classes('field-label') }}" for="{{ $field }}">{{ __('laravelusers::forms.'.$label) }}</label>
+            <div class="lu-control {{ \jeremykenedy\laravelusers\Support\Frontend::classes('field-control') }}"><div class="lu-input-group {{ \jeremykenedy\laravelusers\Support\Frontend::classes('control') }}">
+            <input class="lu-input {{ \jeremykenedy\laravelusers\Support\Frontend::classes('input') }}" id="{{ $field }}" name="{{ $field }}"
                 type="{{ str_contains($field, 'password') ? 'password' : ($field === 'email' ? 'email' : 'text') }}"
                 @if(!str_contains($field, 'password')) value="{{ old($field, isset($user) ? $user->$field : '') }}" maxlength="255" required @else autocomplete="new-password" @if(!isset($user)) required @endif @endif
                 @if($errors->has($field)) aria-invalid="true" aria-describedby="{{ $field }}-error" @elseif(isset($user) && $field === 'password') aria-describedby="password-help" @endif>

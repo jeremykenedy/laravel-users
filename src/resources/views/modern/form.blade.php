@@ -21,10 +21,10 @@
     </div>
     <div @if($editing) id="lu-edit-roles" role="tabpanel" aria-labelledby="lu-edit-tab-roles" data-lu-edit-panel="roles" @endif>
     @if($rolesEnabled)
-        <div class="lu-field">
-            <label for="role">{{ __('laravelusers::forms.create_user_label_role') }}</label>
-            <div class="lu-control"><div class="lu-input-group">
-            <select class="lu-input {{ $tailwind ? 'lu:w-full' : 'form-select' }}" id="role" name="{{ isset($user) ? 'role[]' : 'role' }}" @if(isset($user)) multiple @endif required @if($errors->has('role')) aria-invalid="true" aria-describedby="role-error" @endif>
+        <div class="lu-field {{ \jeremykenedy\laravelusers\Support\Frontend::classes('field') }}">
+            <label class="{{ \jeremykenedy\laravelusers\Support\Frontend::classes('field-label') }}" for="role">{{ __('laravelusers::forms.create_user_label_role') }}</label>
+            <div class="lu-control {{ \jeremykenedy\laravelusers\Support\Frontend::classes('field-control') }}"><div class="lu-input-group {{ \jeremykenedy\laravelusers\Support\Frontend::classes('control') }}">
+            <select class="lu-input {{ \jeremykenedy\laravelusers\Support\Frontend::classes('select') }}" id="role" name="{{ isset($user) ? 'role[]' : 'role' }}" @if(isset($user)) multiple @endif required @if($errors->has('role')) aria-invalid="true" aria-describedby="role-error" @endif>
                 <option value="">{{ __('laravelusers::forms.create_user_ph_role') }}</option>
                 @foreach($roles as $role)
                     <option value="{{ $role->id }}" {{ in_array((string) $role->id, array_map('strval', (array) old('role', $currentRole ?? [])), true) ? 'selected' : '' }}>{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>

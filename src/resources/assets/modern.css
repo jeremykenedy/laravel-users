@@ -109,6 +109,57 @@
 #laravelusers .lu-scroll {
     overflow-x: auto;
 }
+#laravelusers .lu-native-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 16px;
+}
+#laravelusers .lu-native-user-card {
+    min-width: 0;
+}
+#laravelusers .lu-native-user-card .lu-heading {
+    margin-bottom: 16px;
+}
+#laravelusers .lu-native-user-card h2 {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#laravelusers .lu-native-user-card .lu-details > div {
+    display: grid;
+    grid-template-columns: minmax(80px, 1fr) 2fr;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--lu-border);
+}
+#laravelusers .lu-native-user-card .lu-actions {
+    margin-top: 16px;
+}
+#laravelusers .lu-native-sort {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+#laravelusers .lu-native-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+#laravelusers .lu-native-profile > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#laravelusers .lu-native-profile p {
+    margin: 4px 0 0;
+}
 #laravelusers table {
     width: 100%;
     border-collapse: collapse;
@@ -350,6 +401,28 @@
 }
 #laravelusers .lu-modal::backdrop {
     background: #0008;
+}
+#laravelusers .lu-native-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    overflow-y: auto;
+    background: #11182780;
+}
+#laravelusers .lu-email-dialog.lu-native-dialog[aria-modal="true"] {
+    display: block;
+    width: min(560px, 100%);
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    border: 1px solid var(--lu-border);
+    border-radius: 8px;
+    background: var(--lu-bg);
+    color: var(--lu-text);
 }
 #laravelusers .lu-modal-footer {
     padding: 16px 24px;

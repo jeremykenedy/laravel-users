@@ -1,0 +1,45 @@
+#laravelusers[data-lu-css="foundation"] {
+    --lu-bg: #fff;
+    --lu-text: #0a0a0a;
+    --lu-muted: #4d4d4d;
+    --lu-border: #cacaca;
+    --lu-accent: #126195;
+    --lu-soft: #f2f2f2;
+    --lu-primary: #126195;
+    --lu-on-primary: #fff;
+    --lu-success: #237c39;
+    --lu-on-success: #fff;
+    --lu-danger: #b52a1f;
+    --lu-on-danger: #fff;
+    --lu-control-radius: 0;
+    --lu-field-radius: 0;
+    --lu-panel-radius: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#laravelusers[data-lu-css="foundation"][data-lu-theme="dark"] {
+    --lu-bg: #182c3b;
+    --lu-text: #f2f5f7;
+    --lu-muted: #bbcad4;
+    --lu-border: #5a6d7a;
+    --lu-accent: #8dccf5;
+    --lu-soft: #11212d;
+    --lu-primary: #8dccf5;
+    --lu-on-primary: #11212d;
+    --lu-success: #a2daa8;
+    --lu-on-success: #173d21;
+    --lu-danger: #ffb4a9;
+    --lu-on-danger: #4b1b15;
+}
+#laravelusers[data-lu-css="foundation"] .lu-field.grid-x {
+    display: flex;
+    gap: 0;
+}
+#laravelusers[data-lu-css="foundation"] .lu-field .cell {
+    min-width: 0;
+}
+#laravelusers[data-lu-css="foundation"] .lu-field-error {
+    color: var(--lu-danger);
+}
+#laravelusers[data-lu-css="foundation"] .lu-panel {
+    box-shadow: none;
+}

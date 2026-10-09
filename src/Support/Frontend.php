@@ -18,7 +18,8 @@ class Frontend
 
     public static function classes(string $element): string
     {
-        $classes = match (self::framework()) {
+        $framework = self::framework();
+        $classes = match ($framework) {
             'tailwind' => [
                 'shell'  => 'lu:mx-auto lu:max-w-6xl lu:px-6 lu:py-8',
                 'panel'  => 'lu:rounded-xl lu:border lu:shadow-sm',
@@ -65,7 +66,7 @@ class Frontend
                 'scroll' => 'table-responsive',
                 'table'  => 'table',
                 'input'  => 'form-control',
-                'select' => 'form-select',
+                'select' => $framework === 'bootstrap4' ? 'form-control' : 'form-select',
             ],
         };
 

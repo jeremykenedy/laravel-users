@@ -16,9 +16,13 @@
         a { color: #2456c2; }
         @media (prefers-color-scheme: dark) { body { background: #141d2b; color: #edf2fa; } main { background: #253145; border-color: #42516a; } a { color: #94b9ff; } }
     </style>
+    @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet())
+        @include('laravelusers::modern.styles')
+        @include('laravelusers::modern.framework-styles')
+    @endif
 </head>
 <body>
-<main>
+<main @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet()) id="laravelusers" class="lu-public-page" data-lu-css="{{ \jeremykenedy\laravelusers\Support\Frontend::framework() }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" @endif>
     @if($completed ?? false)
         <h1>{{ __('laravelusers::ui.account_'.$completed.'_complete') }}</h1>
         <p>{{ __('laravelusers::ui.account_'.$completed.'_done') }}</p>
@@ -29,12 +33,16 @@
         <p>{{ __('laravelusers::ui.account_link_once') }}</p>
         <form method="POST" action="{{ route('users.account-link.confirm', ['token' => $token]) }}">
             @csrf
-            <button type="submit" @if($link->action === 'force_delete') class="danger" @endif>{{ __('laravelusers::ui.account_'.$link->action) }}</button>
+            <button type="submit" @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet()) class="lu-button{{ $link->action === 'force_delete' ? ' lu-danger' : '' }}" @elseif($link->action === 'force_delete') class="danger" @endif>{{ __('laravelusers::ui.account_'.$link->action) }}</button>
         </form>
     @else
         <h1>{{ __('laravelusers::ui.account_link_invalid') }}</h1>
         <p>{{ __('laravelusers::ui.account_link_invalid_help') }}</p>
     @endif
 </main>
+@if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet())
+    @include('laravelusers::scripts.theme')
+    @include('laravelusers::partials.framework-module')
+@endif
 </body>
 </html>

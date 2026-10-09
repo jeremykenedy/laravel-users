@@ -1,0 +1,79 @@
+#laravelusers[data-lu-css="materialize"] {
+    --lu-bg: #fff;
+    --lu-text: #24332f;
+    --lu-muted: #52645e;
+    --lu-border: #c6d7d0;
+    --lu-accent: #00695c;
+    --lu-soft: #eef5f2;
+    --lu-primary: #00695c;
+    --lu-on-primary: #fff;
+    --lu-success: #2e7d32;
+    --lu-on-success: #fff;
+    --lu-danger: #c62828;
+    --lu-on-danger: #fff;
+    --lu-control-radius: 2px;
+    --lu-field-radius: 2px;
+    --lu-panel-radius: 4px;
+}
+#laravelusers[data-lu-css="materialize"][data-lu-theme="dark"] {
+    --lu-bg: #17332d;
+    --lu-text: #edf6f2;
+    --lu-muted: #b4c9c1;
+    --lu-border: #55726a;
+    --lu-accent: #80cbc4;
+    --lu-soft: #102620;
+    --lu-primary: #80cbc4;
+    --lu-on-primary: #102620;
+    --lu-success: #a5d6a7;
+    --lu-on-success: #17332d;
+    --lu-danger: #ef9a9a;
+    --lu-on-danger: #461a1a;
+}
+#laravelusers[data-lu-css="materialize"] .lu-panel {
+    box-shadow: 0 2px 5px #0002, 0 1px 3px #0002;
+}
+#laravelusers[data-lu-css="materialize"] .lu-button {
+    box-shadow: 0 2px 3px #0002;
+}
+#laravelusers[data-lu-css="materialize"] table.highlight > tbody > tr {
+    transition: none;
+}
+#laravelusers[data-lu-css="materialize"] .lu-field.row {
+    display: block;
+    margin: 0 -12px 20px;
+}
+#laravelusers[data-lu-css="materialize"] .lu-field.row .col {
+    margin-left: 0;
+}
+#laravelusers[data-lu-css="materialize"] :is(.lu-toolbar, .lu-actions, .lu-settings-tabs, .lu-account-tabs) {
+    height: auto;
+    width: auto;
+    line-height: inherit;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+}
+#laravelusers[data-lu-css="materialize"] :is(.lu-toolbar, .lu-actions) a {
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+}
+#laravelusers[data-lu-css="materialize"] label {
+    color: var(--lu-text);
+}
+#laravelusers[data-lu-css="materialize"] .lu-field-error {
+    color: var(--lu-danger);
+}
+#laravelusers[data-lu-css="materialize"] .lu-input:focus {
+    border-color: var(--lu-accent);
+    box-shadow: 0 1px 0 var(--lu-accent);
+}
+#laravelusers[data-lu-css="materialize"] textarea {
+    height: auto;
+}
+@media (max-width: 600px) {
+    #laravelusers[data-lu-css="materialize"] .lu-field > label {
+        text-align: start;
+        padding-top: 0;
+    }
+}

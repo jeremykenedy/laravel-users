@@ -1,0 +1,156 @@
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) {
+    color-scheme: light;
+    accent-color: var(--lu-primary);
+    transition: none;
+    background: transparent;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) label {
+    color: var(--lu-text);
+}
+#laravelusers.lu-public-page[data-lu-css] {
+    width: min(480px, calc(100% - 32px));
+    max-width: 480px;
+    margin: 12vh auto;
+    padding: 32px;
+    border: 1px solid var(--lu-border);
+    border-radius: var(--lu-panel-radius);
+    background: var(--lu-bg);
+    color: var(--lu-text);
+}
+body:has(#laravelusers.lu-public-page[data-lu-theme="dark"]) {
+    background: #111827;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(a, button, input, select, textarea) {
+    transition-property: box-shadow, outline-offset;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"])[data-lu-theme="dark"] {
+    color-scheme: dark;
+    --lu-table-stripe: var(--lu-soft);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-panel {
+    border-radius: var(--lu-panel-radius);
+    background: var(--lu-bg);
+    color: var(--lu-text);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(table, thead, tbody, tfoot) {
+    background-color: var(--lu-bg);
+    color: var(--lu-text);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-button {
+    height: auto;
+    margin: 0;
+    border-radius: var(--lu-control-radius);
+    background: var(--lu-primary);
+    color: var(--lu-on-primary);
+    line-height: 1.4;
+    text-decoration: none;
+    text-transform: none;
+    letter-spacing: normal;
+    transition: box-shadow .15s ease;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-button.lu-secondary {
+    background: var(--lu-bg);
+    color: var(--lu-text);
+    border-color: var(--lu-border);
+    box-shadow: none;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-button.lu-success {
+    background: var(--lu-success);
+    color: var(--lu-on-success);
+    border-color: transparent;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-button.lu-danger {
+    background: var(--lu-danger);
+    color: var(--lu-on-danger);
+    border-color: transparent;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-input, .lu-email-input, .lu-column-filter) {
+    display: block;
+    box-sizing: border-box;
+    margin-top: 0;
+    border: 1px solid var(--lu-border);
+    border-radius: var(--lu-field-radius);
+    background-color: var(--lu-bg);
+    color: var(--lu-text);
+    box-shadow: none;
+    font: inherit;
+    transition: box-shadow .15s ease;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-input, .lu-email-input)[aria-invalid="true"] {
+    border-color: var(--lu-danger);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-input-group .lu-input {
+    margin-bottom: 0;
+    border-radius: var(--lu-field-radius) 0 0 var(--lu-field-radius);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-input-group:not(:has(.lu-input-icon)) .lu-input {
+    border-radius: var(--lu-field-radius);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-input-icon {
+    border-radius: 0 var(--lu-field-radius) var(--lu-field-radius) 0;
+    background: var(--lu-soft);
+    color: var(--lu-muted);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) select {
+    display: block;
+    color: var(--lu-text);
+    background-color: var(--lu-bg);
+    border-color: var(--lu-border);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) select[multiple] {
+    height: auto;
+    min-height: 88px;
+    padding-right: 12px;
+    background-image: none;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(input[type="checkbox"], input[type="radio"]) {
+    position: static;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    opacity: 1;
+    pointer-events: auto;
+    appearance: auto;
+    flex-shrink: 0;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-column-options, .lu-mobile-filter-fields, .lu-email-options, .lu-user-menu-items) {
+    border-radius: var(--lu-panel-radius);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-settings-tabs, .lu-account-tabs) button {
+    background: transparent;
+    color: var(--lu-muted);
+    border-radius: 0;
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-settings-tabs, .lu-account-tabs) button[aria-selected="true"] {
+    color: var(--lu-accent);
+    border-bottom-color: var(--lu-accent);
+    background: var(--lu-soft);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :is(.lu-modal, .lu-email-dialog) {
+    border-radius: var(--lu-panel-radius);
+    background: var(--lu-bg);
+    color: var(--lu-text);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-email-heading {
+    background: var(--lu-soft);
+    color: var(--lu-text);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"])[data-lu-table-view="cards"] [data-lu-table] tbody tr {
+    border-radius: var(--lu-panel-radius);
+    background: var(--lu-bg);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) .lu-table-toolbar [aria-pressed="true"] {
+    background: var(--lu-primary);
+    color: var(--lu-on-primary);
+}
+#laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) :disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+@media (prefers-reduced-motion: reduce) {
+    #laravelusers:is([data-lu-css="materialize"], [data-lu-css="material3"], [data-lu-css="bulma"], [data-lu-css="foundation"]) * {
+        animation: none;
+        transition: none;
+        scroll-behavior: auto;
+    }
+}
