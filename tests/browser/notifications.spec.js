@@ -6,6 +6,7 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
             await page.goto(`/__browser/${framework}?settings=1&accounts=1&appearance=1&soft-deletes=1&full-width=${fullWidth}`);
             const token = await page.locator('meta[name="csrf-token"]').getAttribute('content');
             const legacy = framework === 'bootstrap4';
+            const contentBounds = new Map();
             const pages = [
                 ['/users/settings', legacy ? '.container > .card' : '.lu-settings-panel'],
                 ['/users', legacy ? '.container .card' : '.lu-panel'],
@@ -36,9 +37,15 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                 await expect(alert).toContainText('User settings saved.');
                 await expect(page.locator('.lu-breadcrumbs [aria-current="page"]')).toBeVisible();
 
-                for (const width of [390, 768, 1024, 1200, 1440]) {
+                for (const width of [320, 390, 768, 1024, 1200, 1440]) {
                     await page.setViewportSize({ width, height: 1000 });
                     const content = await page.locator(contentSelector).first().boundingBox();
+                    if (contentBounds.has(width)) {
+                        expect(content.x, `${path}, ${width}px, shared left`).toBeCloseTo(contentBounds.get(width).x, 1);
+                        expect(content.width, `${path}, ${width}px, shared width`).toBeCloseTo(contentBounds.get(width).width, 1);
+                    } else {
+                        contentBounds.set(width, { x: content.x, width: content.width });
+                    }
                     const header = await page.locator('#laravelusers.lu-shell > .lu-toolbar, #app > .navbar-laravel > .container').evaluate(element => {
                         const box = element.getBoundingClientRect();
                         const style = getComputedStyle(element);
@@ -59,10 +66,39 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                         expect(Math.abs(box.width - content.width), `${path}, ${width}px, ${element} width`).toBeLessThanOrEqual(2);
                     }
                     expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path}, ${width}px`).toBeLessThanOrEqual(width);
+                    if (path === '/users/settings') {
+                        const toggler = page.locator('.navbar-toggler');
+                        if (await toggler.isVisible()) await toggler.click();
+                        await page.locator('.lu-user-menu > summary').click();
+                        const menu = await page.locator('.lu-user-menu-items').boundingBox();
+                        expect(menu.x, `${width}px, opened menu left`).toBeGreaterThanOrEqual(content.x);
+                        expect(menu.x + menu.width, `${width}px, opened menu right`).toBeLessThanOrEqual(content.x + content.width);
+                        await page.locator('.lu-user-menu > summary').click();
+                        if (await toggler.isVisible()) await toggler.click();
+                    }
                 }
 
                 await alert.getByRole('button', { name: 'Close', exact: true }).click();
                 await expect(alert).toBeHidden();
+            }
+
+            const brand = page.locator('.lu-brand, .navbar-brand');
+            await brand.hover();
+            await expect(brand).toHaveCSS('text-decoration-line', 'none');
+            await brand.focus();
+            await expect(brand).toHaveCSS('text-decoration-line', 'none');
+            await expect(brand).toHaveAttribute('href', /\/users$/);
+            await brand.click();
+            await expect(page).toHaveURL('/users');
+
+            const publicResponse = await page.goto('/users/account-link/invalid');
+            expect(publicResponse.status()).toBe(410);
+            for (const width of contentBounds.keys()) {
+                await page.setViewportSize({ width, height: 1000 });
+                const publicContent = await page.locator('main').boundingBox();
+                expect(publicContent.x, `public confirmation, ${width}px, shared left`).toBeCloseTo(contentBounds.get(width).x, 1);
+                expect(publicContent.width, `public confirmation, ${width}px, shared width`).toBeCloseTo(contentBounds.get(width).width, 1);
+                expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
             }
         });
     }
