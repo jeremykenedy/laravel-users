@@ -282,6 +282,7 @@ class MiddlewareAccessTest extends TestCase
             $this->markTestSkipped('This regression requires the optional Spatie integration.');
         }
         $this->app->register(PermissionServiceProvider::class);
+        config(['permission.testing' => true]);
         $this->app->make(PermissionRegistrar::class)->initializeCache();
         if (class_exists('CreatePermissionTables', false)) {
             (new \CreatePermissionTables())->up();
