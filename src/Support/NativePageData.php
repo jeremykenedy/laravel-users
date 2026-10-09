@@ -629,7 +629,6 @@ class NativePageData
                     $fields[] = $this->field('toast.'.$key, __('laravelusers::ui.toast_'.$key), $field['type'], $values[$key], $attributes);
                 }
             }
-
         }
         if ($data['accessAvailable'] ?? false) {
             foreach (UserAccess::ACTIONS as $action) {
