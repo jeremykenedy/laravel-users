@@ -27,7 +27,8 @@ class ComposerPackagesTest extends TestCase
         foreach (['packages.php', 'services.php', 'config.php'] as $file) {
             File::put($this->fixturePath.'/bootstrap/cache/'.$file, '<?php return [];');
         }
-        File::put($this->fixturePath.'/bin/composer', '#!'.PHP_BINARY."\n".<<<'PHP'
+        File::put($this->fixturePath.'/bin/composer', "#!/bin/sh\nexec ".escapeshellarg(PHP_BINARY).' '.escapeshellarg($this->fixturePath.'/bin/composer.php').' "$@"'."\n");
+        File::put($this->fixturePath.'/bin/composer.php', <<<'PHP'
 <?php
 file_put_contents('commands.jsonl', json_encode(array_slice($argv, 1))."\n", FILE_APPEND);
 if (is_file('composer-fails')) {

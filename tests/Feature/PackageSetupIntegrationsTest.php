@@ -8,6 +8,8 @@ use jeremykenedy\LaravelRoles\RolesServiceProvider;
 use Jeremykenedy\LaravelToast\Providers\ToastServiceProvider;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Test\TestCase;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Spatie\Permission\PermissionServiceProvider;
 
 class PackageSetupIntegrationsTest extends TestCase
@@ -40,6 +42,13 @@ PHP);
         parent::tearDown();
     }
 
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_spatie_setup_preserves_host_configuration_and_only_runs_package_migrations(): void
     {
         $this->setupRoles('spatie', PermissionServiceProvider::class, 'permission');
