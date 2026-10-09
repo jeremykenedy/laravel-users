@@ -4,6 +4,8 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Support\Facades\Blade;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class IconTest extends TestCase
 {
@@ -15,7 +17,7 @@ class IconTest extends TestCase
         $defined = $caseMatches[1];
         $used = [];
 
-        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($viewRoot)) as $file) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($viewRoot)) as $file) {
             if (!$file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }

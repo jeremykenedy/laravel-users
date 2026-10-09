@@ -223,7 +223,10 @@
         clearTimeout(timer);
         if (request) request.abort();
         clear.hidden = !input.value.length;
-        if (!input.value.length) return reset();
+        if (!input.value.length) {
+            reset();
+            return;
+        }
         if (!options.searchDebounce) return;
         timer = setTimeout(() => form.requestSubmit(), delay);
     });

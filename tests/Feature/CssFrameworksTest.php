@@ -2,6 +2,8 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Filesystem\Filesystem;
 use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Test\TestCase;
@@ -43,9 +45,9 @@ class CssFrameworksTest extends TestCase
             }
 
             if ($framework === 'material3') {
-                $document = new \DOMDocument();
+                $document = new DOMDocument();
                 $document->loadHTML($response->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
-                $scripts = (new \DOMXPath($document))->query('//script[@src="'.PublicAssets::url('material3.js').'"]');
+                $scripts = (new DOMXPath($document))->query('//script[@src="'.PublicAssets::url('material3.js').'"]');
                 $this->assertCount(1, $scripts);
                 $this->assertSame('module', $scripts->item(0)->getAttribute('type'));
                 $this->assertTrue($scripts->item(0)->hasAttribute('data-navigate-once'));

@@ -53,7 +53,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_modified_state_cannot_execute_host_routes_or_restore_a_different_actor(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [, $target, $state] = $this->begin();
         $state['actor_id'] = (string) $target->id;
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden()->assertDontSee('Host dashboard');
         $this->assertGuest();

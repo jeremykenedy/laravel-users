@@ -3,20 +3,23 @@ import { readFile } from 'node:fs/promises';
 import { build } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import actions from './icon-actions.json' with { type: 'json' };
 
 const directory = fileURLToPath(new URL('.', import.meta.url));
+// The icon source is a fixed package asset, never a caller-supplied path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const iconSource = await readFile(new URL('../../views/partials/icon.blade.php', import.meta.url), 'utf8');
-const iconNames = new Set(Object.values(JSON.parse(await readFile(new URL('./icon-actions.json', import.meta.url), 'utf8'))));
-const icons = {};
+const iconNames = new Set(Object.values(actions));
+const icons = new Map();
 for (const [, name, markup] of iconSource.matchAll(/@case\('([^']+)'\)([\s\S]*?)@break/g)) {
     if (!iconNames.has(name)) continue;
     const shapes = [];
     for (const [, tag, source] of markup.matchAll(/<(path|circle|rect)\b([^>]*)\/>/g)) {
-        const attributes = {};
-        for (const [, name, value] of source.matchAll(/\b(d|cx|cy|r|x|y|width|height|rx|fill)="([^"]*)"/g)) attributes[name] = value;
-        shapes.push({ tag, attributes });
+        const attributes = new Map();
+        for (const [, name, value] of source.matchAll(/\b(d|cx|cy|r|x|y|width|height|rx|fill)="([^"]*)"/g)) attributes.set(name, value);
+        shapes.push({ tag, attributes: Object.fromEntries(attributes) });
     }
-    icons[name] = shapes;
+    icons.set(name, shapes);
 }
 const runtimes = process.argv.slice(2);
 for (const runtime of runtimes.length ? runtimes : ['livewire', 'vue', 'react', 'svelte']) {
@@ -25,7 +28,7 @@ for (const runtime of runtimes.length ? runtimes : ['livewire', 'vue', 'react', 
         configFile: false,
         root: directory,
         plugins: runtime === 'vue' ? [vue()] : runtime === 'svelte' ? [svelte({ configFile: false })] : [],
-        define: { 'process.env.NODE_ENV': JSON.stringify('production'), __LARAVEL_USERS_ICONS__: JSON.stringify(icons) },
+        define: { 'process.env.NODE_ENV': JSON.stringify('production'), __LARAVEL_USERS_ICONS__: JSON.stringify(Object.fromEntries(icons)) },
         build: {
             outDir: fileURLToPath(new URL('../../assets/', import.meta.url)),
             emptyOutDir: false,

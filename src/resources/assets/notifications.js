@@ -81,61 +81,80 @@
             alert.style.bottom = topToast ? '16px' : 'auto';
         }
 
+        function previewOptions(settings) {
+            const options = new Map();
+            for (const control of settings.querySelectorAll('[name^="toast["]:not([type="hidden"])')) {
+                if (!control.reportValidity()) return null;
+                const value = control.type === 'checkbox' ? control.checked : control.type === 'number' ? Number(control.value) : control.value;
+                options.set(control.name.slice(6, -1), value);
+            }
+            return options;
+        }
+
+        function previewAlert(settings) {
+            const alert = settings.querySelector('[data-lu-preview-alert-template]').content.firstElementChild.cloneNode(true);
+            if (!settings.querySelector('[name="notifications_dismissible"][type="checkbox"]').checked) alert.querySelector('[data-lu-dismiss-alert]').remove();
+            root.querySelector('.lu-notifications').append(alert);
+            alignPreviewAlert();
+        }
+
+        function previewStack(options) {
+            const previews = () => Array.from(root.querySelectorAll('[data-lu-preview-toast-stack] [data-lu-toast]'));
+            if (!options.get('stack')) previews().forEach(toast => toast.remove());
+            if (options.get('max_visible') > 0) {
+                while (previews().length >= options.get('max_visible')) previews()[0].remove();
+            }
+            const position = options.get('position');
+            let stack = root.querySelector('[data-lu-preview-toast-stack][data-lu-toast-position="' + position + '"]');
+            if (!stack) {
+                stack = document.createElement('div');
+                stack.className = 'lu-toast-stack';
+                stack.dataset.luPreviewToastStack = 'true';
+                stack.dataset.luToastPosition = position;
+                stack.setAttribute('aria-live', 'polite');
+                root.append(stack);
+            }
+            return stack;
+        }
+
+        function configurePreviewToast(toast, options) {
+            const attributes = {autoDismiss: 'auto_dismiss', duration: 'duration', pauseOnHover: 'pause_on_hover', enterAnimation: 'enter_animation', enterDuration: 'enter_duration', exitAnimation: 'exit_animation', exitDuration: 'exit_duration', border: 'show_border'};
+            for (const [attribute, key] of Object.entries(attributes)) {
+                const name = 'data-' + attribute.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase());
+                toast.setAttribute(name, String(options.get(key)));
+            }
+            toast.dataset.luToastId = 'preview-' + Date.now();
+            toast.dir = options.get('dir');
+            toast.style.opacity = String(options.get('opacity'));
+            if (!options.get('show_icons')) toast.querySelector('.lu-toast-icon').remove();
+            if (!options.get('show_close')) toast.querySelector('[data-lu-dismiss-toast]').remove();
+            const progress = toast.querySelector('.lu-toast-progress');
+            if (!options.get('show_progress') || !options.get('auto_dismiss') || options.get('duration') <= 0) {
+                progress.remove();
+                return;
+            }
+            progress.dataset.position = options.get('progress_position');
+            progress.dataset.direction = options.get('progress_direction');
+        }
+
         function previewNotification(button) {
             const settings = button.closest('.lu-settings-notifications');
             const driver = settings.querySelector('#settings-notifications')?.value || 'alert';
             const toastTemplate = settings.querySelector('[data-lu-preview-toast-template]');
             const useToast = ['toast', 'both'].includes(driver) && toastTemplate;
-            const options = {};
-            if (useToast) {
-                for (const control of settings.querySelectorAll('[name^="toast["]:not([type="hidden"])')) {
-                    if (!control.reportValidity()) return;
-                    const key = control.name.slice(6, -1);
-                    options[key] = control.type === 'checkbox' ? control.checked : control.type === 'number' ? Number(control.value) : control.value;
-                }
-            }
+            const options = useToast ? previewOptions(settings) : new Map();
+            if (!options) return;
 
             root.querySelectorAll('.lu-flash[data-lu-notification-preview]').forEach(alert => alert.remove());
-            if (!useToast || driver === 'both') {
-                const alert = settings.querySelector('[data-lu-preview-alert-template]').content.firstElementChild.cloneNode(true);
-                if (!settings.querySelector('[name="notifications_dismissible"][type="checkbox"]').checked) alert.querySelector('[data-lu-dismiss-alert]').remove();
-                root.querySelector('.lu-notifications').append(alert);
-                alignPreviewAlert();
-            }
+            if (!useToast || driver === 'both') previewAlert(settings);
             if (!useToast) {
                 root.querySelectorAll('[data-lu-preview-toast-stack]').forEach(stack => stack.remove());
                 alignPreviewAlert();
                 return;
             }
-
-            const previews = () => Array.from(root.querySelectorAll('[data-lu-preview-toast-stack] [data-lu-toast]'));
-            if (!options.stack) previews().forEach(toast => toast.remove());
-            if (options.max_visible > 0) {
-                while (previews().length >= options.max_visible) previews()[0].remove();
-            }
-            let stack = root.querySelector('[data-lu-preview-toast-stack][data-lu-toast-position="' + options.position + '"]');
-            if (!stack) {
-                stack = document.createElement('div');
-                stack.className = 'lu-toast-stack';
-                stack.dataset.luPreviewToastStack = 'true';
-                stack.dataset.luToastPosition = options.position;
-                stack.setAttribute('aria-live', 'polite');
-                root.append(stack);
-            }
+            const stack = previewStack(options);
             const toast = toastTemplate.content.firstElementChild.cloneNode(true);
-            const attributes = {autoDismiss: 'auto_dismiss', duration: 'duration', pauseOnHover: 'pause_on_hover', enterAnimation: 'enter_animation', enterDuration: 'enter_duration', exitAnimation: 'exit_animation', exitDuration: 'exit_duration', border: 'show_border'};
-            for (const [attribute, key] of Object.entries(attributes)) toast.dataset[attribute] = String(options[key]);
-            toast.dataset.luToastId = 'preview-' + Date.now();
-            toast.dir = options.dir;
-            toast.style.opacity = String(options.opacity);
-            if (!options.show_icons) toast.querySelector('.lu-toast-icon').remove();
-            if (!options.show_close) toast.querySelector('[data-lu-dismiss-toast]').remove();
-            const progress = toast.querySelector('.lu-toast-progress');
-            if (!options.show_progress || !options.auto_dismiss || options.duration <= 0) progress.remove();
-            else {
-                progress.dataset.position = options.progress_position;
-                progress.dataset.direction = options.progress_direction;
-            }
+            configurePreviewToast(toast, options);
             stack.append(toast);
             prepare(toast);
             alignPreviewAlert();

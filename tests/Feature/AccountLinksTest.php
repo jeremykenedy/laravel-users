@@ -12,6 +12,7 @@ use jeremykenedy\laravelusers\Notifications\UserMessage;
 use jeremykenedy\laravelusers\Support\AccountLinks;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
 class AccountLinksTest extends TestCase
 {
@@ -125,7 +126,7 @@ class AccountLinksTest extends TestCase
         try {
             $this->post($url);
             $this->fail('Expected the account action to fail.');
-        } catch (\RuntimeException $exception) {
+        } catch (RuntimeException $exception) {
             $this->assertSame('The account action could not be completed.', $exception->getMessage());
         }
         $this->assertNull(AccountLink::first()->consumed_at);
@@ -272,7 +273,7 @@ class AccountLinksTest extends TestCase
             foreach ([0, 1] as $index) {
                 $pid = pcntl_fork();
                 if ($pid === -1) {
-                    throw new \RuntimeException('Could not start the concurrent request.');
+                    throw new RuntimeException('Could not start the concurrent request.');
                 }
                 if ($pid === 0) {
                     $this->app['db']->purge('testing');

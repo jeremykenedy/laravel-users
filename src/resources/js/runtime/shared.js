@@ -5,8 +5,17 @@ export function sameOriginUrl(value, origin = window.location.href) {
     return url;
 }
 
+export function getOwnValue(values, key) {
+    return values != null && Object.hasOwn(values, key) ? Reflect.get(Object(values), key) : undefined;
+}
+
+export function setOwnValue(values, key, value) {
+    if (['__proto__', 'constructor', 'prototype'].includes(key)) throw new Error('Invalid field name.');
+    Object.defineProperty(values, key, { value, writable: true, enumerable: true, configurable: true });
+}
+
 export function getValue(values, key) {
-    return key.split('.').reduce((value, part) => value?.[part], values);
+    return key.split('.').reduce(getOwnValue, values);
 }
 
 export function displayValue(field, values) {
@@ -17,8 +26,11 @@ export function setValue(values, key, value) {
     const parts = key.split('.');
     if (parts.some(part => ['__proto__', 'constructor', 'prototype'].includes(part))) throw new Error('Invalid field name.');
     let target = values;
-    for (const part of parts.slice(0, -1)) target = target[part] ??= {};
-    target[parts.at(-1)] = value;
+    for (const part of parts.slice(0, -1)) {
+        if (getOwnValue(target, part) == null) setOwnValue(target, part, {});
+        target = getOwnValue(target, part);
+    }
+    setOwnValue(target, parts.at(-1), value);
 }
 
 export function fieldVisible(field, values) {
@@ -71,12 +83,12 @@ export async function request(url, runtime, csrf, options = {}) {
 }
 
 export function statusIcon(status) {
-    return {
+    return new Map(Object.entries({
         queued: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2',
         running: 'M21 12a9 9 0 1 1-9-9',
         completed: 'm5 12 4 4L19 6',
         failed: 'm12 3 10 18H2L12 3m0 6v5m0 3v1',
-    }[status] ?? '';
+    })).get(status) ?? '';
 }
 
 export function cellText(user, column) {
@@ -111,8 +123,8 @@ export function passwordFeedback(value, confirmation, config) {
     const length = Array.from(value ?? '').length;
     const checks = { length: length >= rules.min && (rules.max === null || length <= rules.max), mixed_case: /\p{Ll}/u.test(value) && /\p{Lu}/u.test(value), numbers: /\p{N}/u.test(value), symbols: /[^\p{L}\p{N}\s]/u.test(value) };
     let score = Number(checks.length) + Number(length >= Math.max(12, rules.min)) + Number(checks.mixed_case) + Number(checks.numbers && checks.symbols);
-    if (!checks.length || ['mixed_case', 'numbers', 'symbols'].some(rule => rules[rule] && !checks[rule])) score = Math.min(score, 1);
-    return { score, label: config.strength_labels[Math.max(0, score - 1)], checks, mismatch: Boolean(value || confirmation) && value !== confirmation };
+    if (!checks.length || ['mixed_case', 'numbers', 'symbols'].some(rule => getOwnValue(rules, rule) && !getOwnValue(checks, rule))) score = Math.min(score, 1);
+    return { score, label: getOwnValue(config.strength_labels, Math.max(0, score - 1)), checks, mismatch: Boolean(value || confirmation) && value !== confirmation };
 }
 
 export function observeDialogs(root, dismiss) {

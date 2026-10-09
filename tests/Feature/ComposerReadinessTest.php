@@ -5,6 +5,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 use Illuminate\Support\Facades\File;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Test\TestCase;
+use stdClass;
 
 class ComposerReadinessTest extends TestCase
 {
@@ -22,7 +23,7 @@ class ComposerReadinessTest extends TestCase
         }
         File::put(base_path('bin/composer'), "#!/bin/sh\nexit 1\n");
         chmod(base_path('bin/composer'), 0755);
-        File::put(base_path('composer.json'), json_encode(['name' => 'example/application', 'require' => new \stdClass()]));
+        File::put(base_path('composer.json'), json_encode(['name' => 'example/application', 'require' => new stdClass()]));
         File::put(base_path('vendor/composer/installed.json'), json_encode(['packages' => [['name' => 'example/package', 'version' => '1.0.0']]]));
         File::put(base_path('artisan'), '<?php');
         File::put(base_path('composer.lock'), '{}');

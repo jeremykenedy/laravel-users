@@ -2,6 +2,7 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use CreatePermissionTables;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use ReflectionClass;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Models\Permission as SpatiePermission;
@@ -247,7 +249,7 @@ class MiddlewareAccessTest extends TestCase
         if (!class_exists(RolesServiceProvider::class)) {
             $this->markTestSkipped('This regression requires the optional Laravel Roles integration.');
         }
-        config(['roles' => require dirname((new \ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
+        config(['roles' => require dirname((new ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
         Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
         foreach (['roles', 'permissions'] as $name) {
             Schema::create($name, function (Blueprint $table) use ($name) {
@@ -285,10 +287,10 @@ class MiddlewareAccessTest extends TestCase
         config(['permission.testing' => true]);
         $this->app->make(PermissionRegistrar::class)->initializeCache();
         if (class_exists('CreatePermissionTables', false)) {
-            (new \CreatePermissionTables())->up();
+            (new CreatePermissionTables())->up();
         } else {
-            $migration = require dirname((new \ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
-            (is_object($migration) ? $migration : new \CreatePermissionTables())->up();
+            $migration = require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
+            (is_object($migration) ? $migration : new CreatePermissionTables())->up();
         }
         Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
 

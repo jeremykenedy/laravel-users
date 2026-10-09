@@ -241,7 +241,7 @@ test('standalone navigation components work without the package shell', async ({
 
 test.describe('Optional package controls', () => {
     let packageWorker;
-    test.beforeAll(async ({}, testInfo) => { packageWorker = await startPackageWorker(Number(new URL(testInfo.project.use.baseURL).port)); });
+    test.beforeAll(async ({baseURL}) => { packageWorker = await startPackageWorker(Number(new URL(baseURL).port)); });
     test.afterAll(() => { packageWorker?.kill('SIGTERM'); });
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {

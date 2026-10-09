@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use jeremykenedy\LaravelRoles\RolesServiceProvider;
+use ReflectionClass;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -57,7 +58,7 @@ class NativeRoleBrowser
             $userModel::create(['name' => 'Morgan Hayes', 'email' => 'user0@example.com', 'password' => bcrypt('password')]);
             $userModel::create(['name' => 'Alex Rivers', 'email' => 'user1@example.com', 'password' => bcrypt('password')]);
         }
-        $directory = dirname((new \ReflectionClass($provider))->getFileName());
+        $directory = dirname((new ReflectionClass($provider))->getFileName());
         if ($spatie) {
             $app->make(PermissionRegistrar::class)->initializeCache();
             if (!Schema::hasTable('roles')) {

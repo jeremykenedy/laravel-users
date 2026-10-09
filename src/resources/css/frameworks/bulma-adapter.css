@@ -14,8 +14,10 @@
     --lu-control-radius: var(--bulma-radius);
     --lu-field-radius: var(--bulma-radius);
     --lu-panel-radius: var(--bulma-radius-large);
+
     font-family: var(--bulma-family-primary);
 }
+
 #laravelusers[data-lu-css="bulma"][data-lu-theme="dark"] {
     --lu-primary: #a5b5f1;
     --lu-on-primary: #172655;
@@ -24,39 +26,47 @@
     --lu-danger: #ffb0c2;
     --lu-on-danger: #491827;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-field.is-horizontal {
     display: block;
     gap: 24px;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-field .field-body {
     display: block;
     min-width: 0;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-field .field-label {
     margin-right: 0;
     margin-bottom: 6px;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-input-group.control {
     display: flex;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-scroll.table-container {
     margin-bottom: 0;
 }
+
 #laravelusers[data-lu-css="bulma"] .lu-field-error {
     color: var(--lu-danger);
 }
-@media (min-width: 769px) {
+@media (width >= 769px) {
     #laravelusers[data-lu-css="bulma"] .lu-field.is-horizontal {
         display: flex;
     }
+
     #laravelusers[data-lu-css="bulma"] .lu-field .field-label {
         flex: 1;
     }
+
     #laravelusers[data-lu-css="bulma"] .lu-field .field-body {
         flex: 3;
     }
 }
-@media (max-width: 768px) {
+@media (width <= 768px) {
     #laravelusers[data-lu-css="bulma"] .lu-field > label {
         text-align: start;
         padding-top: 0;

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use jeremykenedy\laravelusers\Notifications\WelcomeUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
 class WelcomeTest extends TestCase
 {
@@ -120,7 +121,7 @@ class WelcomeTest extends TestCase
     public function test_mail_failure_reports_a_warning_without_rolling_back_the_account(): void
     {
         $this->mock(Dispatcher::class, function ($mock) {
-            $mock->shouldReceive('send')->once()->andThrow(new \RuntimeException('Mail unavailable'));
+            $mock->shouldReceive('send')->once()->andThrow(new RuntimeException('Mail unavailable'));
         });
         $this->mock(ExceptionHandler::class, function ($mock) {
             $mock->shouldReceive('report')->once();

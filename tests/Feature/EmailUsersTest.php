@@ -24,6 +24,7 @@ use jeremykenedy\laravelusers\Notifications\WelcomeUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
 class EmailUsersTest extends TestCase
 {
@@ -479,7 +480,7 @@ class EmailUsersTest extends TestCase
     {
         $this->mock(Dispatcher::class, function ($mock) {
             $mock->shouldReceive('send')->once()->ordered()->andReturnNull();
-            $mock->shouldReceive('send')->once()->ordered()->andThrow(new \RuntimeException('Queue unavailable'));
+            $mock->shouldReceive('send')->once()->ordered()->andThrow(new RuntimeException('Queue unavailable'));
         });
         $this->mock(ExceptionHandler::class, fn ($mock) => $mock->shouldReceive('report')->once());
         $owner = $this->user();

@@ -2,6 +2,7 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use CreatePermissionTables;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Event;
@@ -16,6 +17,7 @@ use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use ReflectionClass;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Models\Permission;
@@ -65,12 +67,12 @@ class RoleIntegrationsTest extends TestCase
     private function spatieMigration(): void
     {
         if (class_exists('CreatePermissionTables', false)) {
-            (new \CreatePermissionTables())->up();
+            (new CreatePermissionTables())->up();
 
             return;
         }
-        $migration = require dirname((new \ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
-        (is_object($migration) ? $migration : new \CreatePermissionTables())->up();
+        $migration = require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
+        (is_object($migration) ? $migration : new CreatePermissionTables())->up();
     }
 
     public function test_laravel_roles_remains_optional_and_preserves_existing_assignment(): void
@@ -78,7 +80,7 @@ class RoleIntegrationsTest extends TestCase
         if (!class_exists(RolesServiceProvider::class)) {
             $this->markTestSkipped('Run the optional roles integration job to test Laravel Roles.');
         }
-        config(['roles' => require dirname((new \ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
+        config(['roles' => require dirname((new ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
             $table->string('name');
