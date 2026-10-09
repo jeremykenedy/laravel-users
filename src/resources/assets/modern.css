@@ -160,6 +160,77 @@
 #laravelusers .lu-native-profile p {
     margin: 4px 0 0;
 }
+#laravelusers .lu-native-breadcrumbs {
+    margin: 0 0 18px;
+    color: var(--lu-muted);
+    font-size: .8rem;
+    line-height: 1.4;
+}
+#laravelusers .lu-native-breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+#laravelusers .lu-native-breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#laravelusers .lu-native-breadcrumbs svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+#laravelusers .lu-native-breadcrumbs a {
+    color: var(--lu-muted);
+}
+#laravelusers .lu-native-breadcrumbs [aria-current="page"] {
+    color: var(--lu-text);
+    font-weight: 600;
+}
+#laravelusers .lu-native-package-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+#laravelusers .lu-native-package-status > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#laravelusers .lu-native-package-status .lu-package-status-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+#laravelusers .lu-native-package-status p:last-child {
+    margin-bottom: 0;
+}
+#laravelusers .lu-native-package-status .lu-package-spinner {
+    animation: lu-native-package-spin 1s linear infinite;
+}
+#laravelusers .lu-native-notifications[data-lu-notification-style="toast"] {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 11000;
+    display: grid;
+    gap: 12px;
+    width: 24rem;
+    max-width: calc(100vw - 2rem);
+}
+@keyframes lu-native-package-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    #laravelusers .lu-native-package-status .lu-package-spinner {
+        animation: none;
+    }
+}
 #laravelusers table {
     width: 100%;
     border-collapse: collapse;

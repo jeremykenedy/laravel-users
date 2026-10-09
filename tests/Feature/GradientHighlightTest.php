@@ -5,6 +5,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ViewErrorBag;
 use jeremykenedy\laravelusers\Models\UserSetting;
 use jeremykenedy\laravelusers\Support\AppearancePreferences;
 use jeremykenedy\laravelusers\Support\Frontend;
@@ -41,6 +42,15 @@ class GradientHighlightTest extends TestCase
         }
         $this->assertSame('#ffffff48', Frontend::gradientColors($base, 50, 'red; color:blue')['highlight']);
         $this->assertSame('#aabbcc48', Frontend::gradientColors($base, 50, '#abc')['highlight']);
+    }
+
+    public function test_existing_custom_forms_can_use_the_original_appearance_partial_arguments(): void
+    {
+        $keys = ['color' => 'profileCardColor', 'gradient' => 'profileCardGradient', 'strength' => 'profileCardGradientStrength'];
+        $html = view('laravelusers::partials.settings-appearance', ['kind' => 'profile', 'keys' => $keys, 'fallback' => $keys, 'colorLabel' => 'Profile card color', 'errors' => new ViewErrorBag()])->render();
+        $this->assertStringContainsString('name="profile_color"', $html);
+        $this->assertStringContainsString('name="profile_gradient_highlight_color"', $html);
+        $this->assertStringContainsString('type="color" value="#ffffff" data-lu-gradient-highlight-color', $html);
     }
 
     public function test_global_highlights_are_separate_from_base_color_and_dark_mode_inherits_light(): void

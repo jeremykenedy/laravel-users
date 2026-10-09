@@ -3,6 +3,7 @@
 @if($mode !== '')
     @php($globalColors['base'] = config('laravelusers.profileCardDarkColor') === null ? ($appearancePreference['color'] ?? $globalColors['base']) : $globalColors['base'])
     @php($globalColors['strength'] = config('laravelusers.profileCardDarkGradientStrength') === null ? ($appearancePreference['strength'] ?? $globalColors['strength']) : $globalColors['strength'])
+    @php($globalColors['highlight'] = config('laravelusers.profileCardDarkGradientHighlightColor') === null ? ($appearancePreference['highlight_color'] ?? $globalColors['highlight']) : $globalColors['highlight'])
 @endif
 @php($cardColor = old('user_card'.$mode.'_color', $appearancePreference[$mode === '' ? 'color' : 'dark_color'] ?? null))
 <div class="{{ $modern ? 'lu-field' : 'form-group row' }}">
@@ -15,6 +16,19 @@
         @error('user_card'.$mode.'_color')<p class="lu-field-error text-danger">{{ $message }}</p>@enderror
     </div>
 </div>
+@if($appearanceHighlightAvailable ?? false)
+@php($highlightColor = old('user_card'.$mode.'_gradient_highlight_color', $appearancePreference[$mode === '' ? 'highlight_color' : 'dark_highlight_color'] ?? null))
+<div class="{{ $modern ? 'lu-field' : 'form-group row' }}">
+    <label for="user-card{{ $modeId }}-gradient-highlight-color" class="lu-icon-label lu-control-title {{ $modern ? '' : 'col-md-3 control-label' }}"><span class="lu-title-icon lu-title-icon-palette">@include('laravelusers::partials.icon', ['name' => 'palette'])</span><span>{{ __('laravelusers::ui.gradient_highlight_color') }}</span></label>
+    <div class="{{ $modern ? 'lu-control' : 'col-md-9' }}">
+        <input type="hidden" name="user_card{{ $mode }}_gradient_highlight_color" value="">
+        <input id="user-card{{ $modeId }}-gradient-highlight-color" name="user_card{{ $mode }}_gradient_highlight_color" type="color" value="{{ \jeremykenedy\laravelusers\Support\Frontend::colors($highlightColor ?? substr($globalColors['highlight'], 0, 7), '#ffffff')['base'] }}" data-lu-gradient-highlight-color data-lu-highlight-default="{{ substr($globalColors['highlight'], 0, 7) }}" @if($mode !== '' && config('laravelusers.profileCardDarkGradientHighlightColor') === null) data-lu-highlight-fallback="user-card-gradient-highlight-color" @endif @if(!$highlightColor) disabled @endif>
+        @include('laravelusers::partials.appearance-reset', ['target' => 'user-card'.$modeId.'-gradient-highlight-color', 'value' => 'inherit', 'label' => __('laravelusers::ui.gradient_highlight_color')])
+        <label class="lu-appearance-inherit"><input type="checkbox" data-lu-inherit-color="user-card{{ $modeId }}-gradient-highlight-color" @if(!$highlightColor) checked @endif> {{ __('laravelusers::ui.appearance_inherit_highlight_color') }}</label>
+        @error('user_card'.$mode.'_gradient_highlight_color')<p class="lu-field-error text-danger">{{ $message }}</p>@enderror
+    </div>
+</div>
+@endif
 <div class="{{ $modern ? 'lu-field' : 'form-group row' }}">
     <label for="user-card{{ $modeId }}-gradient" class="{{ $modern ? '' : 'col-md-3 control-label' }}">{{ __('laravelusers::ui.appearance_gradient') }}</label>
     <div class="{{ $modern ? 'lu-control' : 'col-md-9' }}">

@@ -12,6 +12,7 @@
             <p class="lu-muted text-muted">{{ __('laravelusers::ui.appearance_dark_migration_required') }}</p>
         @endif
         </div>
+        @if($appearanceAvailable && !($appearanceHighlightAvailable ?? false))<p class="lu-muted text-muted">{{ __('laravelusers::ui.appearance_highlight_migration_required') }}</p>@endif
         <p class="lu-muted text-muted">{{ __($appearanceAvailable ? 'laravelusers::ui.appearance_hint' : 'laravelusers::ui.appearance_migration_required') }}</p>
     </fieldset>
 @endif

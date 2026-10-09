@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('users.settings.update') }}" class="lu-settings-form" data-lu-settings-form>
+<form method="POST" action="{{ route('users.settings.update') }}" class="lu-settings-form" data-lu-settings-form @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_appearance')) data-lu-avatar-preview-url="{{ route('users.settings.avatar-preview') }}" data-lu-avatar-preview-error="{{ __('laravelusers::ui.appearance_avatar_preview_failed') }}" @endif>
     @csrf @method('PUT')
     @if(!$settingsAvailable)<p class="lu-alert" role="status">{{ __('laravelusers::ui.settings_migration_required') }}</p>@endif
     <fieldset @if(!$settingsAvailable) disabled @endif>
@@ -13,7 +13,7 @@
                     <p class="lu-muted text-muted">{{ __('laravelusers::ui.settings_avatar_hint') }}</p>
                 </div>
                 @foreach(['profile' => 'profileCard', 'edit' => 'editCard'] as $kind => $prefix)
-                    @php($keys = ['color' => $prefix.'Color', 'gradient' => $prefix.'Gradient', 'strength' => $prefix.'GradientStrength'])
+                    @php($keys = ['color' => $prefix.'Color', 'gradient' => $prefix.'Gradient', 'strength' => $prefix.'GradientStrength', 'highlight' => $prefix.'GradientHighlightColor'])
                     @include('laravelusers::partials.settings-appearance', ['kind' => $kind, 'keys' => $keys, 'fallback' => $keys, 'colorLabel' => __('laravelusers::ui.settings_'.$kind.'_color')])
                 @endforeach
             </div>
@@ -21,20 +21,18 @@
             <p class="lu-muted text-muted">{{ __('laravelusers::ui.appearance_dark_hint') }}</p>
             <div class="lu-settings-grid lu-settings-dark-grid">
                 @foreach(['profile' => 'profileCard', 'edit' => 'editCard'] as $kind => $prefix)
-                    @include('laravelusers::partials.settings-appearance', ['kind' => $kind.'_dark', 'keys' => ['color' => $prefix.'DarkColor', 'gradient' => $prefix.'DarkGradient', 'strength' => $prefix.'DarkGradientStrength'], 'fallback' => ['color' => $prefix.'Color', 'gradient' => $prefix.'Gradient', 'strength' => $prefix.'GradientStrength'], 'colorLabel' => __('laravelusers::ui.settings_'.$kind.'_dark_color')])
+                    @include('laravelusers::partials.settings-appearance', ['kind' => $kind.'_dark', 'keys' => ['color' => $prefix.'DarkColor', 'gradient' => $prefix.'DarkGradient', 'strength' => $prefix.'DarkGradientStrength', 'highlight' => $prefix.'DarkGradientHighlightColor'], 'fallback' => ['color' => $prefix.'Color', 'gradient' => $prefix.'Gradient', 'strength' => $prefix.'GradientStrength', 'highlight' => $prefix.'GradientHighlightColor'], 'colorLabel' => __('laravelusers::ui.settings_'.$kind.'_dark_color')])
                 @endforeach
             </div>
+            <div class="lu-settings-choice">
+                <label class="lu-settings-check" for="settings-breadcrumbs"><input type="hidden" name="show_breadcrumbs" value="0"><input id="settings-breadcrumbs" type="checkbox" name="show_breadcrumbs" value="1" @if(old('show_breadcrumbs', config('laravelusers.showBreadcrumbs', false))) checked @endif>@include('laravelusers::partials.icon', ['name' => 'breadcrumbs']) {{ __('laravelusers::ui.settings_breadcrumbs') }}</label>
+                <p class="lu-muted text-muted">{{ __('laravelusers::ui.settings_breadcrumbs_hint') }}</p>
+            </div>
+            <p class="lu-field-error text-danger" data-lu-avatar-preview-status role="status" hidden></p>
         </fieldset>
         </div>
         <div data-lu-settings-panel="notifications" id="lu-settings-notifications" role="tabpanel" aria-labelledby="lu-tab-notifications">
-            <fieldset class="lu-settings-notifications" @if(!\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_notifications')) disabled @endif>
-                <legend>@include('laravelusers::partials.icon', ['name' => 'notifications']) {{ __('laravelusers::ui.settings_notifications') }}</legend>
-                @if(\jeremykenedy\laravelusers\Support\UserNotifications::toastInstalled())
-                <label for="settings-notifications">{{ __('laravelusers::ui.settings_notification_style') }}</label>
-                <select id="settings-notifications" name="notifications_driver" class="{{ $modern ? 'lu-input' : 'form-control' }}">@foreach(['alert', 'toast'] as $driver)<option value="{{ $driver }}" @if(old('notifications_driver', config('laravelusers.notifications.driver', 'alert')) === $driver) selected @endif>{{ __('laravelusers::ui.settings_notification_'.$driver) }}</option>@endforeach</select>
-                @endif
-                <label class="lu-settings-check"><input type="hidden" name="notifications_dismissible" value="0"><input type="checkbox" name="notifications_dismissible" value="1" @if(old('notifications_dismissible', config('laravelusers.notifications.dismissible', true))) checked @endif> {{ __('laravelusers::ui.settings_dismissible') }}</label>
-            </fieldset>
+            @include('laravelusers::partials.settings-notifications')
         </div>
         <div data-lu-settings-panel="access" id="lu-settings-access" role="tabpanel" aria-labelledby="lu-tab-access">
         @if($accessAvailable)
