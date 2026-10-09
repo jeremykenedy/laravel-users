@@ -5,14 +5,7 @@
 @endsection
 
 @section('template_linked_css')
-    @if(config('laravelusers.enabledDatatablesJs'))
-        <link rel="stylesheet" type="text/css" href="{{ config('laravelusers.datatablesCssCDN') }}">
-    @endif
-    @if(config('laravelusers.fontAwesomeEnabled'))
-        <link rel="stylesheet" type="text/css" href="{{ config('laravelusers.fontAwesomeCdn') }}">
-    @endif
-    @include('laravelusers::partials.styles')
-    @include('laravelusers::partials.bs-visibility-css')
+    @include('laravelusers::partials.legacy-form-styles')
 @endsection
 
 @section('content')
@@ -100,98 +93,13 @@
                                     @endif
                                 </div>
                             </div>
-                            @if($rolesEnabled)
-                                <div class="form-group has-feedback row {{ $errors->has('role') ? ' has-error ' : '' }}">
-                                    @if(config('laravelusers.fontAwesomeEnabled'))
-                                        <label for="role" class="col-md-3 control-label">{!! trans('laravelusers::forms.create_user_label_role') !!}</label>
-                                    @endif
-                                    <div class="col-md-9">
-                                    <div class="input-group">
-                                        <select class="custom-select form-control" name="role[]" id="role" multiple>
-                                            <option value="">{!! trans('laravelusers::forms.create_user_ph_role') !!}</option>
-                                            @if ($roles)
-                                                @foreach($roles as $role)
-                                                    @if ($currentRole)
-                                                        <option value="{{ $role->id }}" {{ in_array($role->id ,$currentRole) ? 'selected="selected"' : '' }}>{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>
-                                                    @else
-                                                        <option value="{{ $role->id }}">{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>
-                                                    @endif
-                                                @endforeach
-                                            @endif
-                                        </select>
-                                        <div class="input-group-append">
-                                            <label class="input-group-text" for="role">
-                                                @if(config('laravelusers.fontAwesomeEnabled'))
-                                                    <i class="{!! trans('laravelusers::forms.create_user_icon_role') !!}" aria-hidden="true"></i>
-                                                @else
-                                                    {!! trans('laravelusers::forms.create_user_label_username') !!}
-                                                @endif
-                                            </label>
-                                        </div>
-                                    </div>
-                                    @if ($errors->has('role'))
-                                        <span class="help-block">
-                                            <strong>{{ $errors->first('role') }}</strong>
-                                        </span>
-                                    @endif
-                                    </div>
-                                </div>
-                            @endif
+                            @include('laravelusers::partials.legacy-role-select', ['multipleRoles' => true, 'selectedRoles' => $currentRole ?? []])
                             @include('laravelusers::partials.avatar-source', ['modern' => false])
                             @include('laravelusers::partials.user-appearance', ['modern' => false])
                             @include('laravelusers::partials.user-permissions', ['modern' => false])
     @include('laravelusers::partials.account-access', ['modern' => false])
                             <div class="pw-change-container">
-                                <div class="form-group has-feedback row {{ $errors->has('password') ? ' has-error ' : '' }}">
-                                    @if(config('laravelusers.fontAwesomeEnabled'))
-                                        <label for="password" class="col-md-3 control-label">{!! trans('laravelusers::forms.create_user_label_password') !!}</label>
-                                    @endif
-                                    <div class="col-md-9">
-                                        <div class="input-group">
-                                            <input type="password" name="password" id="password" class="form-control" placeholder="{{ trans('laravelusers::forms.create_user_ph_password') }}">
-                                            <div class="input-group-append">
-                                                <label class="input-group-text" for="password">
-                                                    @if(config('laravelusers.fontAwesomeEnabled'))
-                                                        <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_password') !!}" aria-hidden="true"></i>
-                                                    @else
-                                                        {!! trans('laravelusers::forms.create_user_label_password') !!}
-                                                    @endif
-                                                </label>
-                                            </div>
-                                        </div>
-                                        @include('laravelusers::partials.password-meter')
-                                        @if ($errors->has('password'))
-                                            <span class="help-block">
-                                                <strong>{{ $errors->first('password') }}</strong>
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="form-group has-feedback row {{ $errors->has('password_confirmation') ? ' has-error ' : '' }}">
-                                    @if(config('laravelusers.fontAwesomeEnabled'))
-                                        <label for="password_confirmation" class="col-md-3 control-label">{!! trans('laravelusers::forms.create_user_label_pw_confirmation') !!}</label>
-                                    @endif
-                                    <div class="col-md-9">
-                                        <div class="input-group">
-                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="{{ trans('laravelusers::forms.create_user_ph_pw_confirmation') }}">
-                                            <div class="input-group-append">
-                                                <label class="input-group-text" for="password_confirmation">
-                                                    @if(config('laravelusers.fontAwesomeEnabled'))
-                                                        <i class="fa fa-fw {!! trans('laravelusers::forms.create_user_icon_pw_confirmation') !!}" aria-hidden="true"></i>
-                                                    @else
-                                                        {!! trans('laravelusers::forms.create_user_label_pw_confirmation') !!}
-                                                    @endif
-                                                </label>
-                                            </div>
-                                        </div>
-                                        @include('laravelusers::partials.password-confirmation')
-                                        @if ($errors->has('password_confirmation'))
-                                            <span class="help-block">
-                                                <strong>{{ $errors->first('password_confirmation') }}</strong>
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
+                                @include('laravelusers::partials.legacy-password-fields')
                             </div>
                             <div class="row">
                                 <div class="col-12 col-sm-6 mb-2">

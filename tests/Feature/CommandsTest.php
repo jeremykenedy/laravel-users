@@ -16,6 +16,14 @@ use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class CommandsTest extends TestCase
 {
     private string $directory;
@@ -82,11 +90,7 @@ class CommandsTest extends TestCase
         }
         $composer = $this->mock(ComposerPackages::class);
         $supported = PHP_VERSION_ID >= 80200 && version_compare($this->app->version(), '10.0.0', '>=');
-        if ($supported) {
-            $composer->shouldReceive('install')->once()->andReturn(false);
-        } else {
-            $composer->shouldNotReceive('install');
-        }
+        $composer->shouldReceive('install')->times($supported ? 1 : 0)->andReturn(false);
         $composer->shouldNotReceive('setup');
         $this->artisan('laravelusers:update', ['--toast' => 'install', '--notifications' => 'both', '--no-interaction' => true])
             ->expectsOutput($supported ? 'Toast installation failed. Laravel Users configuration was not changed.' : 'Laravel Toast requires PHP 8.2 or newer and Laravel 10 or newer. Existing notification settings are unchanged.')

@@ -70,10 +70,12 @@ PHP);
                 return $this->result(false, 'laravelusers::ui.package_requirements_not_verified');
             }
             $lock->release();
-            if ($failure = $this->composer->readiness()) {
+            $failure = $this->composer->readiness();
+            if ($failure) {
                 return $this->result(false, $failure);
             }
-            if ($failure = PackageWorker::failure()) {
+            $failure = PackageWorker::failure();
+            if ($failure) {
                 return $this->result(false, $failure);
             }
             if (!PackageWorker::verified()) {

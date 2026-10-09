@@ -10,6 +10,12 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+/**
+ * Livewire requires public lifecycle hooks and callable actions; each callback retains method complexity checks.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class UsersScreen extends Component
 {
     #[Locked]
@@ -199,7 +205,7 @@ class UsersScreen extends Component
     private function ready(string $id): bool
     {
         foreach ($this->page['forms'][$id]['fields'] as $field) {
-            if (isset($field['when']) && (isset($field['when']['in']) ? !in_array(Arr::get($this->values[$id], $field['when']['key']), $field['when']['in'], true) : Arr::get($this->values[$id], $field['when']['key']) != $field['when']['equals'])) {
+            if (!$this->fieldVisible($field, $this->values[$id])) {
                 continue;
             }
             $value = Arr::get($this->values[$id], $field['key']);
@@ -209,5 +215,17 @@ class UsersScreen extends Component
         }
 
         return true;
+    }
+
+    private function fieldVisible(array $field, array $values): bool
+    {
+        if (!isset($field['when'])) {
+            return true;
+        }
+        $value = Arr::get($values, $field['when']['key']);
+
+        return isset($field['when']['in'])
+            ? in_array($value, $field['when']['in'], true)
+            : $value == $field['when']['equals'];
     }
 }

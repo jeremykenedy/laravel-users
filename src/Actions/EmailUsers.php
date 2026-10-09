@@ -21,6 +21,11 @@ use jeremykenedy\laravelusers\Support\EmailRecipients;
 use jeremykenedy\laravelusers\Support\ExpiringTokenRepository;
 use Throwable;
 
+/**
+ * Coordinates recipient validation, password brokers, notifications, and account links as one email action.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class EmailUsers
 {
     public function __construct(private readonly PasswordBrokerFactory $passwords, private readonly Dispatcher $notifications, private readonly EmailRecipients $recipients, private readonly AccountLinks $links)
@@ -37,11 +42,7 @@ class EmailUsers
         $sent = 0;
         foreach ($users as $user) {
             try {
-                if ($broker) {
-                    $this->sendReset($user, $broker, $minutes, $data);
-                } else {
-                    $this->sendMessage($user, $data, $actions);
-                }
+                $this->send($user, $broker, $minutes, $data, $actions);
                 $sent++;
             } catch (ValidationException $exception) {
                 throw $exception;
@@ -53,6 +54,16 @@ class EmailUsers
         }
 
         return $sent;
+    }
+
+    private function send(Model $user, ?PasswordBroker $broker, ?int $minutes, array $data, array $actions): void
+    {
+        if ($broker) {
+            $this->sendReset($user, $broker, $minutes, $data);
+
+            return;
+        }
+        $this->sendMessage($user, $data, $actions);
     }
 
     private function resetMinutes(array $data): ?int

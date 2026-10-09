@@ -40,6 +40,11 @@ class UpdateUserRequest extends FormRequest
         return $this->target;
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function rules(): array
     {
         $user = $this->target();

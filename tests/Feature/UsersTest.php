@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Hash;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class UsersTest extends TestCase
 {
     public function test_guests_cannot_access_any_user_endpoint(): void

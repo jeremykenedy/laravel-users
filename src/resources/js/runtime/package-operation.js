@@ -1,5 +1,18 @@
 import { formData, request, sameOriginUrl } from './shared.js';
 
+function requirementsValid(value) {
+    return Boolean(value && ['checking', 'not_ready', 'completed'].includes(value.status) && typeof value.queue_ready === 'boolean');
+}
+
+function validateRequirements(payload, response) {
+    if (response.status === 422) throw new Error(Object.values(payload.errors ?? {}).flat().join(' ') || payload.message);
+    if (!requirementsValid(payload)) throw new Error('The application returned an unexpected requirements status.');
+}
+
+function validateOperation(payload) {
+    if (!payload.id || !payload.status) throw new Error('The application returned an unexpected package status.');
+}
+
 export function createPackageRequirementsTracker(runtime, csrf, form, initial, onChange) {
     let status = initial;
     let timer;
@@ -12,7 +25,7 @@ export function createPackageRequirementsTracker(runtime, csrf, form, initial, o
     const tracker = {
         current() { return status; },
         update(value) {
-            if (!value || !['checking', 'not_ready', 'completed'].includes(value.status) || typeof value.queue_ready !== 'boolean') return;
+            if (!requirementsValid(value)) return;
             stopped = false;
             status = { ...value };
             onChange(status);
@@ -25,8 +38,7 @@ export function createPackageRequirementsTracker(runtime, csrf, form, initial, o
             try {
                 const { payload, response } = await request(form.action, runtime, csrf(), { method: 'POST', body: formData(form, form.values, csrf()) });
                 if (!payload) { tracker.stop(); return; }
-                if (response.status === 422) throw new Error(Object.values(payload.errors ?? {}).flat().join(' ') || payload.message);
-                if (!['checking', 'not_ready', 'completed'].includes(payload.status) || typeof payload.queue_ready !== 'boolean') throw new Error('The application returned an unexpected requirements status.');
+                validateRequirements(payload, response);
                 tracker.update(payload);
             } catch (error) {
                 if ([401, 403, 404].includes(error.status)) tracker.stop();
@@ -50,6 +62,16 @@ export function createPackageOperationTracker(runtime, csrf, initial, onChange) 
         clearTimeout(timer);
         if (!stopped && pending()) timer = setTimeout(() => tracker.poll(), 2000);
     };
+    const reportPollingError = error => {
+        if ([401, 403, 404].includes(error.status)) {
+            operation = null;
+            onChange(null);
+            tracker.stop();
+        } else {
+            operation = { ...operation, transport_error: error.message };
+            onChange(operation);
+        }
+    };
     const tracker = {
         current() { return operation; },
         update(value) {
@@ -68,17 +90,10 @@ export function createPackageOperationTracker(runtime, csrf, initial, onChange) 
                 const { payload } = await request(operation.status_url, runtime, csrf());
                 if (operation?.id !== id) return;
                 if (!payload) { tracker.stop(); return; }
-                if (!payload.id || !payload.status) throw new Error('The application returned an unexpected package status.');
+                validateOperation(payload);
                 tracker.update({ ...payload, status_url: payload.status_url ?? operation.status_url });
             } catch (error) {
-                if ([401, 403, 404].includes(error.status)) {
-                    operation = null;
-                    onChange(null);
-                    tracker.stop();
-                } else {
-                    operation = { ...operation, transport_error: error.message };
-                    onChange(operation);
-                }
+                reportPollingError(error);
             } finally { polling = false; schedule(); }
         },
         stop() { stopped = true; clearTimeout(timer); },

@@ -23,6 +23,11 @@ use jeremykenedy\laravelusers\Support\UserRoles;
 use LogicException;
 use Throwable;
 
+/**
+ * Coordinates account creation, password brokers, profile preferences, and welcome delivery as one action.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class CreateUser
 {
     public function __construct(private readonly PasswordBrokerFactory $passwords, private readonly Dispatcher $notifications)

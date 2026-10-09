@@ -24,7 +24,15 @@ use jeremykenedy\laravelusers\Notifications\WelcomeUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class EmailUsersTest extends TestCase
 {
     protected function setUp(): void
@@ -169,6 +177,7 @@ class EmailUsersTest extends TestCase
         $user = $this->user();
         $this->actingAs($user)->post('/users/email', ['action' => 'reset', 'ids' => [$user->id]])->assertSessionHasNoErrors();
         Notification::assertSentOnDemand(ResetUserPassword::class, function ($notification, $channels, $recipient) use ($user) {
+            $this->assertSame(['mail'], $channels);
             $token = basename(parse_url($notification->url, PHP_URL_PATH));
             parse_str(parse_url($notification->url, PHP_URL_QUERY), $query);
             $this->assertSame($user->email, $query['email']);
@@ -479,7 +488,7 @@ class EmailUsersTest extends TestCase
     {
         $this->mock(Dispatcher::class, function ($mock) {
             $mock->shouldReceive('send')->once()->ordered()->andReturnNull();
-            $mock->shouldReceive('send')->once()->ordered()->andThrow(new \RuntimeException('Queue unavailable'));
+            $mock->shouldReceive('send')->once()->ordered()->andThrow(new RuntimeException('Queue unavailable'));
         });
         $this->mock(ExceptionHandler::class, fn ($mock) => $mock->shouldReceive('report')->once());
         $owner = $this->user();

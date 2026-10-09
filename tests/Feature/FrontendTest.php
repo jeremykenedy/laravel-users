@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\View;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class FrontendTest extends TestCase
 {
     public function test_impersonation_markup_styles_and_search_actions_are_not_rendered_without_a_roles_integration(): void
@@ -72,9 +77,10 @@ class FrontendTest extends TestCase
             $response = $this->get('/users')->assertOk()->assertDontSee('jquery-3.3.1')->assertDontSee('bootstrap/4.0.0');
             if ($framework === 'bootstrap5') {
                 $response->assertSee('bootstrap@5.3.8');
-            } else {
-                $response->assertDontSee('cdn.jsdelivr.net')->assertSee('lu:overflow-x-auto');
+
+                continue;
             }
+            $response->assertDontSee('cdn.jsdelivr.net')->assertSee('lu:overflow-x-auto');
         }
     }
 
@@ -85,11 +91,8 @@ class FrontendTest extends TestCase
         foreach (Frontend::FRAMEWORKS as $framework) {
             config(['laravelusers.frontend' => $framework, 'laravelusers.showBreadcrumbs' => false]);
             $response = $this->get('/users')->assertOk()->assertDontSee('class="lu-breadcrumbs"', false);
-            if ($framework === 'bootstrap4') {
-                $response->assertSee('class="navbar-brand" href="'.route('users').'"', false);
-            } else {
-                $response->assertSee('class="lu-brand" href="'.route('users').'"', false);
-            }
+            $brand = $framework === 'bootstrap4' ? 'navbar-brand' : 'lu-brand';
+            $response->assertSee('class="'.$brand.'" href="'.route('users').'"', false);
 
             config(['laravelusers.showBreadcrumbs' => true]);
             $response = $this->get('/users/create')->assertOk()->assertSee('aria-label="Breadcrumbs"', false)->assertSee('aria-current="page"', false)->assertSee('Home', false)->assertSee('Create user');

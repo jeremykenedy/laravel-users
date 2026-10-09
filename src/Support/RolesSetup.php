@@ -142,11 +142,11 @@ class RolesSetup
     private function instructions(Command $command, string $choice, string $trait): void
     {
         $command->line('Add this trait inside your configured user model: use \\'.$trait.';');
+        $command->line($choice === 'spatie'
+            ? 'Publish: php artisan vendor:publish --provider="Spatie\\Permission\\PermissionServiceProvider"'
+            : 'Publish: php artisan vendor:publish --tag=laravelroles-migrations');
         if ($choice === 'spatie') {
-            $command->line('Publish: php artisan vendor:publish --provider="Spatie\\Permission\\PermissionServiceProvider"');
             $command->line('Register the role and permission middleware aliases for your installed Spatie version.');
-        } else {
-            $command->line('Publish: php artisan vendor:publish --tag=laravelroles-migrations');
         }
         $command->line('Review the published migrations, then run php artisan migrate. Assign an administrator role before enabling its middleware.');
     }

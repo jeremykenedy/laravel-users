@@ -34,6 +34,11 @@ class ConsolePrompts
         return (string) $command->choice($label, $options, $default);
     }
 
+    /**
+     * The boolean default matches the Laravel and Symfony confirmation prompt contract.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function confirm(Command $command, string $label, bool $interactive, bool $default = false): bool
     {
         if (self::usesNativePrompts($command, $interactive) && function_exists('Laravel\\Prompts\\confirm')) {

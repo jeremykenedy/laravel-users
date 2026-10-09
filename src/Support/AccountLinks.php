@@ -15,6 +15,11 @@ use jeremykenedy\laravelusers\Models\AccountLink;
 use JsonException;
 use RuntimeException;
 
+/**
+ * Keeps the encrypted single-use link lifecycle together; each operation has its own method complexity checks.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class AccountLinks
 {
     public function __construct(private readonly Encrypter $encrypter, private readonly DeletedUsers $deleted)

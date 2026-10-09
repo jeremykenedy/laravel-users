@@ -2,6 +2,8 @@
 
 namespace jeremykenedy\laravelusers\Test\Fixtures;
 
+use RuntimeException;
+
 class RoleUser extends User
 {
     protected $table = 'users';
@@ -16,7 +18,7 @@ class RoleUser extends User
     public function attachRole($role): void
     {
         if (self::$failAssignment) {
-            throw new \RuntimeException('Role assignment failed');
+            throw new RuntimeException('Role assignment failed');
         }
         $this->roles()->attach($role);
     }

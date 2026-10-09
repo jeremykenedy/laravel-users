@@ -2,6 +2,7 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use CreatePermissionTables;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use ReflectionClass;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Models\Permission as SpatiePermission;
@@ -28,6 +30,13 @@ use Spatie\Permission\Models\Role as SpatieRole;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\PermissionServiceProvider;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class MiddlewareAccessTest extends TestCase
 {
     public function test_gate_rechecks_use_the_actor_without_replacing_the_current_user(): void
@@ -226,6 +235,11 @@ class MiddlewareAccessTest extends TestCase
         $this->assertFalse(MiddlewareAccess::allows($actor, ['security-permission:manage-users,api']));
     }
 
+    /**
+     * Gate callbacks receive the user before the requested ability.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function test_spatie_permission_checks_honor_host_gate_revocation(): void
     {
         $revoked = false;
@@ -247,7 +261,7 @@ class MiddlewareAccessTest extends TestCase
         if (!class_exists(RolesServiceProvider::class)) {
             $this->markTestSkipped('This regression requires the optional Laravel Roles integration.');
         }
-        config(['roles' => require dirname((new \ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
+        config(['roles' => require dirname((new ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
         Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
         foreach (['roles', 'permissions'] as $name) {
             Schema::create($name, function (Blueprint $table) use ($name) {
@@ -256,7 +270,8 @@ class MiddlewareAccessTest extends TestCase
                 $table->string('slug');
                 if ($name === 'roles') {
                     $table->integer('level')->default(1);
-                } else {
+                }
+                if ($name === 'permissions') {
                     $table->string('description')->nullable();
                     $table->string('model')->nullable();
                 }
@@ -284,12 +299,10 @@ class MiddlewareAccessTest extends TestCase
         $this->app->register(PermissionServiceProvider::class);
         config(['permission.testing' => true]);
         $this->app->make(PermissionRegistrar::class)->initializeCache();
-        if (class_exists('CreatePermissionTables', false)) {
-            (new \CreatePermissionTables())->up();
-        } else {
-            $migration = require dirname((new \ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
-            (is_object($migration) ? $migration : new \CreatePermissionTables())->up();
-        }
+        $migration = class_exists('CreatePermissionTables', false)
+            ? new CreatePermissionTables()
+            : require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
+        (is_object($migration) ? $migration : new CreatePermissionTables())->up();
         Schema::table('users', fn (Blueprint $table) => $table->softDeletes());
 
         return SpatieRoleUser::findOrFail($this->user()->id);

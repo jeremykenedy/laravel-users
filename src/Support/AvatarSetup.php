@@ -15,11 +15,7 @@ class AvatarSetup
 
     public function configure(Command $command, bool $interactive): array|false
     {
-        $source = $command->option('avatar');
-        if ($source === null && $interactive) {
-            $choices = array_merge(['keep'], Avatar::SOURCES);
-            $source = ConsolePrompts::select($command, 'Avatar source (keep preserves current settings)', array_combine($choices, $choices), 'keep', $interactive);
-        }
+        $source = $this->source($command, $interactive);
         if (in_array($source, [null, 'keep'], true)) {
             return [];
         }
@@ -34,6 +30,17 @@ class AvatarSetup
         }
 
         return $source === 'dicebear' ? ['source' => $source, 'dicebear' => ['driver' => 'local']] : ['source' => $source];
+    }
+
+    private function source(Command $command, bool $interactive): ?string
+    {
+        $source = $command->option('avatar');
+        if ($source === null && $interactive) {
+            $choices = array_merge(['keep'], Avatar::SOURCES);
+            $source = ConsolePrompts::select($command, 'Avatar source (keep preserves current settings)', array_combine($choices, $choices), 'keep', $interactive);
+        }
+
+        return $source;
     }
 
     private function installDiceBear(Command $command, bool $interactive): ?bool

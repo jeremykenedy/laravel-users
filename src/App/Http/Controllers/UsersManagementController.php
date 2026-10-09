@@ -45,6 +45,13 @@ use jeremykenedy\laravelusers\Support\UserRoles;
 use jeremykenedy\laravelusers\Support\UserSettings;
 use RuntimeException;
 
+/**
+ * Preserves the existing public route actions and their typed Laravel requests and action dependencies.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class UsersManagementController extends Controller
 {
     private bool $_authEnabled;
@@ -87,13 +94,23 @@ class UsersManagementController extends Controller
     {
         abort_unless(config('laravelusers.settings.enabled', false), 404);
         $user = Auth::user();
-        $accessAvailable = $user instanceof Model && RoleAccess::available($user);
-        $roles = $accessAvailable ? RoleAccess::query($user, 'role')->get() : collect();
-        $permissions = $accessAvailable ? RoleAccess::query($user, 'permission')->get() : collect();
+        $access = $this->accessData($user);
         $packageManagementAllowed = $user instanceof Model && $packages->allowed($user);
         $packageRequirements = $packageManagementAllowed ? $requirements->status($packages) : null;
 
-        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $packageManagementAllowed, 'managedPackages' => $packages->listing(), 'managedPackageSetup' => ['toast' => $packages->toastSetupComplete()], 'packageQueueReady' => $packageRequirements['queue_ready'] ?? false, 'packageRequirements' => $packageRequirements, 'packageOperation' => $packageManagementAllowed ? PackageOperations::latest($user) : null, 'appearancePreviewAvatars' => UserAccess::allows('edit_appearance') ? $preview->handle(config('laravelusers.avatar.source', 'initials')) : [], 'impersonationEnabled' => config('laravelusers.impersonation.enabled', false)]);
+        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', array_merge($access, ['settingsAvailable' => $settings->available(), 'packageManagementAllowed' => $packageManagementAllowed, 'managedPackages' => $packages->listing(), 'managedPackageSetup' => ['toast' => $packages->toastSetupComplete()], 'packageQueueReady' => $packageRequirements['queue_ready'] ?? false, 'packageRequirements' => $packageRequirements, 'packageOperation' => $packageManagementAllowed ? PackageOperations::latest($user) : null, 'appearancePreviewAvatars' => UserAccess::allows('edit_appearance') ? $preview->handle(config('laravelusers.avatar.source', 'initials')) : [], 'impersonationEnabled' => config('laravelusers.impersonation.enabled', false)]));
+    }
+
+    private function accessData(mixed $user): array
+    {
+        $available = $user instanceof Model && RoleAccess::available($user);
+
+        return [
+            'accessAvailable' => $available,
+            'levelsAvailable' => $available && method_exists($user, 'level'),
+            'roles'           => $available ? RoleAccess::query($user, 'role')->get() : collect(),
+            'permissions'     => $available ? RoleAccess::query($user, 'permission')->get() : collect(),
+        ];
     }
 
     public function updateSettings(UpdateSettingsRequest $request, UpdateUserSettings $update): RedirectResponse
@@ -111,11 +128,8 @@ class UsersManagementController extends Controller
         $pagintaionEnabled = config('laravelusers.enablePagination', true);
         $userModel = config('laravelusers.defaultUserModel');
 
-        if ($pagintaionEnabled) {
-            $users = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'))->paginate(config('laravelusers.paginateListSize', 25));
-        } else {
-            $users = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'))->get();
-        }
+        $query = $userModel::when($this->_rolesEnabled, fn ($query) => $query->with('roles'));
+        $users = $pagintaionEnabled ? $query->paginate(config('laravelusers.paginateListSize', 25)) : $query->get();
 
         $data = [
             'users'               => $users,
@@ -227,7 +241,7 @@ class UsersManagementController extends Controller
         $userModel = config('laravelusers.defaultUserModel');
         $user = $userModel::findOrFail($id);
 
-        return $this->editForm($user);
+        return $this->editForm($user, false);
     }
 
     public function editDeleted(int $id, DeletedUsers $deleted): View
@@ -237,7 +251,7 @@ class UsersManagementController extends Controller
         return $this->editForm($deleted->query()->findOrFail($id), true);
     }
 
-    private function editForm(Model $user, bool $deletedUser = false): View
+    private function editForm(Model $user, bool $deletedUser): View
     {
         $roles = [];
         $currentRole = [];

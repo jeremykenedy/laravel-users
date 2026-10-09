@@ -12,6 +12,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Registers the package services, commands, middleware, and events at the Laravel composition root.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class LaravelUsersServiceProvider extends ServiceProvider
 {
     private string $_packageTag;
@@ -50,6 +55,13 @@ class LaravelUsersServiceProvider extends ServiceProvider
         foreach (['eloquent.restoring: *', 'eloquent.deleted: *'] as $event) {
             $this->app['events']->listen($event, [Listeners\InvalidateAccountLinks::class, 'handle']);
         }
+        $this->configureViewComposers();
+        $this->publishOptionalResources();
+        $this->loadTranslationsFrom(__DIR__.'/resources/lang/', $this->_packageTag);
+    }
+
+    private function configureViewComposers(): void
+    {
         $this->app['view']->composer('laravelusers::partials.user-menu', View\UserMenuComposer::class);
         $this->app['view']->composer('laravelusers::partials.notifications', View\NotificationsComposer::class);
         $this->app['events']->listen('eloquent.deleted: *', [Listeners\TrackUserActivity::class, 'deleted']);
@@ -66,7 +78,10 @@ class LaravelUsersServiceProvider extends ServiceProvider
             'laravelusers::usersmanagement.edit-user', 'laravelusers::modern.edit-user',
             'laravelusers::account.page',
         ], View\AvatarComposer::class);
+    }
 
+    private function publishOptionalResources(): void
+    {
         $this->publishes([
             __DIR__.'/database/migrations' => database_path('migrations'),
         ], 'laravelusers-activity-migrations');
@@ -92,8 +107,6 @@ class LaravelUsersServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/resources/views/emails' => resource_path('views/vendor/laravelusers/emails'),
         ], 'laravelusers-email-views');
-
-        $this->loadTranslationsFrom(__DIR__.'/resources/lang/', $this->_packageTag);
     }
 
     /**

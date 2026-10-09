@@ -60,7 +60,7 @@ class AccountHighlightRegressionTest extends TestCase
 
     public function test_hosts_without_highlight_columns_preserve_appearance_and_ignore_unavailable_fields(): void
     {
-        $this->install(false);
+        $this->install(['2026_10_09_043153_add_gradient_highlight_colors_to_laravelusers_appearance_preferences_table.php']);
         $user = $this->user();
         $this->actingAs($user);
         AppearancePreferences::save($user, ['user_card_color' => '#204070']);
@@ -79,11 +79,11 @@ class AccountHighlightRegressionTest extends TestCase
         }
     }
 
-    private function install(bool $highlight = true): void
+    private function install(array $excludedMigrations = []): void
     {
         foreach (['accounts', 'appearance'] as $feature) {
             foreach (glob(dirname(__DIR__, 2).'/src/database/'.$feature.'/*.php') as $path) {
-                if ($highlight || !str_contains($path, 'highlight_colors')) {
+                if (!in_array(basename($path), $excludedMigrations, true)) {
                     (require $path)->up();
                 }
             }

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 
+/**
+ * Preserves the Composer process service API; readiness and each process operation are checked separately.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class ComposerPackages
 {
     public function readiness(): ?string
@@ -15,20 +20,55 @@ class ComposerPackages
         if (!(new ExecutableFinder())->find('composer') || !function_exists('proc_open')) {
             return 'laravelusers::ui.package_composer_missing';
         }
-        $manifest = base_path('composer.json');
-        if (!is_file($manifest) || !is_readable($manifest) || !is_writable($manifest) || !is_object(json_decode((string) file_get_contents($manifest)))) {
+        if (!$this->manifestReady()) {
             return 'laravelusers::ui.package_composer_manifest';
         }
-        if (!is_dir(base_path('vendor')) || !is_writable(base_path('vendor')) || $this->installedPackages() === null) {
+        if (!$this->vendorReady()) {
             return 'laravelusers::ui.package_composer_vendor';
         }
-        if (!is_file(base_path('artisan')) || !is_readable(base_path('artisan')) || !is_dir(base_path('bootstrap/cache')) || !is_writable(base_path('bootstrap/cache')) || (file_exists(base_path('composer.lock')) && (!is_file(base_path('composer.lock')) || !is_writable(base_path('composer.lock'))))) {
+        if (!$this->applicationReady()) {
             return 'laravelusers::ui.package_composer_application';
         }
 
         return null;
     }
 
+    private function manifestReady(): bool
+    {
+        $manifest = base_path('composer.json');
+
+        return is_file($manifest) && is_readable($manifest) && is_writable($manifest)
+            && is_object(json_decode((string) file_get_contents($manifest)));
+    }
+
+    private function vendorReady(): bool
+    {
+        return $this->vendorOwned() && is_dir(base_path('vendor')) && is_writable(base_path('vendor')) && $this->installedPackages() !== null;
+    }
+
+    private function vendorOwned(): bool
+    {
+        $application = realpath(base_path());
+        $vendor = realpath(base_path('vendor'));
+
+        return $application !== false && $vendor !== false
+            && str_starts_with($vendor, rtrim($application, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
+    }
+
+    private function applicationReady(): bool
+    {
+        $lock = base_path('composer.lock');
+
+        return is_file(base_path('artisan')) && is_readable(base_path('artisan'))
+            && is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache'))
+            && (!file_exists($lock) || (is_file($lock) && is_writable($lock)));
+    }
+
+    /**
+     * Symfony Process supplies an output type before each output chunk.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function setup(string $package, string $framework, bool $migrate, callable $output): bool
     {
         if (!isset(ManagedPackages::PACKAGES[$package]) || !in_array($framework, Frontend::FRAMEWORKS, true)) {
@@ -63,8 +103,8 @@ class ComposerPackages
         if (!in_array($action, ['install', 'remove'], true) || !in_array($package, ManagedPackages::PACKAGES, true)) {
             return false;
         }
-        $composer = (new ExecutableFinder())->find('composer');
-        if (!$composer || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
+        $composer = $this->settingsComposer();
+        if (!$composer) {
             return false;
         }
         $process = new Process([$composer, $action === 'install' ? 'require' : 'remove', $package, '--no-interaction', '--no-scripts', '--no-plugins'], base_path(), null, null, 300);
@@ -78,6 +118,15 @@ class ComposerPackages
         }
 
         return $this->refreshApplication($package);
+    }
+
+    private function settingsComposer(): ?string
+    {
+        if (!$this->vendorOwned() || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
+            return null;
+        }
+
+        return (new ExecutableFinder())->find('composer');
     }
 
     private function verifyChange(string $action, string $package): bool
@@ -140,6 +189,11 @@ class ComposerPackages
         return $restart->run() === 0;
     }
 
+    /**
+     * Symfony Process supplies an output type before each output chunk.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function run(string $action, array $packages, callable $output): bool
     {
         $composer = (new ExecutableFinder())->find('composer');

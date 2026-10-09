@@ -32,6 +32,11 @@ class AccountPreferences
         return self::enabled($user) && self::enabled($user, 'settings_enabled');
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public static function rules(Model $user): array
     {
         $rules = [];

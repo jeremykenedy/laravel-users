@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use jeremykenedy\laravelusers\Notifications\WelcomeUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
 class WelcomeTest extends TestCase
 {
@@ -100,6 +101,7 @@ class WelcomeTest extends TestCase
         $user = User::where('email', 'new@example.com')->firstOrFail();
         $this->assertFalse(Hash::check('password123', $user->password));
         Notification::assertSentOnDemand(WelcomeUser::class, function ($notification, $channels, $recipient) use ($user) {
+            $this->assertSame(['mail'], $channels);
             parse_str(parse_url($notification->resetUrl, PHP_URL_QUERY), $query);
             $token = basename(parse_url($notification->resetUrl, PHP_URL_PATH));
             $this->assertEquals($user->email, $query['email']);
@@ -120,7 +122,7 @@ class WelcomeTest extends TestCase
     public function test_mail_failure_reports_a_warning_without_rolling_back_the_account(): void
     {
         $this->mock(Dispatcher::class, function ($mock) {
-            $mock->shouldReceive('send')->once()->andThrow(new \RuntimeException('Mail unavailable'));
+            $mock->shouldReceive('send')->once()->andThrow(new RuntimeException('Mail unavailable'));
         });
         $this->mock(ExceptionHandler::class, function ($mock) {
             $mock->shouldReceive('report')->once();
@@ -146,10 +148,11 @@ class WelcomeTest extends TestCase
             if ($url) {
                 $this->assertStringContainsString(trans('laravelusers::ui.reset_notice'), $html);
                 $this->assertStringContainsString(trans('laravelusers::ui.reset_expiry', ['minutes' => config('auth.passwords.users.expire')]), $text);
-            } else {
-                $this->assertStringContainsString(route('login'), $html);
-                $this->assertStringNotContainsString(trans('laravelusers::ui.reset_notice'), $text);
+
+                continue;
             }
+            $this->assertStringContainsString(route('login'), $html);
+            $this->assertStringNotContainsString(trans('laravelusers::ui.reset_notice'), $text);
         }
     }
 }

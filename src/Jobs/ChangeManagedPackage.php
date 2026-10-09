@@ -60,19 +60,7 @@ class ChangeManagedPackage implements ShouldQueue
             if (PackageOperations::overdue($record)) {
                 throw ValidationException::withMessages(['package' => trans('laravelusers::ui.package_worker_missing')]);
             }
-            $this->authorize($packages, $settings);
-            $packages->check($record['package'], $record['operation']);
-            $message = match ($record['operation']) {
-                'install'   => 'package_installing',
-                'configure' => 'package_configuring',
-                default     => 'package_removing',
-            };
-            PackageOperations::update($this->id, ['status' => 'running', 'stage' => $record['operation'] === 'configure' ? 'setup' : 'composer', 'started_at' => now()->timestamp, 'message' => trans('laravelusers::ui.'.$message)]);
-            $this->change($composer, $record);
-            $message = $record['operation'] === 'configure' ? 'Package setup completed.' : ($record['operation'] === 'install'
-                ? (!empty($record['setup']) ? 'Package installed and setup completed. Restart remaining application workers after changing dependencies.' : 'Composer installation completed. Finish the package setup using the instructions below before enabling the integration. Restart remaining application workers after changing dependencies.')
-                : 'Composer removal completed. Database tables and published files were retained. Review application references and restart remaining application workers.');
-            PackageOperations::update($this->id, ['status' => 'completed', 'stage' => 'completed', 'message' => $message]);
+            $this->perform($record, $packages, $composer, $settings);
         } catch (Throwable $exception) {
             $this->failed($exception);
         } finally {
@@ -80,6 +68,23 @@ class ChangeManagedPackage implements ShouldQueue
             $this->release();
             $claim->release();
         }
+    }
+
+    private function perform(array $record, ManagedPackages $packages, ComposerPackages $composer, UserSettings $settings): void
+    {
+        $this->authorize($packages, $settings);
+        $packages->check($record['package'], $record['operation']);
+        $message = match ($record['operation']) {
+            'install'   => 'package_installing',
+            'configure' => 'package_configuring',
+            default     => 'package_removing',
+        };
+        PackageOperations::update($this->id, ['status' => 'running', 'stage' => $record['operation'] === 'configure' ? 'setup' : 'composer', 'started_at' => now()->timestamp, 'message' => trans('laravelusers::ui.'.$message)]);
+        $this->change($composer, $record);
+        $message = $record['operation'] === 'configure' ? 'Package setup completed.' : ($record['operation'] === 'install'
+            ? (!empty($record['setup']) ? 'Package installed and setup completed. Restart remaining application workers after changing dependencies.' : 'Composer installation completed. Finish the package setup using the instructions below before enabling the integration. Restart remaining application workers after changing dependencies.')
+            : 'Composer removal completed. Database tables and published files were retained. Review application references and restart remaining application workers.');
+        PackageOperations::update($this->id, ['status' => 'completed', 'stage' => 'completed', 'message' => $message]);
     }
 
     private function authorize(ManagedPackages $packages, UserSettings $settings): void
@@ -102,7 +107,7 @@ class ChangeManagedPackage implements ShouldQueue
         }
         if (in_array($record['operation'], ['install', 'configure'], true) && !empty($record['setup'])) {
             PackageOperations::update($this->id, ['stage' => 'setup', 'message' => trans('laravelusers::ui.package_configuring')]);
-            if (!$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn ($text) => null)) {
+            if (!$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn () => null)) {
                 throw new RuntimeException('Package setup failed. Review the application logs before retrying setup from settings.');
             }
         }

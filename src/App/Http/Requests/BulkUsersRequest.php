@@ -15,6 +15,11 @@ class BulkUsersRequest extends FormRequest
         return (bool) config('laravelusers.bulkActions', false);
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function rules(): array
     {
         return [

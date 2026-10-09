@@ -12,7 +12,13 @@ use jeremykenedy\laravelusers\Notifications\UserMessage;
 use jeremykenedy\laravelusers\Support\AccountLinks;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\TestCase;
+use RuntimeException;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class AccountLinksTest extends TestCase
 {
     protected function setUp(): void
@@ -125,7 +131,7 @@ class AccountLinksTest extends TestCase
         try {
             $this->post($url);
             $this->fail('Expected the account action to fail.');
-        } catch (\RuntimeException $exception) {
+        } catch (RuntimeException $exception) {
             $this->assertSame('The account action could not be completed.', $exception->getMessage());
         }
         $this->assertNull(AccountLink::first()->consumed_at);
@@ -141,6 +147,7 @@ class AccountLinksTest extends TestCase
         $this->actingAs($admin)->from('/users/deleted')->post('/users/email', $this->message(['ids' => [$one->id, $two->id], 'message' => '<img src=x onerror=alert(1)>', 'use_greeting' => 1, 'greeting' => 'Hi', 'include_name' => 1]))->assertRedirect('/users/deleted')->assertSessionHasNoErrors();
         $urls = [];
         Notification::assertSentOnDemand(UserMessage::class, function ($notification, $channels, $recipient) use (&$urls) {
+            $this->assertSame(['mail'], $channels);
             $mail = $notification->toMail($recipient);
             $this->assertSame('laravelusers::emails.deleted-user', $mail->markdown);
             $this->assertSame(120, $mail->viewData['accountMinutes']);
@@ -272,22 +279,10 @@ class AccountLinksTest extends TestCase
             foreach ([0, 1] as $index) {
                 $pid = pcntl_fork();
                 if ($pid === -1) {
-                    throw new \RuntimeException('Could not start the concurrent request.');
+                    throw new RuntimeException('Could not start the concurrent request.');
                 }
                 if ($pid === 0) {
-                    $this->app['db']->purge('testing');
-                    while (!file_exists($directory.'/start')) {
-                        usleep(1000);
-                    }
-
-                    try {
-                        $result = $this->app->make(AccountLinks::class)->consume(basename($url));
-                        file_put_contents($directory.'/'.$index, json_encode($result));
-                        exit(0);
-                    } catch (\Throwable $exception) {
-                        file_put_contents($directory.'/'.$index, $exception->getMessage());
-                        exit(1);
-                    }
+                    $this->consumeInChild($directory, $index, $url);
                 }
                 $children[] = $pid;
             }
@@ -310,6 +305,28 @@ class AccountLinksTest extends TestCase
                 unlink($file);
             }
             rmdir($directory);
+        }
+    }
+
+    /**
+     * Forked requests must terminate before the parent PHPUnit process continues.
+     *
+     * @SuppressWarnings("PHPMD.ExitExpression")
+     */
+    private function consumeInChild(string $directory, int $index, string $url): never
+    {
+        $this->app['db']->purge('testing');
+        while (!file_exists($directory.'/start')) {
+            usleep(1000);
+        }
+
+        try {
+            $result = $this->app->make(AccountLinks::class)->consume(basename($url));
+            file_put_contents($directory.'/'.$index, json_encode($result));
+            exit(0);
+        } catch (\Throwable $exception) {
+            file_put_contents($directory.'/'.$index, $exception->getMessage());
+            exit(1);
         }
     }
 

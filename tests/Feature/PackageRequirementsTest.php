@@ -16,6 +16,11 @@ use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PackageWorker;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class PackageRequirementsTest extends TestCase
 {
     private string $directory;

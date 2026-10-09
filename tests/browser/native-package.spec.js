@@ -16,6 +16,25 @@ test.afterAll(async () => {
     if (originalToastConfig) await fs.writeFile(toastConfig, originalToastConfig);
 });
 
+async function assertResponsivePackageActions(page, requirements, runtime) {
+    for (const width of [390, 768]) {
+        await page.setViewportSize({ width, height: 950 });
+        const buttons = await requirements.locator('button').evaluateAll(nodes => nodes.map(node => {
+            const box = node.getBoundingClientRect();
+            const result = { x: box.x, y: box.y, width: box.width, height: box.height, fontSize: parseFloat(getComputedStyle(node).fontSize), text: node.textContent.trim(), labelVisible: node.querySelector('span').getBoundingClientRect().width > 0 };
+            return result;
+        }));
+        if (width === 390) {
+            expect(buttons[0].x).toBe(buttons[1].x);
+            expect(buttons[1].y).toBeGreaterThanOrEqual(buttons[0].y + buttons[0].height);
+            expect(buttons[0].width).toBe(buttons[1].width);
+        } else expect(buttons[0].y).toBe(buttons[1].y);
+        expect(buttons.every(button => button.labelVisible && button.fontSize >= 12)).toBe(true);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        await page.locator('#packages').screenshot({ path: `tests/browser/runtime/native-${runtime}-package-actions-${width}.png` });
+    }
+}
+
 for (const runtime of ['livewire', 'vue', 'react', 'svelte']) {
     test(`${runtime} automatically refreshes actual setup and preserves independent requirement status`, async ({ page }) => {
         test.setTimeout(60000);
@@ -33,21 +52,7 @@ for (const runtime of ['livewire', 'vue', 'react', 'svelte']) {
         await expect(reverify).toBeEnabled();
         await expect(reverify.locator('[data-lu-icon="verify"]')).toBeVisible();
         await expect(requirements.locator('[data-lu-icon="check"]')).toBeVisible();
-        for (const width of [390, 768]) {
-            await page.setViewportSize({ width, height: 950 });
-            const buttons = await requirements.locator('button').evaluateAll(nodes => nodes.map(node => {
-                const box = node.getBoundingClientRect();
-                return { x: box.x, y: box.y, width: box.width, height: box.height, fontSize: parseFloat(getComputedStyle(node).fontSize), text: node.textContent.trim(), labelVisible: node.querySelector('span').getBoundingClientRect().width > 0 };
-            }));
-            if (width === 390) {
-                expect(buttons[0].x).toBe(buttons[1].x);
-                expect(buttons[1].y).toBeGreaterThanOrEqual(buttons[0].y + buttons[0].height);
-                expect(buttons[0].width).toBe(buttons[1].width);
-            } else expect(buttons[0].y).toBe(buttons[1].y);
-            expect(buttons.every(button => button.labelVisible && button.fontSize >= 12)).toBe(true);
-            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-            await page.locator('#packages').screenshot({ path: `tests/browser/runtime/native-${runtime}-package-actions-${width}.png` });
-        }
+        await assertResponsivePackageActions(page, requirements, runtime);
         await configure.click();
         const dialog = page.getByRole('dialog');
         await dialog.locator('[name="confirmation"]').fill('continue');

@@ -5,6 +5,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 use Illuminate\Support\Facades\File;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Test\TestCase;
+use stdClass;
 
 class ComposerReadinessTest extends TestCase
 {
@@ -22,7 +23,7 @@ class ComposerReadinessTest extends TestCase
         }
         File::put(base_path('bin/composer'), "#!/bin/sh\nexit 1\n");
         chmod(base_path('bin/composer'), 0755);
-        File::put(base_path('composer.json'), json_encode(['name' => 'example/application', 'require' => new \stdClass()]));
+        File::put(base_path('composer.json'), json_encode(['name' => 'example/application', 'require' => new stdClass()]));
         File::put(base_path('vendor/composer/installed.json'), json_encode(['packages' => [['name' => 'example/package', 'version' => '1.0.0']]]));
         File::put(base_path('artisan'), '<?php');
         File::put(base_path('composer.lock'), '{}');
@@ -43,6 +44,30 @@ class ComposerReadinessTest extends TestCase
         File::put(base_path('vendor/composer/installed.json'), json_encode([['name' => 'example/package', 'version' => '1.0.0']]));
         $this->assertNull((new ComposerPackages())->readiness());
         File::delete(base_path('composer.lock'));
+        $this->assertNull((new ComposerPackages())->readiness());
+    }
+
+    public function test_settings_only_accept_vendor_symlinks_inside_the_application(): void
+    {
+        $external = $this->directory.'-shared-vendor';
+        rename(base_path('vendor'), $external);
+        symlink($external, base_path('vendor'));
+        $manifest = File::get(base_path('composer.json'));
+
+        try {
+            $composer = new ComposerPackages();
+            $this->assertSame('laravelusers::ui.package_composer_vendor', $composer->readiness());
+            $this->assertFalse($composer->changeFromSettings('remove', 'jeremykenedy/laravel-toast'));
+            $this->assertSame($manifest, File::get(base_path('composer.json')));
+            $this->assertFileExists($external.'/composer/installed.json');
+        } finally {
+            unlink(base_path('vendor'));
+            rename($external, base_path('vendor'));
+        }
+
+        rename(base_path('vendor'), base_path('vendor-local'));
+        symlink(base_path('vendor-local'), base_path('vendor'));
+
         $this->assertNull((new ComposerPackages())->readiness());
     }
 

@@ -2,7 +2,11 @@
     const root = document.getElementById('laravelusers');
     if (!root) return;
     const options = JSON.parse(document.getElementById('lu-page-options').textContent);
-    const tooltips = options.tooltips;
+    const {
+        tooltips, avatarColumn, bulk, roles, createdColumn, updatedColumn, onlineColumn,
+        loginColumn, loginDetailsColumn, emailLinks, currentUser,
+        usersUrl: baseUrl, searchDelay: delay
+    } = options;
     function buttonLabels() {
         root.querySelectorAll('.lu-button').forEach(function (button) {
             const label = button.textContent.trim();
@@ -25,13 +29,19 @@
         modal.querySelector('#lu-confirm-title').textContent = form.dataset.luConfirmTitle || options.deleteTitle;
         modal.querySelector('#lu-confirm-message').textContent = form.dataset.luConfirm;
         const action = form.querySelector('[name="action"]');
-        const deletion = form.querySelector('[name="_method"]')?.value === 'DELETE' || (action && ['delete', 'force_delete'].includes(action.value));
+        const deletion = isDeletion(form, action);
         modal.dataset.luDelete = deletion ? 'true' : 'false';
-        modal.dispatchEvent(new CustomEvent('lu:delete-modal', { bubbles: true, detail: { action: deletion && (!action || action.value === 'delete') && !/\/force(?:\?|$)/.test(form.action) ? 'delete' : null } }));
+        modal.dispatchEvent(new CustomEvent('lu:delete-modal', { bubbles: true, detail: { action: deleteAction(form, action, deletion) } }));
         modal.querySelector('[data-lu-delete-icon]').hidden = !deletion;
         modal.querySelector('[data-lu-save-icon]').hidden = deletion;
         modal.showModal();
     });
+    function isDeletion(form, action) {
+        return form.querySelector('[name="_method"]')?.value === 'DELETE' || (action && ['delete', 'force_delete'].includes(action.value));
+    }
+    function deleteAction(form, action, deletion) {
+        return deletion && (!action || action.value === 'delete') && !/\/force(?:\?|$)/.test(form.action) ? 'delete' : null;
+    }
     if (modal) {
         modal.querySelectorAll('[data-lu-dismiss]').forEach(button => button.addEventListener('click', () => modal.close()));
         modal.addEventListener('close', function () {
@@ -56,18 +66,6 @@
     const results = root.querySelector('#lu-results');
     const status = root.querySelector('#lu-search-status');
     const pagination = root.querySelector('#lu-pagination');
-    const avatarColumn = options.avatarColumn;
-    const bulk = options.bulk;
-    const roles = options.roles;
-    const createdColumn = options.createdColumn;
-    const updatedColumn = options.updatedColumn;
-    const onlineColumn = options.onlineColumn;
-    const loginColumn = options.loginColumn;
-    const loginDetailsColumn = options.loginDetailsColumn;
-    const emailLinks = options.emailLinks;
-    const currentUser = options.currentUser;
-    const baseUrl = options.usersUrl;
-    const delay = options.searchDelay;
     let request;
     let timer;
     function reset() {
@@ -218,12 +216,33 @@
         actionCell(row, user, link.href);
         results.append(row);
     }
+    function renderSearch(payload) {
+        const users = Array.isArray(payload) ? payload : payload.users;
+        const activity = payload.activity || {};
+        const avatars = payload.avatars || {};
+        results.replaceChildren();
+        users.forEach(user => renderUser(user, activity, avatars));
+        if (!users.length) {
+            const row = document.createElement('tr');
+            cell(row, options.noResults).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn) + Number(loginDetailsColumn);
+            results.append(row);
+        }
+        original.hidden = true;
+        results.hidden = false;
+        if (pagination) pagination.hidden = true;
+        status.textContent = options.results.replace(':count', users.length);
+        root.dispatchEvent(new Event('lu:rows'));
+        root.dispatchEvent(new CustomEvent('lu:appearance', {detail: payload.appearance || {}}));
+    }
     form.addEventListener('reset', reset);
     input.addEventListener('input', function () {
         clearTimeout(timer);
         if (request) request.abort();
         clear.hidden = !input.value.length;
-        if (!input.value.length) return reset();
+        if (!input.value.length) {
+            reset();
+            return;
+        }
         if (!options.searchDebounce) return;
         timer = setTimeout(() => form.requestSubmit(), delay);
     });
@@ -242,23 +261,8 @@
             });
             if (!response.ok) throw new Error('Search failed');
             const payload = await response.json();
-            const users = Array.isArray(payload) ? payload : payload.users;
-            const activity = payload.activity || {};
-            const avatars = payload.avatars || {};
             if (current !== request || current.signal.aborted) return;
-            results.replaceChildren();
-            users.forEach(user => renderUser(user, activity, avatars));
-            if (!users.length) {
-                const row = document.createElement('tr');
-                cell(row, options.noResults).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn) + Number(loginDetailsColumn);
-                results.append(row);
-            }
-            original.hidden = true;
-            results.hidden = false;
-            if (pagination) pagination.hidden = true;
-            status.textContent = options.results.replace(':count', users.length);
-            root.dispatchEvent(new Event('lu:rows'));
-            root.dispatchEvent(new CustomEvent('lu:appearance', {detail: payload.appearance || {}}));
+            renderSearch(payload);
         } catch (error) {
             if (error.name === 'AbortError' || current !== request) return;
             original.hidden = false;

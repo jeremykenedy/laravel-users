@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use jeremykenedy\laravelusers\Models\AppearancePreference;
 
+/**
+ * Preserves the appearance preference API across validation, persistence, schema capabilities, and presentation.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class AppearancePreferences
 {
     public static function available(Model $user): bool
@@ -25,21 +30,34 @@ class AppearancePreferences
         $allowed = UserAccess::allows('edit_user_appearance') ? 'sometimes' : 'prohibited';
         $rules = [];
         foreach (['' => self::available($user), '_dark' => self::darkAvailable($user)] as $mode => $available) {
-            $readyForMode = function ($attribute, $value, $fail) use ($available) {
-                if (!$available) {
-                    $fail(trans('laravelusers::ui.appearance_migration_required'));
-                }
-            };
-            $rules['user_card'.$mode.'_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i', $readyForMode];
-            $rules['user_card'.$mode.'_gradient'] = array_merge($allowed === 'sometimes' ? ['sometimes', 'required'] : ['prohibited'], [Rule::in(['inherit', 'on', 'off']), $readyForMode]);
-            $rules['user_card'.$mode.'_gradient_strength'] = [$allowed, 'nullable', 'integer', 'min:0', 'max:100', $readyForMode, function ($attribute, $value, $fail) use ($user, $mode) {
-                if ($mode === '' && !self::strengthAvailable($user)) {
-                    $fail(trans('laravelusers::ui.appearance_migration_required'));
-                }
-            }];
-            if ($available && self::highlightAvailable($user)) {
-                $rules['user_card'.$mode.'_gradient_highlight_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'];
+            $rules += self::modeRules($user, $mode, $available, $allowed);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
+    private static function modeRules(Model $user, string $mode, bool $available, string $allowed): array
+    {
+        $rules = [];
+        $readyForMode = function ($attribute, $value, $fail) use ($available) {
+            if (!$available) {
+                $fail(trans('laravelusers::ui.appearance_migration_required'));
             }
+        };
+        $rules['user_card'.$mode.'_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i', $readyForMode];
+        $rules['user_card'.$mode.'_gradient'] = array_merge($allowed === 'sometimes' ? ['sometimes', 'required'] : ['prohibited'], [Rule::in(['inherit', 'on', 'off']), $readyForMode]);
+        $rules['user_card'.$mode.'_gradient_strength'] = [$allowed, 'nullable', 'integer', 'min:0', 'max:100', $readyForMode, function ($attribute, $value, $fail) use ($user, $mode) {
+            if ($mode === '' && !self::strengthAvailable($user)) {
+                $fail(trans('laravelusers::ui.appearance_migration_required'));
+            }
+        }];
+        if ($available && self::highlightAvailable($user)) {
+            $rules['user_card'.$mode.'_gradient_highlight_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'];
         }
 
         return $rules;

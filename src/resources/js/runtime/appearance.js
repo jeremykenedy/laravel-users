@@ -1,3 +1,5 @@
+import { getOwnValue } from './shared.js';
+
 function hexColor(value, fallback) {
     return typeof value === 'string' && /^#[a-f0-9]{6}$/i.test(value) ? value.toLowerCase() : fallback;
 }
@@ -14,25 +16,25 @@ function colors(base, strength, highlight, gradient) {
 }
 
 export function previewColors(page, values, kind) {
-    const fallback = page.data.appearance_defaults[kind];
+    const fallback = getOwnValue(page.data.appearance_defaults, kind);
     const lightKind = kind.replace('_dark', '');
-    const highlight = values[kind + '_gradient_highlight_color'] ?? values[lightKind + '_gradient_highlight_color'] ?? fallback.highlight_color;
-    return colors(hexColor(values[kind + '_color'], fallback.base), values[kind + '_gradient_strength'] ?? fallback.strength, hexColor(highlight, '#ffffff'), values[kind + '_gradient'] ?? fallback.gradient);
+    const highlight = getOwnValue(values, kind + '_gradient_highlight_color') ?? getOwnValue(values, lightKind + '_gradient_highlight_color') ?? fallback.highlight_color;
+    return colors(hexColor(getOwnValue(values, kind + '_color'), fallback.base), getOwnValue(values, kind + '_gradient_strength') ?? fallback.strength, hexColor(highlight, '#ffffff'), getOwnValue(values, kind + '_gradient') ?? fallback.gradient);
 }
 
 export function profileStyle(page, user, editing = false, values = null) {
     const kind = editing ? 'edit' : 'profile';
-    let light = user?.appearance ?? page.data.appearance_defaults[kind];
-    let dark = user?.appearance?.dark ?? page.data.appearance_defaults[kind + '_dark'];
+    let light = user?.appearance ?? getOwnValue(page.data.appearance_defaults, kind);
+    let dark = user?.appearance?.dark ?? getOwnValue(page.data.appearance_defaults, kind + '_dark');
     if (values) {
         const make = (mode, fallback) => colors(
-            hexColor(values[`user_card${mode}_color`], fallback.base),
-            values[`user_card${mode}_gradient_strength`] ?? fallback.strength,
-            hexColor(values[`user_card${mode}_gradient_highlight_color`], fallback.highlight_color ?? '#ffffff'),
-            values[`user_card${mode}_gradient`] === 'inherit' || values[`user_card${mode}_gradient`] === undefined ? fallback.gradient : values[`user_card${mode}_gradient`] === 'on',
+            hexColor(getOwnValue(values, `user_card${mode}_color`), fallback.base),
+            getOwnValue(values, `user_card${mode}_gradient_strength`) ?? fallback.strength,
+            hexColor(getOwnValue(values, `user_card${mode}_gradient_highlight_color`), fallback.highlight_color ?? '#ffffff'),
+            getOwnValue(values, `user_card${mode}_gradient`) === 'inherit' || getOwnValue(values, `user_card${mode}_gradient`) === undefined ? fallback.gradient : getOwnValue(values, `user_card${mode}_gradient`) === 'on',
         );
-        light = make('', page.data.appearance_defaults[kind]);
-        const fallback = page.data.appearance_defaults[kind + '_dark'];
+        light = make('', getOwnValue(page.data.appearance_defaults, kind));
+        const fallback = getOwnValue(page.data.appearance_defaults, kind + '_dark');
         dark = make('_dark', { ...fallback, highlight_color: fallback.highlight_inherits_light ? light.highlight.slice(0, 7) : fallback.highlight_color });
     }
     return { ...styleVariables(light), ...styleVariables(dark, true) };

@@ -87,7 +87,7 @@ PHP);
     public function test_cli_install_remove_and_setup_use_separate_process_arguments(): void
     {
         $composer = new ComposerPackages();
-        $output = fn ($text) => null;
+        $output = fn () => null;
         $this->assertTrue($composer->install('jeremykenedy/laravel-toast', $output));
         $this->assertTrue($composer->installMany(['dicebear/core:^10.7', 'dicebear/styles:^10.6'], $output));
         $this->assertTrue($composer->remove('jeremykenedy/laravel-toast', $output));

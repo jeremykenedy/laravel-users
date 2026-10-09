@@ -17,7 +17,7 @@
     --md-sys-shape-corner-large: 16px;
     --md-sys-shape-corner-extra-large: 28px;
     --md-sys-shape-corner-full: 9999px;
-    --md-ref-typeface-plain: Roboto, "Segoe UI", sans-serif;
+    --md-ref-typeface-plain: roboto, "Segoe UI", sans-serif;
     --lu-bg: var(--md-sys-color-surface);
     --lu-text: var(--md-sys-color-on-surface);
     --lu-muted: var(--md-sys-color-on-surface-variant);
@@ -34,8 +34,10 @@
     --lu-field-radius: var(--md-sys-shape-corner-small);
     --lu-panel-radius: var(--md-sys-shape-corner-large);
     --md-focus-ring-color: var(--md-sys-color-primary);
+
     font-family: var(--md-ref-typeface-plain);
 }
+
 #laravelusers[data-lu-css="material3"][data-lu-theme="dark"] {
     --md-sys-color-primary: #d0bcff;
     --md-sys-color-on-primary: #381e72;
@@ -53,34 +55,44 @@
     --lu-success: #a1d789;
     --lu-on-success: #113800;
 }
+
 #laravelusers[data-lu-css="material3"] .lu-panel {
     box-shadow: 0 1px 3px #0002;
 }
+
 #laravelusers[data-lu-css="material3"] [data-lu-material-control] {
     position: relative;
     isolation: isolate;
+
     --md-focus-ring-shape: var(--lu-control-radius);
-    --md-ripple-hover-color: currentColor;
-    --md-ripple-pressed-color: currentColor;
+    --md-ripple-hover-color: currentcolor;
+    --md-ripple-pressed-color: currentcolor;
 }
+
 #laravelusers[data-lu-css="material3"] .lu-input-group[data-lu-material-control] {
     border-radius: var(--lu-field-radius);
+
     --md-focus-ring-shape: var(--lu-field-radius);
 }
+
 #laravelusers[data-lu-css="material3"] :is(.lu-settings-tabs, .lu-account-tabs) [data-lu-material-control] {
     --md-focus-ring-shape: 4px;
 }
+
 #laravelusers[data-lu-css="material3"] .lu-email-choice[data-lu-material-control] {
     --md-focus-ring-shape: 4px;
 }
+
 #laravelusers[data-lu-css="material3"] md-ripple,
 #laravelusers[data-lu-css="material3"] md-focus-ring {
     border-radius: inherit;
     pointer-events: none;
 }
+
 #laravelusers[data-lu-css="material3"] .lu-field-error {
     color: var(--md-sys-color-error);
 }
+
 #laravelusers[data-lu-css="material3"] .lu-button:hover,
 #laravelusers[data-lu-css="material3"] .lu-button:focus {
     filter: none;
@@ -89,8 +101,10 @@
     #laravelusers[data-lu-css="material3"] md-ripple {
         display: none;
     }
+
     #laravelusers[data-lu-css="material3"] md-focus-ring {
         animation: none;
+
         --md-focus-ring-duration: 0ms;
     }
 }

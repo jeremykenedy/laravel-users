@@ -49,9 +49,10 @@ class AvatarPreviewTest extends TestCase
             $response->assertDontSee($actor->name)->assertDontSee($actor->email);
             if ($source === 'initials') {
                 $this->assertSame([null, null, null, null], array_column(array_column($avatars, 'avatar'), 'src'));
-            } else {
-                $this->assertCount(4, array_unique(array_column(array_column($avatars, 'avatar'), 'src')));
+
+                continue;
             }
+            $this->assertCount(4, array_unique(array_column(array_column($avatars, 'avatar'), 'src')));
         }
         $this->assertSame($saved, UserSetting::findOrFail('global')->value);
         $this->assertSame('initials', config('laravelusers.avatar.source'));

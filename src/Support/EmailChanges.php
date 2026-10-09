@@ -18,6 +18,12 @@ use jeremykenedy\laravelusers\Notifications\ConfirmEmailChange;
 use JsonException;
 use RuntimeException;
 
+/**
+ * Keeps email change issuance, confirmation, cancellation, and replay protection in one lifecycle service.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class EmailChanges
 {
     public function __construct(private readonly Encrypter $encrypter, private readonly Dispatcher $notifications)

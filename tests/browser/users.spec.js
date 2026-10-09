@@ -1,6 +1,10 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const { startPackageWorker } = require('./package-worker.cjs');
+const { execFileSync } = require('node:child_process');
+const path = require('node:path');
+
+const toastInstalled = execFileSync('php', ['-r', 'require $argv[1]; echo class_exists(Jeremykenedy\\LaravelToast\\Providers\\ToastServiceProvider::class) ? "1" : "0";', path.join(__dirname, '../../vendor/autoload.php')], { encoding: 'utf8' }) === '1';
 
 test.use({ timezoneId: 'America/Los_Angeles' });
 
@@ -68,27 +72,29 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         const userData = {name: 'Alex Rivers', email: 'user1@example.com', user_card_color: '', user_card_gradient: 'inherit', user_card_gradient_strength: '', user_card_dark_color: '', user_card_dark_gradient: 'inherit', user_card_dark_gradient_strength: ''};
         await page.request.post('/users/2/restore', {form: {_token: token}});
         await page.request.post('/users/2', {form: {_token: token, _method: 'PUT', ...userData}});
-        await page.goto('/users/settings');
-        await page.locator('#settings-profile-color').fill('#264e36');
-        await page.locator('#settings-profile-dark-color').fill('#19283a');
-        await page.locator('#settings-profile-dark-gradient').uncheck();
-        await page.locator('#settings-profile-dark-strength').fill('75');
-        await page.locator('#settings-edit-dark-color').fill('#49340e');
-        await page.locator('#settings-edit-dark-gradient').check();
-        await page.locator('#settings-edit-dark-strength').fill('80');
-        await page.getByRole('button', {name: 'Save settings', exact: true}).click();
-        await page.goto('/users/2');
-        await setTheme(page, 'dark');
-        await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(25, 40, 58)');
-        await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-image', 'none');
-        await setTheme(page, 'light');
-        await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(38, 78, 54)');
-        await page.goto('/users/2/edit');
-        await setTheme(page, 'dark');
-        if (framework !== 'bootstrap4') {
-            await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(73, 52, 14)');
-            expect(await page.locator('.lu-profile-identity').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('radial-gradient');
-        }
+        await test.step('Save global dark appearance and verify inherited profile colors', async () => {
+            await page.goto('/users/settings');
+            await page.locator('#settings-profile-color').fill('#264e36');
+            await page.locator('#settings-profile-dark-color').fill('#19283a');
+            await page.locator('#settings-profile-dark-gradient').uncheck();
+            await page.locator('#settings-profile-dark-strength').fill('75');
+            await page.locator('#settings-edit-dark-color').fill('#49340e');
+            await page.locator('#settings-edit-dark-gradient').check();
+            await page.locator('#settings-edit-dark-strength').fill('80');
+            await page.getByRole('button', {name: 'Save settings', exact: true}).click();
+            await page.goto('/users/2');
+            await setTheme(page, 'dark');
+            await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(25, 40, 58)');
+            await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-image', 'none');
+            await setTheme(page, 'light');
+            await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(38, 78, 54)');
+            await page.goto('/users/2/edit');
+            await setTheme(page, 'dark');
+            if (framework !== 'bootstrap4') {
+                await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(73, 52, 14)');
+                expect(await page.locator('.lu-profile-identity').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('radial-gradient');
+            }
+        });
         await openEditSection(page, 'Appearance');
         await page.locator('[data-lu-inherit-color="user-card-dark-color"]').uncheck();
         await page.locator('#user-card-dark-color').fill('#503260');
@@ -134,29 +140,31 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.goto(`/__browser/${framework}?settings=1&appearance=1&avatar-preferences=1`);
         const setupToken = await page.locator('meta[name="csrf-token"]').getAttribute('content');
         await page.request.post('/users/2', {form: {_token: setupToken, _method: 'PUT', name: 'Alex Rivers', email: 'user1@example.com', user_card_color: '', user_card_gradient: 'inherit', user_card_gradient_strength: ''}});
-        await page.locator('.lu-user-menu summary').click();
-        await expect(page.getByRole('button', { name: 'Log out', exact: true })).toBeVisible();
-        await page.locator('#user_search_box').click();
-        await expect(page.locator('.lu-user-menu')).not.toHaveAttribute('open');
-        await expect(page.locator('.lu-user-menu .lu-avatar')).toHaveCSS('border-radius', '50%');
-        await page.getByRole('link', { name: 'User settings', exact: true }).click();
-        if (framework !== 'bootstrap4') {
-            await expect(page.locator('.lu-settings-panel > header')).toHaveClass(/lu-card-heading/);
-            await expect(page.locator('.lu-settings-panel > header h1')).toHaveCSS('font-size', '20px');
-            await expect(page.locator('.lu-settings-panel > header')).toHaveCSS('padding-left', '24px');
-        }
-        await page.locator('#settings-profile-strength').fill('80');
-        await expect(page.locator('output[for="settings-profile-strength"]')).toHaveText('80%');
-        await page.getByRole('button', { name: 'Reset Gradient strength to default', exact: true }).first().click();
-        await expect(page.locator('#settings-profile-strength')).toHaveValue('50');
-        await page.locator('#settings-profile-color').fill('#123456');
-        await page.getByRole('button', { name: 'Reset View user card color to default', exact: true }).click();
-        await expect(page.locator('#settings-profile-color')).toHaveValue('#2458b7');
+        await test.step('Check user-menu dismissal and global appearance reset controls', async () => {
+            await page.locator('.lu-user-menu summary').click();
+            await expect(page.getByRole('button', { name: 'Log out', exact: true })).toBeVisible();
+            await page.locator('#user_search_box').click();
+            await expect(page.locator('.lu-user-menu')).not.toHaveAttribute('open');
+            await expect(page.locator('.lu-user-menu .lu-avatar')).toHaveCSS('border-radius', '50%');
+            await page.getByRole('link', { name: 'User settings', exact: true }).click();
+            if (framework !== 'bootstrap4') {
+                await expect(page.locator('.lu-settings-panel > header')).toHaveClass(/lu-card-heading/);
+                await expect(page.locator('.lu-settings-panel > header h1')).toHaveCSS('font-size', '20px');
+                await expect(page.locator('.lu-settings-panel > header')).toHaveCSS('padding-left', '24px');
+            }
+            await page.locator('#settings-profile-strength').fill('80');
+            await expect(page.locator('output[for="settings-profile-strength"]')).toHaveText('80%');
+            await page.getByRole('button', { name: 'Reset Gradient strength to default', exact: true }).first().click();
+            await expect(page.locator('#settings-profile-strength')).toHaveValue('50');
+            await page.locator('#settings-profile-color').fill('#123456');
+            await page.getByRole('button', { name: 'Reset View user card color to default', exact: true }).click();
+            await expect(page.locator('#settings-profile-color')).toHaveValue('#2458b7');
+        });
         await page.locator('#settings-avatar').selectOption('ui-avatars');
         await page.locator('#settings-profile-color').fill('#264e36');
         await page.locator('#settings-edit-color').fill('#705000');
         await page.locator('#settings-profile-gradient').uncheck();
-        await expect(page.locator('#settings-notifications')).toHaveCount(0);
+        await expect(page.locator('#settings-notifications')).toHaveCount(toastInstalled ? 1 : 0);
         await page.getByRole('button', { name: 'Save settings', exact: true }).click();
         await expect(page.locator('.lu-flash')).toContainText('User settings saved.');
         await page.locator('.lu-flash').getByRole('button', { name: 'Close', exact: true }).click();
@@ -167,20 +175,22 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         const image = page.locator('.lu-profile-identity .lu-avatar img');
         await expect(image).toHaveAttribute('src', /^data:image\/svg\+xml;base64,/);
         await expect.poll(() => image.evaluate(element => element.naturalWidth)).toBe(256);
-        await page.goto('/users/2/edit');
-        await openEditSection(page, 'Appearance');
-        await page.getByLabel('Use global color', { exact: true }).first().uncheck();
-        await page.locator('#user-card-color').fill('#6b3e79');
-        await page.locator('#user-card-gradient').selectOption('on');
-        await page.getByLabel('Use global gradient strength', { exact: true }).first().uncheck();
-        await page.locator('#user-card-strength').fill('65');
-        await page.getByRole('button', { name: /^Save changes$/i }).click();
-        if (framework === 'bootstrap4') await page.locator('#confirmSave #confirm').click();
-        else await page.locator('#lu-confirm-submit').click();
-        await expect(page.locator('.lu-flash')).toContainText('Successfully updated user');
-        const profileWidth = await page.locator(framework === 'bootstrap4' ? '.card' : '.lu-profile').first().evaluate(element => element.getBoundingClientRect().width);
-        const alertWidth = await page.locator('.lu-flash').evaluate(element => element.getBoundingClientRect().width);
-        expect(alertWidth).toBeLessThanOrEqual(profileWidth + 1);
+        await test.step('Save individual appearance and check confirmation layout', async () => {
+            await page.goto('/users/2/edit');
+            await openEditSection(page, 'Appearance');
+            await page.getByLabel('Use global color', { exact: true }).first().uncheck();
+            await page.locator('#user-card-color').fill('#6b3e79');
+            await page.locator('#user-card-gradient').selectOption('on');
+            await page.getByLabel('Use global gradient strength', { exact: true }).first().uncheck();
+            await page.locator('#user-card-strength').fill('65');
+            await page.getByRole('button', { name: /^Save changes$/i }).click();
+            if (framework === 'bootstrap4') await page.locator('#confirmSave #confirm').click();
+            else await page.locator('#lu-confirm-submit').click();
+            await expect(page.locator('.lu-flash')).toContainText('Successfully updated user');
+            const profileWidth = await page.locator(framework === 'bootstrap4' ? '.card' : '.lu-profile').first().evaluate(element => element.getBoundingClientRect().width);
+            const alertWidth = await page.locator('.lu-flash').evaluate(element => element.getBoundingClientRect().width);
+            expect(alertWidth).toBeLessThanOrEqual(profileWidth + 1);
+        });
         await page.goto('/users/2');
         await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(107, 62, 121)');
         expect(await page.locator('.lu-profile-identity').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('radial-gradient');
@@ -241,7 +251,7 @@ test('standalone navigation components work without the package shell', async ({
 
 test.describe('Optional package controls', () => {
     let packageWorker;
-    test.beforeAll(async ({}, testInfo) => { packageWorker = await startPackageWorker(Number(new URL(testInfo.project.use.baseURL).port)); });
+    test.beforeAll(async ({baseURL}) => { packageWorker = await startPackageWorker(Number(new URL(baseURL).port)); });
     test.afterAll(() => { packageWorker?.kill('SIGTERM'); });
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
@@ -272,77 +282,81 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.setViewportSize({width:390,height:844});
         const verifiedMessage = 'Package requirements verified. Confirm that a persistent queue worker is running on every application server.';
         const requirementsStatus = page.locator('[data-lu-package-status]');
-        await expect(requirementsStatus).toHaveText(verifiedMessage);
-        await expect(setupRequirements).toBeDisabled();
-        await page.reload();
-        await expect(requirementsStatus).toHaveText(verifiedMessage);
-        await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
-        await page.reload();
-        await expect(requirementsStatus).toHaveText(verifiedMessage);
-        await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
-        await page.route('**/users/settings/packages/verify', route => route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'completed',queue_ready:true,message:verifiedMessage})}));
-        await verifyRequirements.click();
         const verifiedIcon = requirementsStatus.locator('[data-lu-icon="check"]');
-        await expect(requirementsStatus).toHaveText(verifiedMessage);
-        await expect(verifiedIcon).toBeVisible();
-        await expect(verifiedIcon).toHaveCSS('color', 'rgb(8, 127, 91)');
-        const iconBounds = await verifiedIcon.boundingBox();
-        const messageBounds = await requirementsStatus.locator('[data-lu-package-status-message]').boundingBox();
-        expect(messageBounds.x).toBeGreaterThan(iconBounds.x + iconBounds.width);
-        await setTheme(page, 'dark');
-        await expect(verifiedIcon).toHaveCSS('color', 'rgb(125, 225, 171)');
-        await setTheme(page, 'light');
-        await expect(setupRequirements).toBeDisabled();
-        await expect(setupRequirements.locator('[data-lu-package-requirements-label]')).toHaveText('Package requirements completed');
-        await expect(page.locator('[data-lu-package-requirements-icon="complete"] [data-lu-icon="check"]')).toBeVisible();
-        await page.unroute('**/users/settings/packages/verify');
-        await page.route('**/users/settings/packages/verify', route => route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({message:'Package requirements could not be verified.'})}));
-        await verifyRequirements.click();
-        await expect(requirementsStatus).toHaveText('Package requirements could not be verified.');
-        await expect(verifiedIcon).toBeHidden();
-        await page.unroute('**/users/settings/packages/verify');
+        await test.step('Verify persistent requirements status and recover from verification errors', async () => {
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            await expect(setupRequirements).toBeDisabled();
+            await page.reload();
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
+            await page.reload();
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
+            await page.route('**/users/settings/packages/verify', route => route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'completed',queue_ready:true,message:verifiedMessage})}));
+            await verifyRequirements.click();
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            await expect(verifiedIcon).toBeVisible();
+            await expect(verifiedIcon).toHaveCSS('color', 'rgb(8, 127, 91)');
+            const iconBounds = await verifiedIcon.boundingBox();
+            const messageBounds = await requirementsStatus.locator('[data-lu-package-status-message]').boundingBox();
+            expect(messageBounds.x).toBeGreaterThan(iconBounds.x + iconBounds.width);
+            await setTheme(page, 'dark');
+            await expect(verifiedIcon).toHaveCSS('color', 'rgb(125, 225, 171)');
+            await setTheme(page, 'light');
+            await expect(setupRequirements).toBeDisabled();
+            await expect(setupRequirements.locator('[data-lu-package-requirements-label]')).toHaveText('Package requirements completed');
+            await expect(page.locator('[data-lu-package-requirements-icon="complete"] [data-lu-icon="check"]')).toBeVisible();
+            await page.unroute('**/users/settings/packages/verify');
+            await page.route('**/users/settings/packages/verify', route => route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({message:'Package requirements could not be verified.'})}));
+            await verifyRequirements.click();
+            await expect(requirementsStatus).toHaveText('Package requirements could not be verified.');
+            await expect(verifiedIcon).toBeHidden();
+            await page.unroute('**/users/settings/packages/verify');
+        });
         const cards = page.locator('.lu-package-settings .lu-settings-choice');
         const toastInstall = cards.filter({hasText: 'Laravel Toast'}).getByRole('button', {name:'Install',exact:true});
-        await expect(toastInstall).toBeVisible();
-        await expect(toastInstall).toContainText('Install');
-        await expect(toastInstall).not.toHaveCSS('font-size','0px');
-        await expect(toastInstall.locator('[data-lu-icon="install"]')).toBeVisible();
-        await expect(cards.filter({hasText:'Laravel Toast'}).locator('.lu-package-badge-available')).toContainText('Not installed');
-        await expect(cards.filter({hasText: 'Laravel Roles'}).getByRole('button', {name:'Install',exact:true})).toBeDisabled();
-        await cards.filter({hasText: 'Spatie Permissions'}).getByRole('button', {name:'Remove',exact:true}).click();
         const modal = page.locator('#lu-package-dialog');
-        await expect(modal).toBeVisible();
-        await expect(modal.locator('[data-lu-package-role-warning]')).toContainText('can break sign-in');
         const submit = modal.getByRole('button', {name:'Confirm package change',exact:true});
-        await expect(submit.locator('[data-lu-icon="check"]')).toBeVisible();
-        await modal.locator('[name="confirmation"]').fill('continue');
-        await modal.locator('[name="acknowledgement"]').check();
-        await expect(submit).toBeDisabled();
-        await modal.locator('[name="confirmation"]').fill('remove');
-        await expect(submit).toBeEnabled();
-        await expect(submit).toHaveCSS('background-color', 'rgb(180, 35, 50)');
-        await expect(submit).toHaveCSS('color', 'rgb(255, 255, 255)');
-        await expect(modal.locator('[data-lu-package-remove-icon]')).toBeVisible();
-        await page.route('**/users/settings/packages', route => route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({errors:{package:['Removal is blocked while your user model uses this package.']}})}));
-        await submit.click();
-        await expect(modal.locator('[data-lu-package-error]')).toContainText('Removal is blocked');
-        await modal.getByRole('button', {name:'Cancel',exact:true}).click();
-        await cards.filter({hasText: 'Spatie Permissions'}).getByRole('button', {name:'Remove',exact:true}).click();
-        await expect(modal.locator('[name="confirmation"]')).toHaveValue('');
-        await expect(modal.locator('[name="acknowledgement"]')).not.toBeChecked();
-        await expect(submit).toBeDisabled();
-        if (framework !== 'bootstrap4') {
-            const result = await new AxeBuilder({page}).include('#lu-package-dialog').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-            expect(result.violations).toEqual([]);
-        }
-        await page.setViewportSize({width:390,height:844});
-        await expect(submit).toHaveCSS('border-radius','5px');
-        await expect(submit).toHaveCSS('cursor','not-allowed');
-        await expect(modal.locator('[data-lu-package-remove-icon]')).toBeVisible();
-        const bounds = await modal.boundingBox();
-        expect(bounds.width).toBeLessThanOrEqual(390);
-        expect(bounds.height).toBeLessThanOrEqual(844);
-        await modal.getByRole('button', {name:'Cancel',exact:true}).click();
+        await test.step('Require exact removal confirmation and retain role dependency warnings', async () => {
+            await expect(toastInstall).toBeVisible();
+            await expect(toastInstall).toContainText('Install');
+            await expect(toastInstall).not.toHaveCSS('font-size','0px');
+            await expect(toastInstall.locator('[data-lu-icon="install"]')).toBeVisible();
+            await expect(cards.filter({hasText:'Laravel Toast'}).locator('.lu-package-badge-available')).toContainText('Not installed');
+            await expect(cards.filter({hasText: 'Laravel Roles'}).getByRole('button', {name:'Install',exact:true})).toBeDisabled();
+            await cards.filter({hasText: 'Spatie Permissions'}).getByRole('button', {name:'Remove',exact:true}).click();
+            await expect(modal).toBeVisible();
+            await expect(modal.locator('[data-lu-package-role-warning]')).toContainText('can break sign-in');
+            await expect(submit.locator('[data-lu-icon="check"]')).toBeVisible();
+            await modal.locator('[name="confirmation"]').fill('continue');
+            await modal.locator('[name="acknowledgement"]').check();
+            await expect(submit).toBeDisabled();
+            await modal.locator('[name="confirmation"]').fill('remove');
+            await expect(submit).toBeEnabled();
+            await expect(submit).toHaveCSS('background-color', 'rgb(180, 35, 50)');
+            await expect(submit).toHaveCSS('color', 'rgb(255, 255, 255)');
+            await expect(modal.locator('[data-lu-package-remove-icon]')).toBeVisible();
+            await page.route('**/users/settings/packages', route => route.fulfill({status:422,contentType:'application/json',body:JSON.stringify({errors:{package:['Removal is blocked while your user model uses this package.']}})}));
+            await submit.click();
+            await expect(modal.locator('[data-lu-package-error]')).toContainText('Removal is blocked');
+            await modal.getByRole('button', {name:'Cancel',exact:true}).click();
+            await cards.filter({hasText: 'Spatie Permissions'}).getByRole('button', {name:'Remove',exact:true}).click();
+            await expect(modal.locator('[name="confirmation"]')).toHaveValue('');
+            await expect(modal.locator('[name="acknowledgement"]')).not.toBeChecked();
+            await expect(submit).toBeDisabled();
+            if (framework !== 'bootstrap4') {
+                const result = await new AxeBuilder({page}).include('#lu-package-dialog').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+                expect(result.violations).toEqual([]);
+            }
+            await page.setViewportSize({width:390,height:844});
+            await expect(submit).toHaveCSS('border-radius','5px');
+            await expect(submit).toHaveCSS('cursor','not-allowed');
+            await expect(modal.locator('[data-lu-package-remove-icon]')).toBeVisible();
+            const bounds = await modal.boundingBox();
+            expect(bounds.width).toBeLessThanOrEqual(390);
+            expect(bounds.height).toBeLessThanOrEqual(844);
+            await modal.getByRole('button', {name:'Cancel',exact:true}).click();
+        });
         await page.route('**/users/settings/packages/verify', route => route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'not_ready',queue_ready:false,message:'Package requirements could not be verified.'})}));
         await verifyRequirements.click();
         await expect(verifiedIcon).toBeHidden();
@@ -354,30 +368,32 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(requirementsStatus).toHaveText(verifiedMessage);
         await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
         await expect(setupRequirements).toBeDisabled();
-        let releaseStatus;
-        const waitingStatus = new Promise(resolve => { releaseStatus = resolve; });
-        const operationUrl = '/users/settings/packages/11111111-1111-1111-1111-111111111111';
-        const queued = {status:'queued', message:'Package change queued. Waiting for the worker.', status_url:operationUrl};
-        await page.route('**/users/settings/packages', route => route.fulfill({status:202,contentType:'application/json',body:JSON.stringify(queued)}));
-        await page.route('**' + operationUrl, async route => {
-            await waitingStatus;
-            await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'completed',message:'Package setup completed. Refresh settings to enable the integration.'})});
+        await test.step('Refresh completed operations without losing requirement status', async () => {
+            let releaseStatus;
+            const waitingStatus = new Promise(resolve => { releaseStatus = resolve; });
+            const operationUrl = '/users/settings/packages/11111111-1111-1111-1111-111111111111';
+            const queued = {status:'queued', message:'Package change queued. Waiting for the worker.', status_url:operationUrl};
+            await page.route('**/users/settings/packages', route => route.fulfill({status:202,contentType:'application/json',body:JSON.stringify(queued)}));
+            await page.route('**' + operationUrl, async route => {
+                await waitingStatus;
+                await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'completed',message:'Package setup completed. Refresh settings to enable the integration.'})});
+            });
+            try {
+                await toastInstall.click();
+                await modal.locator('[name="confirmation"]').fill('continue');
+                await modal.locator('[name="acknowledgement"]').check();
+                await submit.click();
+                const operationStatus = page.locator('[data-lu-package-operation-status]');
+                await expect(operationStatus).toContainText(queued.message);
+                await expect(operationStatus.locator('[data-lu-icon="clock"]')).toBeVisible();
+                await expect(requirementsStatus).toHaveText(verifiedMessage);
+                const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/users/settings' && response.request().method() === 'GET');
+                releaseStatus();
+                expect((await refreshed).status()).toBe(200);
+                await expect(requirementsStatus).toHaveText(verifiedMessage);
+                await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
+            } finally { releaseStatus(); }
         });
-        try {
-            await toastInstall.click();
-            await modal.locator('[name="confirmation"]').fill('continue');
-            await modal.locator('[name="acknowledgement"]').check();
-            await submit.click();
-            const operationStatus = page.locator('[data-lu-package-operation-status]');
-            await expect(operationStatus).toContainText(queued.message);
-            await expect(operationStatus.locator('[data-lu-icon="clock"]')).toBeVisible();
-            await expect(requirementsStatus).toHaveText(verifiedMessage);
-            const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/users/settings' && response.request().method() === 'GET');
-            releaseStatus();
-            expect((await refreshed).status()).toBe(200);
-            await expect(requirementsStatus).toHaveText(verifiedMessage);
-            await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
-        } finally { releaseStatus(); }
     });
 }
 });
@@ -498,15 +514,17 @@ test('bootstrap5: edit profile, password meter, and email dialog', async ({ page
     await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
     await expect(page.locator('.lu-profile-identity')).toHaveCSS('background-color', 'rgb(112, 80, 0)');
     expect((await page.locator('.lu-profile-header .lu-actions a').allTextContents()).map(text => text.trim())).toEqual(['View user', 'Back to users']);
-    await openEditSection(page, 'Password');
-    await expect(page.locator('[data-lu-password-meter]')).toBeHidden();
-    await page.locator('#password').fill('abc');
-    await expect(page.locator('[data-lu-password-strength]')).toHaveText('Weak');
-    await page.locator('#password').fill('LongerPassword123!');
-    await expect(page.locator('[data-lu-password-strength]')).toHaveText('Strong');
-    await expect(page.locator('[data-lu-password-rule="length"]')).toHaveAttribute('data-lu-met', 'true');
-    await page.locator('#password').fill('');
-    await expect(page.locator('[data-lu-password-meter]')).toBeHidden();
+    await test.step('Show password strength only while a password is entered', async () => {
+        await openEditSection(page, 'Password');
+        await expect(page.locator('[data-lu-password-meter]')).toBeHidden();
+        await page.locator('#password').fill('abc');
+        await expect(page.locator('[data-lu-password-strength]')).toHaveText('Weak');
+        await page.locator('#password').fill('LongerPassword123!');
+        await expect(page.locator('[data-lu-password-strength]')).toHaveText('Strong');
+        await expect(page.locator('[data-lu-password-rule="length"]')).toHaveAttribute('data-lu-met', 'true');
+        await page.locator('#password').fill('');
+        await expect(page.locator('[data-lu-password-meter]')).toBeHidden();
+    });
     await page.getByRole('button', { name: 'Send user an email', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Send user an email', exact: true });
     await expect(dialog).toBeVisible();
@@ -801,17 +819,19 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(currentUser.locator('[data-lu-select]')).toHaveCount(0);
         await expect(currentUser.locator('[data-lu-selection-cell]')).toHaveCSS('position', 'absolute');
         await expectCardGrid(page, body);
-        await setTheme(page, 'dark');
-        const colors = await body.locator('tr').first().evaluate(element => ({
-            card: getComputedStyle(element).backgroundColor,
-            container: getComputedStyle(element.closest('.lu-panel, .card')).backgroundColor
-        }));
-        expect(colors.card).not.toBe(colors.container);
-        if (framework !== 'bootstrap4') {
-            const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
-            expect(result.violations).toEqual([]);
-            await expectEqualActionWidths(body);
-        }
+        await test.step('Keep dark user cards distinct and accessible', async () => {
+            await setTheme(page, 'dark');
+            const colors = await body.locator('tr').first().evaluate(element => ({
+                card: getComputedStyle(element).backgroundColor,
+                container: getComputedStyle(element.closest('.lu-panel, .card')).backgroundColor
+            }));
+            expect(colors.card).not.toBe(colors.container);
+            if (framework !== 'bootstrap4') {
+                const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+                expect(result.violations).toEqual([]);
+                await expectEqualActionWidths(body);
+            }
+        });
         await page.setViewportSize({ width: 390, height: 1000 });
         await expectMobileListControls(page);
         const accessibility = await new AxeBuilder({ page }).include('[data-lu-table]').include('.lu-table-toolbar').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
@@ -886,22 +906,24 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(results.locator('.lu-login-details').first()).toContainText('127.0.0.1');
         await expect(results.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first()).toHaveAttribute('rel', 'noopener noreferrer');
         await expectStackedDetails(results.locator('.lu-login-details').first());
-        const device = '<img src=x onerror=alert(1)>';
-        await page.route('**/search-users', route => route.fulfill({
-            contentType: 'application/json',
-            body: JSON.stringify({
-                users: [{ id: 2, name: 'Alex Rivers', email: 'user1@example.com' }],
-                activity: { 2: { device, os: 'Linux 6.8', browser: 'Firefox 143', ip_address: '198.51.100.2', extra: 'Unexpected login field' } }
-            })
-        }));
-        await page.locator('#user_search_box').fill('login metadata');
-        await page.locator('#user_search_box').press('Enter');
-        const loginDetails = results.locator('.lu-login-details');
-        await expect(loginDetails.locator('[data-lu-login-field]')).toHaveCount(4);
-        await expect(loginDetails.locator('[data-lu-login-field="device"]')).toHaveText(device);
-        await expect(loginDetails.locator('img')).toHaveCount(0);
-        await expect(loginDetails).not.toContainText('Unexpected login field');
-        await expect(loginDetails.locator('a')).toHaveAttribute('href', 'https://ipinfo.io/198.51.100.2');
+        await test.step('Render untrusted login metadata as text and ignore unknown fields', async () => {
+            const device = '<img src=x onerror=alert(1)>';
+            await page.route('**/search-users', route => route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    users: [{ id: 2, name: 'Alex Rivers', email: 'user1@example.com' }],
+                    activity: { 2: { device, os: 'Linux 6.8', browser: 'Firefox 143', ip_address: '198.51.100.2', extra: 'Unexpected login field' } }
+                })
+            }));
+            await page.locator('#user_search_box').fill('login metadata');
+            await page.locator('#user_search_box').press('Enter');
+            const loginDetails = results.locator('.lu-login-details');
+            await expect(loginDetails.locator('[data-lu-login-field]')).toHaveCount(4);
+            await expect(loginDetails.locator('[data-lu-login-field="device"]')).toHaveText(device);
+            await expect(loginDetails.locator('img')).toHaveCount(0);
+            await expect(loginDetails).not.toContainText('Unexpected login field');
+            await expect(loginDetails.locator('a')).toHaveAttribute('href', 'https://ipinfo.io/198.51.100.2');
+        });
         await page.goto('/users/1');
         await expect(page.locator('form[action*="/impersonate"]')).toHaveCount(0);
         expect(await page.locator('html').innerHTML()).not.toContain('impersonat');
@@ -1248,14 +1270,16 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.locator('.lu-columns summary').click();
         await page.locator('.lu-column-options').getByLabel('Email', { exact: true }).check();
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.getByRole('button', { name: 'Select all', exact: true }).click();
-        await expect(page.getByRole('button', { name: 'Select all', exact: true })).toBeDisabled();
-        await expect(page.locator('[data-lu-select-visible] [data-lu-checkmark]')).toBeVisible();
-        await expect(page.locator('[data-lu-selected-count]')).toHaveText('1 selected');
-        await page.getByRole('button', { name: 'Deselect all', exact: true }).click();
-        await expect(page.getByRole('button', { name: 'Deselect all', exact: true })).toBeDisabled();
-        await expect(page.locator('[data-lu-select-visible] [data-lu-checkmark]')).toBeHidden();
-        await expect(page.getByRole('button', { name: 'Deselect all', exact: true })).toHaveCSS('cursor', 'not-allowed');
+        await test.step('Keep selection controls synchronized on mobile', async () => {
+            await page.getByRole('button', { name: 'Select all', exact: true }).click();
+            await expect(page.getByRole('button', { name: 'Select all', exact: true })).toBeDisabled();
+            await expect(page.locator('[data-lu-select-visible] [data-lu-checkmark]')).toBeVisible();
+            await expect(page.locator('[data-lu-selected-count]')).toHaveText('1 selected');
+            await page.getByRole('button', { name: 'Deselect all', exact: true }).click();
+            await expect(page.getByRole('button', { name: 'Deselect all', exact: true })).toBeDisabled();
+            await expect(page.locator('[data-lu-select-visible] [data-lu-checkmark]')).toBeHidden();
+            await expect(page.getByRole('button', { name: 'Deselect all', exact: true })).toHaveCSS('cursor', 'not-allowed');
+        });
         await page.locator('.lu-mobile-filters summary').click();
         await page.getByLabel('Filter Name on mobile', { exact: true }).fill('Alex');
         await expect(body.locator('tr:visible')).toHaveCount(1);
@@ -1434,33 +1458,35 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(page.getByLabel('Subject', { exact: true })).toHaveValue('');
         await expect(page.getByLabel('Message', { exact: true })).toHaveValue('');
         await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
-        await page.getByRole('button', { name: 'Send password reset email', exact: true }).click();
-        await page.locator('#lu-reset-unit').selectOption('hours');
-        await page.locator('#lu-reset-duration').fill('2');
-        await expect(page.getByRole('dialog')).toContainText('120 minutes');
-        await page.getByRole('button', { name: 'Preview email', exact: true }).click();
-        await expect(page.frameLocator('[data-lu-email-frame]').getByText(/120 minutes/)).toBeVisible();
-        await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
-        await expect(page.locator('#lu-reset-duration')).toHaveValue('2');
-        await expect(page.locator('#lu-reset-unit')).toHaveValue('hours');
-        await page.getByLabel('Message', { exact: true }).fill('Choose a new password when you are ready.');
-        await page.locator('[data-lu-reset-duration] input[type="checkbox"]').check();
-        await expect(page.locator('#lu-reset-duration')).toBeHidden();
-        await expect(page.locator('#lu-reset-duration')).toBeDisabled();
-        await page.getByRole('button', { name: 'Preview email', exact: true }).click();
-        await expect(page.frameLocator('[data-lu-email-frame]').getByText('Choose a new password when you are ready.')).toBeVisible();
-        await expect(page.frameLocator('[data-lu-email-frame]').getByText(/does not expire/)).toBeVisible();
-        await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
-        await page.locator('[data-lu-reset-duration] input[type="checkbox"]').uncheck();
-        await expect(page.locator('#lu-reset-duration')).toHaveValue('2');
-        await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
-        await page.getByRole('button', { name: 'Send password reset email', exact: true }).click();
-        await expect(page.locator('#lu-reset-unit')).toHaveValue('minutes');
-        await expect(page.locator('#lu-reset-duration')).toHaveValue('60');
-        await expect(page.locator('[data-lu-reset-duration] input[type="checkbox"]')).not.toBeChecked();
-        await page.locator('#lu-reset-unit').selectOption('hours');
-        await expect(page.locator('#lu-reset-duration')).toHaveValue('1');
-        await page.getByRole('dialog').press('Escape');
+        await test.step('Preview reset expiration choices and clear drafts on dismissal', async () => {
+            await page.getByRole('button', { name: 'Send password reset email', exact: true }).click();
+            await page.locator('#lu-reset-unit').selectOption('hours');
+            await page.locator('#lu-reset-duration').fill('2');
+            await expect(page.getByRole('dialog')).toContainText('120 minutes');
+            await page.getByRole('button', { name: 'Preview email', exact: true }).click();
+            await expect(page.frameLocator('[data-lu-email-frame]').getByText(/120 minutes/)).toBeVisible();
+            await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
+            await expect(page.locator('#lu-reset-duration')).toHaveValue('2');
+            await expect(page.locator('#lu-reset-unit')).toHaveValue('hours');
+            await page.getByLabel('Message', { exact: true }).fill('Choose a new password when you are ready.');
+            await page.locator('[data-lu-reset-duration] input[type="checkbox"]').check();
+            await expect(page.locator('#lu-reset-duration')).toBeHidden();
+            await expect(page.locator('#lu-reset-duration')).toBeDisabled();
+            await page.getByRole('button', { name: 'Preview email', exact: true }).click();
+            await expect(page.frameLocator('[data-lu-email-frame]').getByText('Choose a new password when you are ready.')).toBeVisible();
+            await expect(page.frameLocator('[data-lu-email-frame]').getByText(/does not expire/)).toBeVisible();
+            await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
+            await page.locator('[data-lu-reset-duration] input[type="checkbox"]').uncheck();
+            await expect(page.locator('#lu-reset-duration')).toHaveValue('2');
+            await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+            await page.getByRole('button', { name: 'Send password reset email', exact: true }).click();
+            await expect(page.locator('#lu-reset-unit')).toHaveValue('minutes');
+            await expect(page.locator('#lu-reset-duration')).toHaveValue('60');
+            await expect(page.locator('[data-lu-reset-duration] input[type="checkbox"]')).not.toBeChecked();
+            await page.locator('#lu-reset-unit').selectOption('hours');
+            await expect(page.locator('#lu-reset-duration')).toHaveValue('1');
+            await page.getByRole('dialog').press('Escape');
+        });
         await page.getByRole('button', { name: 'Send welcome email', exact: true }).click();
         await expect(page.getByLabel('Subject', { exact: true })).toHaveValue('Welcome to Laravel Users');
         await page.getByLabel('Message', { exact: true }).fill('Welcome back to your account.');
@@ -1495,27 +1521,29 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         const deletedRow = page.locator('[data-lu-table] tbody tr').filter({ hasText: name });
         await deletedRow.locator('.lu-email-toggle').click();
         await deletedRow.getByRole('button', { name: 'Send user an email', exact: true }).click();
-        await page.getByLabel('Subject', { exact: true }).fill('Deleted account options');
-        await page.getByLabel('Message', { exact: true }).fill('Choose whether you want to restore your account.');
-        await page.getByLabel('Include a restore account button', { exact: true }).check();
-        await page.getByLabel('Include a permanently delete account button', { exact: true }).check();
-        await page.locator('#lu-account-unit').selectOption('days');
-        await page.locator('#lu-account-duration').fill('2');
-        await page.getByRole('button', { name: 'Preview email', exact: true }).click();
-        const frame = page.frameLocator('[data-lu-email-frame]');
-        await expect(frame.getByRole('link', { name: 'Restore my account', exact: true })).toBeVisible();
-        await expect(frame.getByRole('link', { name: 'Permanently delete my account', exact: true })).toBeVisible();
-        await expect(frame.getByText(/2880 minutes/)).toBeVisible();
-        await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
-        await expect(page.locator('#lu-account-duration')).toHaveValue('2');
-        await expect(page.getByLabel('Include a restore account button', { exact: true })).toBeChecked();
-        await page.locator('[data-lu-account-duration] input[type="checkbox"]').check();
-        await expect(page.locator('#lu-account-duration')).toBeHidden();
-        await page.getByRole('button', { name: 'Preview email', exact: true }).click();
-        await expect(frame.getByText(/do not expire/)).toBeVisible();
-        await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
-        await page.locator('[data-lu-account-duration] input[type="checkbox"]').uncheck();
-        await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+        await test.step('Preview expiring and non-expiring recovery links without losing edits', async () => {
+            await page.getByLabel('Subject', { exact: true }).fill('Deleted account options');
+            await page.getByLabel('Message', { exact: true }).fill('Choose whether you want to restore your account.');
+            await page.getByLabel('Include a restore account button', { exact: true }).check();
+            await page.getByLabel('Include a permanently delete account button', { exact: true }).check();
+            await page.locator('#lu-account-unit').selectOption('days');
+            await page.locator('#lu-account-duration').fill('2');
+            await page.getByRole('button', { name: 'Preview email', exact: true }).click();
+            const frame = page.frameLocator('[data-lu-email-frame]');
+            await expect(frame.getByRole('link', { name: 'Restore my account', exact: true })).toBeVisible();
+            await expect(frame.getByRole('link', { name: 'Permanently delete my account', exact: true })).toBeVisible();
+            await expect(frame.getByText(/2880 minutes/)).toBeVisible();
+            await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
+            await expect(page.locator('#lu-account-duration')).toHaveValue('2');
+            await expect(page.getByLabel('Include a restore account button', { exact: true })).toBeChecked();
+            await page.locator('[data-lu-account-duration] input[type="checkbox"]').check();
+            await expect(page.locator('#lu-account-duration')).toBeHidden();
+            await page.getByRole('button', { name: 'Preview email', exact: true }).click();
+            await expect(frame.getByText(/do not expire/)).toBeVisible();
+            await page.getByRole('button', { name: 'Back to editing', exact: true }).click();
+            await page.locator('[data-lu-account-duration] input[type="checkbox"]').uncheck();
+            await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+        });
         await page.getByRole('checkbox', { name: `Select ${name}`, exact: true }).check();
         await page.locator('#lu-bulk-action').selectOption('message');
         await page.locator('#lu-bulk-submit').click();

@@ -38,7 +38,8 @@ async function openSettings(page, framework) {
     page.on('request', request => {
         if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method()) && new URL(request.url()).pathname === '/users/settings') writes.push(request.url());
     });
-    return { stored, writes };
+    const result = { stored, writes };
+    return result;
 }
 
 async function option(page, key, value) {
@@ -85,7 +86,8 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                 const measure = () => page.evaluate(() => {
                     const button = document.querySelector('[data-lu-preview-notification]').getBoundingClientRect();
                     const card = document.querySelector('.lu-settings-panel, .container > .card').getBoundingClientRect();
-                    return { scrollX, scrollY, buttonY: button.y, cardY: card.y, cardHeight: card.height };
+                    const result = { scrollX, scrollY, buttonY: button.y, cardY: card.y, cardHeight: card.height };
+                    return result;
                 });
                 const before = await measure();
                 await previewButton(page).click();
@@ -122,7 +124,8 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                     const style = getComputedStyle(element);
                     const left = framework === 'bootstrap4' ? parseFloat(style.borderLeftWidth) : 0;
                     const right = framework === 'bootstrap4' ? parseFloat(style.borderRightWidth) : 0;
-                    return { x: box.x + left, width: box.width - left - right };
+                    const result = { x: box.x + left, width: box.width - left - right };
+                    return result;
                 }, framework);
                 expect(alert.x).toBeCloseTo(card.x, 1);
                 expect(alert.width).toBeCloseTo(card.width, 1);

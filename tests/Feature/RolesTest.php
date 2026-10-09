@@ -111,7 +111,7 @@ class RolesTest extends TestCase
 
 class DenyUsers
 {
-    public function handle($request, $next)
+    public function handle()
     {
         abort(403);
     }

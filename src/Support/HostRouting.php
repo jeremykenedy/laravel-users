@@ -23,6 +23,11 @@ use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use RuntimeException;
 
+/**
+ * Builds a format-preserving PHP syntax tree using the parser node types required for safe route edits.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class HostRouting
 {
     public function __construct(private Filesystem $files, private ParserFactory $factory)
@@ -39,13 +44,7 @@ class HostRouting
             throw new RuntimeException('The web routes file cannot be a symbolic link.');
         }
         $source = $this->files->get($path);
-        $lexer = null;
-        if (!method_exists($this->factory, 'create')) {
-            $parser = $this->factory->createForNewestSupportedVersion();
-        } else {
-            $lexer = new Emulative(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos']]);
-            $parser = $this->factory->create(ParserFactory::PREFER_PHP7, $lexer);
-        }
+        [$parser, $lexer] = $this->createParser();
 
         try {
             $original = $parser->parse($source) ?? [];
@@ -65,6 +64,16 @@ class HostRouting
         }
 
         return ['path' => $path, 'original' => $source, 'updated' => $updated];
+    }
+
+    private function createParser(): array
+    {
+        if (!method_exists($this->factory, 'create')) {
+            return [$this->factory->createForNewestSupportedVersion(), null];
+        }
+        $lexer = new Emulative(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos']]);
+
+        return [$this->factory->create(ParserFactory::PREFER_PHP7, $lexer), $lexer];
     }
 
     public function write(?array $plan): void

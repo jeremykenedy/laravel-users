@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * Preserves the existing authorization helper API and keeps each permission check subject to method complexity limits.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class UserAccess
 {
     public const ACTIONS = ['view_users', 'create_users', 'edit_users', 'delete_users', 'view_deleted', 'edit_deleted', 'restore_users', 'force_delete', 'impersonate_users', 'email_message', 'email_reset', 'email_welcome', 'email_goodbye', 'email_deleted', 'edit_settings', 'edit_appearance', 'edit_user_appearance', 'edit_notifications', 'edit_cleanup', 'edit_email_templates', 'edit_account_access'];
@@ -121,11 +126,21 @@ class UserAccess
         return $method !== null && self::hasOneOf($user, $method, $permissions);
     }
 
+    /**
+     * The existing deleted-user option selects the separate email authorization policy.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function email(string $action, bool $deleted = false): bool
     {
         return in_array($action, ['message', 'reset', 'welcome'], true) && self::allows($deleted ? 'email_deleted' : 'email_'.$action);
     }
 
+    /**
+     * The existing deleted-user option selects restore and permanent deletion policies.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function selectable(bool $deleted = false): bool
     {
         $actions = $deleted ? ['restore_users', 'force_delete'] : ['delete_users'];

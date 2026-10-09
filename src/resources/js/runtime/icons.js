@@ -1,10 +1,13 @@
+/* global __LARAVEL_USERS_ICONS__ */
+import { getOwnValue } from './shared.js';
 import actions from './icon-actions.json' with { type: 'json' };
 
 const definitions = typeof __LARAVEL_USERS_ICONS__ === 'undefined' ? {} : __LARAVEL_USERS_ICONS__;
 
 export function iconForAction(action) {
-    const name = Object.hasOwn(actions, action) ? actions[action] : null;
-    return name && definitions[name]?.length ? { name, shapes: definitions[name] } : null;
+    const name = getOwnValue(actions, action);
+    const shapes = getOwnValue(definitions, name);
+    return shapes?.length ? { name, shapes } : null;
 }
 
 export function submitAction(form) {

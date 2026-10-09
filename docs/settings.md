@@ -140,6 +140,8 @@ Select your application's Laravel version in the documentation. The settings-pag
 
 **Set up package requirements** creates a dedicated database queue, its package-job table and a file-cache lock store for a single host. It preserves the application's existing default queue and cache. The CLI equivalent is `php artisan laravelusers:update --setup-packages`. A persistent process still needs to run the printed worker command; separate application servers need shared storage and supervised workers.
 
+The application's `vendor` directory must resolve inside its own application directory. Shared or externally linked vendor directories cannot be changed from Settings because Composer could remove dependencies used by another application. Use an application-owned vendor directory for these controls, or manage shared dependencies through your normal deployment process. A vendor symlink pointing to a directory inside the application is supported.
+
 Verification checks queue storage, cache locks, Composer availability, writable application files and a nonce acknowledged by an actual worker on the selected queue. Package buttons stay disabled while that check is pending or fails. A verified result shows a green checkmark and the worker reminder, and changes the verification button to **Re-Verify package requirements**. The checkmarked setup button is disabled. Worker verification has a short lease and is checked again before dependency changes; it is not a guarantee that all deployment workers will remain running.
 
 When using the dedicated connection created by setup:

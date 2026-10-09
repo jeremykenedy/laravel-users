@@ -1,3 +1,5 @@
+// Playwright loads this file as CommonJS.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({

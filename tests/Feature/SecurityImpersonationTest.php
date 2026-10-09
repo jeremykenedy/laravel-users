@@ -12,6 +12,7 @@ use jeremykenedy\LaravelRoles\Models\Role;
 use jeremykenedy\LaravelRoles\RolesServiceProvider;
 use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\TestCase;
+use ReflectionClass;
 
 class SecurityImpersonationTest extends TestCase
 {
@@ -22,7 +23,7 @@ class SecurityImpersonationTest extends TestCase
             $this->markTestSkipped('This regression requires the optional Laravel Roles integration.');
         }
         config([
-            'roles'                              => require dirname((new \ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php',
+            'roles'                              => require dirname((new ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php',
             'laravelusers.defaultUserModel'      => PackageRoleUser::class,
             'auth.providers.users.model'         => PackageRoleUser::class,
             'laravelusers.roleModel'             => Role::class,

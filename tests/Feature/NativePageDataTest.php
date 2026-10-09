@@ -11,6 +11,11 @@ use InvalidArgumentException;
 use jeremykenedy\laravelusers\Support\NativePageData;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class NativePageDataTest extends TestCase
 {
     public function test_native_list_uses_explicit_user_fields_and_existing_mutation_routes(): void
@@ -205,10 +210,9 @@ class NativePageDataTest extends TestCase
 
         $data['packageQueueReady'] = true;
         $page = $this->page('laravelusers::modern.settings', $data);
-        if (PHP_VERSION_ID >= 80200 && version_compare(Application::VERSION, '10.0.0', '>=')) {
-            $this->assertFalse($page['forms']['package-toast']['disabled']);
-        } else {
-            $this->assertTrue($page['forms']['package-toast']['disabled']);
+        $supported = PHP_VERSION_ID >= 80200 && version_compare(Application::VERSION, '10.0.0', '>=');
+        $this->assertSame(!$supported, $page['forms']['package-toast']['disabled']);
+        if (!$supported) {
             $this->assertSame(trans('laravelusers::ui.packages_toast_unsupported'), collect($page['data']['packages']['choices'])->firstWhere('package', 'toast')['reason']);
         }
         $this->assertFalse($page['forms']['package-laravel-roles-configure']['disabled']);

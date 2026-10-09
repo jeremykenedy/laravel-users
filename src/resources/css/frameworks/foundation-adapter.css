@@ -14,8 +14,10 @@
     --lu-control-radius: 0;
     --lu-field-radius: 0;
     --lu-panel-radius: 0;
+
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
 #laravelusers[data-lu-css="foundation"][data-lu-theme="dark"] {
     --lu-bg: #182c3b;
     --lu-text: #f2f5f7;
@@ -30,16 +32,20 @@
     --lu-danger: #ffb4a9;
     --lu-on-danger: #4b1b15;
 }
+
 #laravelusers[data-lu-css="foundation"] .lu-field.grid-x {
     display: flex;
     gap: 0;
 }
+
 #laravelusers[data-lu-css="foundation"] .lu-field .cell {
     min-width: 0;
 }
+
 #laravelusers[data-lu-css="foundation"] .lu-field-error {
     color: var(--lu-danger);
 }
+
 #laravelusers[data-lu-css="foundation"] .lu-panel {
     box-shadow: none;
 }

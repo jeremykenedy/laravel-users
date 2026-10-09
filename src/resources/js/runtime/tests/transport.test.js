@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { displayValue, formData, formReady, sameOriginUrl, setValue } from '../shared.js';
+import { displayValue, formData, formReady, getValue, sameOriginUrl, setValue } from '../shared.js';
 import { createNativeStore } from '../store.js';
 
 function environment(t) {
@@ -50,6 +50,22 @@ test('security confirmation is exact and conditional, without validating busines
     assert.equal(formReady(form, { enabled: true, confirmation: 'Permanently delete' }), false);
     assert.equal(formReady(form, { enabled: true, confirmation: 'permanently delete' }), true);
     assert.throws(() => setValue({}, '__proto__.polluted', true));
+    assert.equal({}.polluted, undefined);
+});
+
+test('form values read only own fields and reject prototype paths before writing', () => {
+    const values = Object.create({ inherited: 'unexpected', nested: { secret: 'unexpected' } });
+    values.profile = { name: 'Morgan' };
+    assert.equal(getValue(values, 'profile.name'), 'Morgan');
+    assert.equal(getValue(values, 'inherited'), undefined);
+    assert.equal(getValue(values, 'nested.secret'), undefined);
+    assert.equal(getValue(values, 'profile.constructor'), undefined);
+    setValue(values, 'nested.subject', 'Welcome');
+    assert.equal(getValue(values, 'nested.subject'), 'Welcome');
+    assert.equal(getValue(values, 'nested.secret'), undefined);
+    for (const key of ['__proto__.polluted', 'constructor.prototype.polluted', 'profile.prototype.polluted']) {
+        assert.throws(() => setValue(values, key, true), /Invalid field name/);
+    }
     assert.equal({}.polluted, undefined);
 });
 

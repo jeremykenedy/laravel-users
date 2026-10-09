@@ -37,6 +37,11 @@ class UpdateEmailTemplatesRequest extends FormRequest
         return $rules;
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function goodbyeRules(): array
     {
         $rules = [];

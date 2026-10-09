@@ -1,7 +1,7 @@
 import { globSync } from 'node:fs';
 import { lint, readConfig } from 'markdownlint/promise';
 
-const files = globSync(['readme.md', 'docs/**/*.md']).sort();
+const files = globSync(['readme.md', 'CHANGELOG.md', 'docs/**/*.md']).sort();
 const results = await lint({ files, config: await readConfig('.markdownlint.json') });
 let issues = 0;
 

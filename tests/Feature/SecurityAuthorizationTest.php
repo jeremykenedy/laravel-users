@@ -17,6 +17,11 @@ use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Support\UserSettings;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class SecurityAuthorizationTest extends TestCase
 {
     public function test_configured_automatic_goodbye_remains_available_without_email_permission(): void

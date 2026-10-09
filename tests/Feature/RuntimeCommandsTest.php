@@ -17,6 +17,13 @@ use Livewire\LivewireServiceProvider;
 use Mockery;
 use ReflectionProperty;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class RuntimeCommandsTest extends TestCase
 {
     private string $directory;
@@ -218,7 +225,7 @@ class RuntimeCommandsTest extends TestCase
     {
         $this->registerToast();
         foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
-            @unlink(config_path('toast.php'));
+            (new Filesystem())->delete(config_path('toast.php'));
             $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => $framework, '--no-interaction' => true])->assertExitCode(0);
             $this->assertFileExists(config_path('toast.php'));
             $this->assertSame(in_array($framework, ['bootstrap4', 'bootstrap5', 'tailwind'], true) ? $framework : 'bootstrap5', config('toast.css_framework'));

@@ -25,12 +25,9 @@ class RenderNativePage
         if (NativeRuntime::name() === 'blade') {
             return $response;
         }
-        if ($request->routeIs('search-users') && $response instanceof JsonResponse && $response->getStatusCode() === 200 && NativeRuntime::expectsJson($request)) {
-            $term = $request->input('user_search_box');
-            if (is_string($term)) {
-                return response()->json($this->pages->forView('laravelusers::usersmanagement.show-users', ['users' => $this->users->handle($term), 'pagintaionEnabled' => false], $request))
-                    ->header('Cache-Control', 'no-store, private');
-            }
+        $search = $this->searchResponse($request, $response);
+        if ($search !== null) {
+            return $search;
         }
         if ($response instanceof RedirectResponse && NativeRuntime::expectsJson($request)) {
             return response()->json(['message' => $request->session()->get('success', $request->session()->get('error')), 'redirect' => $response->getTargetUrl()])
@@ -51,6 +48,19 @@ class RenderNativePage
 
         return $response->setContent(view('laravelusers::runtime.page', ['nativePage' => $page, 'nativeRuntime' => NativeRuntime::name()]))
             ->header('Cache-Control', 'no-store, private');
+    }
+
+    private function searchResponse(Request $request, mixed $response): ?JsonResponse
+    {
+        if ($request->routeIs('search-users') && $response instanceof JsonResponse && $response->getStatusCode() === 200 && NativeRuntime::expectsJson($request)) {
+            $term = $request->input('user_search_box');
+            if (is_string($term)) {
+                return response()->json($this->pages->forView('laravelusers::usersmanagement.show-users', ['users' => $this->users->handle($term), 'pagintaionEnabled' => false], $request))
+                    ->header('Cache-Control', 'no-store, private');
+            }
+        }
+
+        return null;
     }
 
     private function page(Request $request, View $view): array

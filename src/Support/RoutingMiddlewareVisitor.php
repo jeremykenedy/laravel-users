@@ -12,6 +12,11 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
+/**
+ * Visits route syntax nodes and constructs the matching guard expression using parser node types.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class RoutingMiddlewareVisitor extends NodeVisitorAbstract
 {
     public function leaveNode(Node $node): ?Node

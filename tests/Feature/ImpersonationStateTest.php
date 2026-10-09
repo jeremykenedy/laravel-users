@@ -53,7 +53,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_modified_state_cannot_execute_host_routes_or_restore_a_different_actor(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [, $target, $state] = $this->begin();
         $state['actor_id'] = (string) $target->id;
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden()->assertDontSee('Host dashboard');
         $this->assertGuest();
@@ -70,7 +70,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_expired_or_revoked_access_restores_the_actor_before_the_host_request_runs(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertRedirect('/users?page=2')->assertSessionHas('warning');
         $this->assertAuthenticatedAs($actor);
         $this->assertFalse(session()->has(ImpersonationSession::KEY));
@@ -79,7 +79,7 @@ class ImpersonationStateTest extends TestCase
     public function test_expiry_can_be_configured_and_stop_remains_available_after_expiration(): void
     {
         config(['laravelusers.impersonation.timeout' => 5]);
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->assertSame(300, $state['expires_at'] - $state['started_at']);
         $this->travel(6)->minutes();
         $this->withSession([ImpersonationSession::KEY => $state])->post('/users/impersonation/stop')->assertRedirect('/users?page=2');
@@ -88,7 +88,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_deleted_actors_end_the_session(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $actor->delete();
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden();
         $this->assertGuest();
@@ -96,7 +96,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_changed_target_identity_ends_the_session(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->actingAs($actor)->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden();
         $this->assertGuest();
     }

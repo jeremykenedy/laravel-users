@@ -1,41 +1,249 @@
-#laravelusers .lu-toast-stack { position: fixed; z-index: 11000; display: flex; flex-direction: column; gap: 10px; width: min(380px, calc(100vw - 24px)); pointer-events: none; }
-#laravelusers .lu-toast-stack[data-lu-toast-position^="top-"] { top: 12px; }
-#laravelusers .lu-toast-stack[data-lu-toast-position^="bottom-"] { bottom: 12px; }
-#laravelusers .lu-toast-stack[data-lu-toast-position$="-right"] { right: 12px; }
-#laravelusers .lu-toast-stack[data-lu-toast-position$="-left"] { left: 12px; }
-#laravelusers .lu-toast-stack[data-lu-toast-position$="-center"] { left: 50%; transform: translateX(-50%); }
-#laravelusers .lu-toast { position: relative; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #bed5ca; border-radius: 10px; background: #edf8f2; color: #176146; box-shadow: 0 8px 24px #17203324; pointer-events: auto; }
-#laravelusers .lu-toast[data-type="error"] { background: #fff0f1; color: #9c2533; border-color: #ecc2c7; }
-#laravelusers .lu-toast[data-type="warning"] { background: #fff7e7; color: #835b10; border-color: #e8d3a4; }
-#laravelusers .lu-toast[data-type="info"] { background: #edf4ff; color: #274d86; border-color: #c3d4ef; }
-#laravelusers .lu-toast[data-border="false"] { border: 0; }
-#laravelusers .lu-toast-body { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
-#laravelusers .lu-toast-icon { display: inline-flex; flex: 0 0 20px; align-items: center; justify-content: center; }
-#laravelusers .lu-toast-icon .lu-icon { width: 20px; height: 20px; }
-#laravelusers .lu-toast-message { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; font-size: .875rem; line-height: 1.45; overflow-wrap: anywhere; }
-#laravelusers .lu-toast [data-lu-dismiss-toast] { display: inline-flex; flex: 0 0 26px; align-items: center; justify-content: center; width: 26px; height: 26px; margin: 0; padding: 4px; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
-#laravelusers .lu-toast [data-lu-dismiss-toast]:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-#laravelusers .lu-toast-progress { flex: 0 0 3px; height: 3px; background: #00000012; }
-#laravelusers .lu-toast-progress[data-position="bottom"] { order: 1; }
-#laravelusers .lu-toast-progress > span { display: block; width: 100%; height: 100%; background: currentColor; opacity: .4; }
-#laravelusers .lu-toast-progress[data-direction="rtl"] > span { margin-left: auto; }
-#laravelusers[data-lu-theme="dark"] .lu-toast { background: #153b2e; border-color: #35614b; color: #d0f0df; }
-#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="error"] { background: #49212a; border-color: #71414b; color: #ffe0e4; }
-#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="warning"] { background: #46371c; border-color: #78613a; color: #ffedc5; }
-#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="info"] { background: #203754; border-color: #3e5c84; color: #dfebff; }
-#laravelusers .lu-settings-form .lu-notification-dismiss { display: flex; align-items: center; gap: 10px; margin: 20px 0 24px; }
-#laravelusers .lu-notification-dismiss input[type="checkbox"] { flex: 0 0 auto; margin: 0; }
-#laravelusers .lu-notification-driver { max-width: 440px; }
-#laravelusers .lu-notification-preview-actions { margin: 0 0 24px; }
-#laravelusers .lu-flash[data-lu-notification-preview] { position: fixed; top: 16px; z-index: 10900; margin: 0; }
-#laravelusers .lu-toast-settings { padding-top: 20px; border-top: 1px solid var(--lu-border, #ced4da); }
-#laravelusers .lu-toast-settings[hidden] { display: none !important; }
-#laravelusers .lu-toast-settings h3 { margin-bottom: 14px; font-size: 1rem; }
-#laravelusers .lu-toast-options-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 20px; margin-top: 20px; }
-#laravelusers .lu-toast-options-grid > div { min-width: 0; }
-#laravelusers .lu-toast-checks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; margin-top: 26px; }
-#laravelusers .lu-settings-form .lu-toast-checks-grid label { display: flex; align-items: center; gap: 10px; margin: 0; }
-#laravelusers .lu-toast-checks-grid input[type="checkbox"] { flex: 0 0 auto; margin: 0; }
-@media (max-width: 900px) { #laravelusers .lu-toast-options-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { #laravelusers .lu-toast-options-grid, #laravelusers .lu-toast-checks-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (prefers-reduced-motion: reduce) { #laravelusers .lu-toast { animation: none !important; transition: none !important; } }
+#laravelusers .lu-toast-stack {
+    position: fixed;
+    z-index: 11000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(380px, calc(100vw - 24px));
+    pointer-events: none;
+}
+
+#laravelusers .lu-toast-stack[data-lu-toast-position^="top-"] {
+    top: 12px;
+}
+
+#laravelusers .lu-toast-stack[data-lu-toast-position^="bottom-"] {
+    bottom: 12px;
+}
+
+#laravelusers .lu-toast-stack[data-lu-toast-position$="-right"] {
+    right: 12px;
+}
+
+#laravelusers .lu-toast-stack[data-lu-toast-position$="-left"] {
+    left: 12px;
+}
+
+#laravelusers .lu-toast-stack[data-lu-toast-position$="-center"] {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#laravelusers .lu-toast {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #bed5ca;
+    border-radius: 10px;
+    background: #edf8f2;
+    color: #176146;
+    box-shadow: 0 8px 24px #17203324;
+    pointer-events: auto;
+}
+
+#laravelusers .lu-toast[data-type="error"] {
+    background: #fff0f1;
+    color: #9c2533;
+    border-color: #ecc2c7;
+}
+
+#laravelusers .lu-toast[data-type="warning"] {
+    background: #fff7e7;
+    color: #835b10;
+    border-color: #e8d3a4;
+}
+
+#laravelusers .lu-toast[data-type="info"] {
+    background: #edf4ff;
+    color: #274d86;
+    border-color: #c3d4ef;
+}
+
+#laravelusers .lu-toast[data-border="false"] {
+    border: 0;
+}
+
+#laravelusers .lu-toast-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+#laravelusers .lu-toast-icon {
+    display: inline-flex;
+    flex: 0 0 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+#laravelusers .lu-toast-icon .lu-icon {
+    width: 20px;
+    height: 20px;
+}
+
+#laravelusers .lu-toast-message {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: .875rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+#laravelusers .lu-toast [data-lu-dismiss-toast] {
+    display: inline-flex;
+    flex: 0 0 26px;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+#laravelusers .lu-toast [data-lu-dismiss-toast]:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
+}
+
+#laravelusers .lu-toast-progress {
+    flex: 0 0 3px;
+    height: 3px;
+    background: #00000012;
+}
+
+#laravelusers .lu-toast-progress[data-position="bottom"] {
+    order: 1;
+}
+
+#laravelusers .lu-toast-progress > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: currentcolor;
+    opacity: .4;
+}
+
+#laravelusers .lu-toast-progress[data-direction="rtl"] > span {
+    margin-left: auto;
+}
+
+#laravelusers[data-lu-theme="dark"] .lu-toast {
+    background: #153b2e;
+    border-color: #35614b;
+    color: #d0f0df;
+}
+
+#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="error"] {
+    background: #49212a;
+    border-color: #71414b;
+    color: #ffe0e4;
+}
+
+#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="warning"] {
+    background: #46371c;
+    border-color: #78613a;
+    color: #ffedc5;
+}
+
+#laravelusers[data-lu-theme="dark"] .lu-toast[data-type="info"] {
+    background: #203754;
+    border-color: #3e5c84;
+    color: #dfebff;
+}
+
+#laravelusers .lu-settings-form .lu-notification-dismiss {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 24px;
+}
+
+#laravelusers .lu-notification-dismiss input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+#laravelusers .lu-notification-driver {
+    max-width: 440px;
+}
+
+#laravelusers .lu-notification-preview-actions {
+    margin: 0 0 24px;
+}
+
+#laravelusers .lu-flash[data-lu-notification-preview] {
+    position: fixed;
+    top: 16px;
+    z-index: 10900;
+    margin: 0;
+}
+
+#laravelusers .lu-toast-settings {
+    padding-top: 20px;
+    border-top: 1px solid var(--lu-border, #ced4da);
+}
+
+#laravelusers .lu-toast-settings[hidden] {
+    display: none !important;
+}
+
+#laravelusers .lu-toast-settings h3 {
+    margin-bottom: 14px;
+    font-size: 1rem;
+}
+
+#laravelusers .lu-toast-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 20px;
+    margin-top: 20px;
+}
+
+#laravelusers .lu-toast-options-grid > div {
+    min-width: 0;
+}
+
+#laravelusers .lu-toast-checks-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    margin-top: 26px;
+}
+
+#laravelusers .lu-settings-form .lu-toast-checks-grid label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+#laravelusers .lu-toast-checks-grid input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 0;
+}
+@media (width <= 900px) {
+    #laravelusers .lu-toast-options-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (width <= 560px) {
+    #laravelusers .lu-toast-options-grid, #laravelusers .lu-toast-checks-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    #laravelusers .lu-toast {
+        animation: none !important;
+        transition: none !important;
+    }
+}

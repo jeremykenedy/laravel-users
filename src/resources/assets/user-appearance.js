@@ -36,20 +36,23 @@
                 ? `radial-gradient(ellipse at 50% 40%, rgba(${highlightChannels.join(',')},${glow}), transparent 75%), linear-gradient(145deg, transparent, rgba(${light ? '255,255,255' : '0,0,0'},${shade}))` : 'none';
         });
     }
+    function applyColors(row, colors, prefix) {
+        const properties = [
+            ['color', colors.base], ['text', colors.text], ['shade', colors.shade], ['glow', colors.highlight],
+        ];
+        for (const [property, value] of properties) {
+            if (/^#[a-f0-9]{3,8}$/i.test(value)) row.style.setProperty(prefix + property, value);
+        }
+        row.style.setProperty(prefix + 'image', colors.gradient ? 'initial' : 'none');
+    }
+
     root?.addEventListener('lu:appearance', event => {
+        const colorsByUser = new Map(Object.entries(event.detail));
         root.querySelectorAll('[data-lu-user]').forEach(row => {
-            const colors = event.detail[row.dataset.luUser];
+            const colors = colorsByUser.get(row.dataset.luUser);
             if (!colors) return;
-            for (const [key, variable] of Object.entries({base: 'color', text: 'text', shade: 'shade', highlight: 'glow'})) {
-                if (/^#[a-f0-9]{3,8}$/i.test(colors[key])) row.style.setProperty('--lu-profile-' + variable, colors[key]);
-            }
-            row.style.setProperty('--lu-profile-image', colors.gradient ? 'initial' : 'none');
-            if (colors.dark) {
-                for (const [key, variable] of Object.entries({base: 'color', text: 'text', shade: 'shade', highlight: 'glow'})) {
-                    if (/^#[a-f0-9]{3,8}$/i.test(colors.dark[key])) row.style.setProperty('--lu-profile-dark-' + variable, colors.dark[key]);
-                }
-                row.style.setProperty('--lu-profile-dark-image', colors.dark.gradient ? 'initial' : 'none');
-            }
+            applyColors(row, colors, '--lu-profile-');
+            if (colors.dark) applyColors(row, colors.dark, '--lu-profile-dark-');
         });
     });
     root?.querySelectorAll('[data-lu-inherit-color], [data-lu-inherit-strength]').forEach(input => {

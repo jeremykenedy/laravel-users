@@ -11,6 +11,7 @@ use jeremykenedy\laravelusers\Test\TestCase;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use Livewire\LivewireServiceProvider;
+use ReflectionClass;
 
 class NativeRuntimeSecurityTest extends TestCase
 {
@@ -25,7 +26,7 @@ class NativeRuntimeSecurityTest extends TestCase
         if (!class_exists(LivewireServiceProvider::class) || !class_exists(UsersScreen::class)) {
             $this->markTestSkipped('This regression requires the optional Livewire integration.');
         }
-        View::prependNamespace('laravelusers', dirname((new \ReflectionClass(NativePageData::class))->getFileName(), 2).'/resources/views');
+        View::prependNamespace('laravelusers', dirname((new ReflectionClass(NativePageData::class))->getFileName(), 2).'/resources/views');
         Livewire::component('laravelusers.users-screen', UsersScreen::class);
         Livewire::component('laravelusers.user-table', UserTable::class);
         $this->actingAs($this->user());

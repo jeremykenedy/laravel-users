@@ -2,6 +2,7 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use CreatePermissionTables;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Event;
@@ -16,6 +17,7 @@ use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
+use ReflectionClass;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Models\Permission;
@@ -23,6 +25,11 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\PermissionServiceProvider;
 
+/**
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class RoleIntegrationsTest extends TestCase
 {
     public function test_spatie_access_rules_do_not_cross_team_boundaries(): void
@@ -65,12 +72,12 @@ class RoleIntegrationsTest extends TestCase
     private function spatieMigration(): void
     {
         if (class_exists('CreatePermissionTables', false)) {
-            (new \CreatePermissionTables())->up();
+            (new CreatePermissionTables())->up();
 
             return;
         }
-        $migration = require dirname((new \ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
-        (is_object($migration) ? $migration : new \CreatePermissionTables())->up();
+        $migration = require dirname((new ReflectionClass(PermissionServiceProvider::class))->getFileName(), 2).'/database/migrations/create_permission_tables.php.stub';
+        (is_object($migration) ? $migration : new CreatePermissionTables())->up();
     }
 
     public function test_laravel_roles_remains_optional_and_preserves_existing_assignment(): void
@@ -78,7 +85,7 @@ class RoleIntegrationsTest extends TestCase
         if (!class_exists(RolesServiceProvider::class)) {
             $this->markTestSkipped('Run the optional roles integration job to test Laravel Roles.');
         }
-        config(['roles' => require dirname((new \ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
+        config(['roles' => require dirname((new ReflectionClass(RolesServiceProvider::class))->getFileName()).'/config/roles.php']);
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -140,27 +147,34 @@ class RoleIntegrationsTest extends TestCase
         $this->assertCount(2, $user->fresh()->roles);
         $this->exercisePermissions($userModel, $user, $admin, $legacy);
         $this->exerciseAccess($actor, $admin, $legacy);
-        if (method_exists($actor, 'assignRole')) {
-            $wrongGuard = $roleModel::create(['name' => 'ApiRole', 'guard_name' => 'api']);
-            $this->get('/users/'.$user->id.'/edit')->assertOk()->assertDontSee('ApiRole');
-            $this->put('/users/'.$user->id, ['name' => $user->name, 'email' => $user->email, 'role' => $wrongGuard->getKey()])->assertSessionHasErrors('role');
-            $roleMiddleware = class_exists(RoleMiddleware::class) ? RoleMiddleware::class : \Spatie\Permission\Middlewares\RoleMiddleware::class;
-            $permissionMiddleware = class_exists(PermissionMiddleware::class) ? PermissionMiddleware::class : \Spatie\Permission\Middlewares\PermissionMiddleware::class;
-            $this->app['router']->aliasMiddleware('role', $roleMiddleware);
-            $this->app['router']->aliasMiddleware('permission', $permissionMiddleware);
-            $actor->assignRole($admin);
-            $permission = Permission::create(['name' => 'manage users', 'guard_name' => 'web']);
-            $actor->givePermissionTo($permission);
-            config(['laravelusers.rolesMiddlwareEnabled' => true, 'laravelusers.rolesMiddlware' => ['role:Administrator', 'permission:manage users']]);
-            foreach ($this->app['router']->getRoutes() as $route) {
-                $route->flushController();
-            }
-            $this->get('/users')->assertOk();
-            $actor->revokePermissionTo($permission);
-            $this->get('/users')->assertForbidden();
-            $this->post('/users/email/preview')->assertForbidden();
-        }
+        $this->exerciseSpatieMiddleware($actor, $user, $admin, $roleModel);
         $this->exerciseInstaller($userModel, $roleModel);
+    }
+
+    private function exerciseSpatieMiddleware($actor, $user, $admin, string $roleModel): void
+    {
+        if (!method_exists($actor, 'assignRole')) {
+            return;
+        }
+
+        $wrongGuard = $roleModel::create(['name' => 'ApiRole', 'guard_name' => 'api']);
+        $this->get('/users/'.$user->id.'/edit')->assertOk()->assertDontSee('ApiRole');
+        $this->put('/users/'.$user->id, ['name' => $user->name, 'email' => $user->email, 'role' => $wrongGuard->getKey()])->assertSessionHasErrors('role');
+        $roleMiddleware = class_exists(RoleMiddleware::class) ? RoleMiddleware::class : \Spatie\Permission\Middlewares\RoleMiddleware::class;
+        $permissionMiddleware = class_exists(PermissionMiddleware::class) ? PermissionMiddleware::class : \Spatie\Permission\Middlewares\PermissionMiddleware::class;
+        $this->app['router']->aliasMiddleware('role', $roleMiddleware);
+        $this->app['router']->aliasMiddleware('permission', $permissionMiddleware);
+        $actor->assignRole($admin);
+        $permission = Permission::create(['name' => 'manage users', 'guard_name' => 'web']);
+        $actor->givePermissionTo($permission);
+        config(['laravelusers.rolesMiddlwareEnabled' => true, 'laravelusers.rolesMiddlware' => ['role:Administrator', 'permission:manage users']]);
+        foreach ($this->app['router']->getRoutes() as $route) {
+            $route->flushController();
+        }
+        $this->get('/users')->assertOk();
+        $actor->revokePermissionTo($permission);
+        $this->get('/users')->assertForbidden();
+        $this->post('/users/email/preview')->assertForbidden();
     }
 
     private function exerciseAccess($actor, $role, bool $legacy): void
@@ -189,19 +203,7 @@ class RoleIntegrationsTest extends TestCase
         $this->actingAs($actor->fresh())->get('/users')->assertForbidden();
         config(['laravelusers.access.view_users' => ['mode' => 'restricted']]);
         $this->get('/users')->assertForbidden();
-        if ($legacy) {
-            config(['laravelusers.access.view_users' => ['mode' => 'restricted', 'level' => 2]]);
-            $this->get('/users')->assertForbidden();
-            $role->update(['level' => 3]);
-            $this->actingAs($actor->fresh())->get('/users')->assertOk();
-            $role->update(['level' => 1]);
-        } else {
-            $wrongGuard = Permission::create(['name' => 'Wrong guard access', 'guard_name' => 'api']);
-            config(['laravelusers.access.view_users' => ['mode' => 'restricted', 'permissions' => [$wrongGuard->getKey()]]]);
-            $this->get('/users')->assertForbidden();
-            config(['laravelusers.access.view_users' => ['mode' => 'inherit']]);
-            $this->put('/users/settings', ['avatar_source' => 'initials', 'profile_color' => '#2458b7', 'edit_color' => '#705000', 'access' => ['view_users' => ['mode' => 'restricted', 'permissions' => [$wrongGuard->getKey()]]]])->assertSessionHasErrors('access.view_users.permissions.0');
-        }
+        $this->exerciseProviderAccess($actor, $role, $legacy);
         $settings = ['avatar_source' => 'initials', 'profile_color' => '#264e36', 'edit_color' => '#705000', 'access' => ['edit_settings' => ['mode' => 'restricted', 'roles' => [$role->getKey()]], 'create_users' => ['mode' => 'deny']]];
         $this->actingAs($actor->fresh())->from('/users/settings')->put('/users/settings', $settings)->assertSessionHasNoErrors();
         $this->get('/users/create')->assertForbidden();
@@ -211,6 +213,24 @@ class RoleIntegrationsTest extends TestCase
         $this->actingAs($actor);
     }
 
+    private function exerciseProviderAccess($actor, $role, bool $legacy): void
+    {
+        if ($legacy) {
+            config(['laravelusers.access.view_users' => ['mode' => 'restricted', 'level' => 2]]);
+            $this->get('/users')->assertForbidden();
+            $role->update(['level' => 3]);
+            $this->actingAs($actor->fresh())->get('/users')->assertOk();
+            $role->update(['level' => 1]);
+
+            return;
+        }
+        $wrongGuard = Permission::create(['name' => 'Wrong guard access', 'guard_name' => 'api']);
+        config(['laravelusers.access.view_users' => ['mode' => 'restricted', 'permissions' => [$wrongGuard->getKey()]]]);
+        $this->get('/users')->assertForbidden();
+        config(['laravelusers.access.view_users' => ['mode' => 'inherit']]);
+        $this->put('/users/settings', ['avatar_source' => 'initials', 'profile_color' => '#2458b7', 'edit_color' => '#705000', 'access' => ['view_users' => ['mode' => 'restricted', 'permissions' => [$wrongGuard->getKey()]]]])->assertSessionHasErrors('access.view_users.permissions.0');
+    }
+
     private function exerciseImpersonation($actor, $role): void
     {
         (require dirname(__DIR__, 2).'/src/database/migrations/2026_10_07_000000_create_laravelusers_login_activity_table.php')->up();
@@ -218,11 +238,7 @@ class RoleIntegrationsTest extends TestCase
         $this->exerciseImpersonationSettings();
         $target = $actor->newInstance(['name' => 'Temporary Account', 'email' => 'temporary@example.com', 'password' => bcrypt('password')]);
         $target->save();
-        if (method_exists($target, 'assignRole')) {
-            $target->assignRole($role);
-        } else {
-            $target->attachRole($role);
-        }
+        method_exists($target, 'assignRole') ? $target->assignRole($role) : $target->attachRole($role);
         $unprivileged = $actor->newInstance(['name' => 'Unprivileged Account', 'email' => 'unprivileged@example.com', 'password' => bcrypt('password')]);
         $unprivileged->save();
 
@@ -267,31 +283,8 @@ class RoleIntegrationsTest extends TestCase
         $data = ['name' => $user->name, 'email' => $user->email, 'role' => [$role->getKey()], 'permissions_present' => 1, 'permissions' => [$direct->getKey()]];
         $this->put('/users/'.$user->id, $data)->assertSessionHasNoErrors();
         $this->assertSame([$direct->getKey()], $user->fresh()->$relation->modelKeys());
-        foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
-            config(['laravelusers.frontend' => $framework]);
-            $this->get('/users/create')->assertOk()->assertSee('name="permissions[]"', false);
-            $this->get('/users/'.$user->id.'/edit')->assertOk()->assertSee('Direct permission')->assertSee('Inherited permission');
-            $this->get('/users/'.$user->id)->assertOk()->assertSee('Direct permission');
-            if ($legacy) {
-                $this->get('/users/'.$user->id.'/edit')->assertSee('Level 1');
-            }
-        }
-        $created = ['name' => 'PermissionUser', 'email' => 'permission@example.com', 'password' => 'password', 'password_confirmation' => 'password', 'role' => $role->getKey(), 'permissions' => [$direct->getKey()]];
-        $this->post('/users', $created)->assertSessionHasNoErrors();
-        $this->assertSame([$direct->getKey()], $userModel::where('name', 'PermissionUser')->firstOrFail()->$relation->modelKeys());
-        Event::listen('eloquent.created: '.$userModel, function ($createdUser) use ($direct, $legacy) {
-            $createdUser->syncPermissions($legacy ? [$direct->getKey()] : [$direct]);
-        });
-
-        try {
-            unset($created['permissions']);
-            $created['name'] = 'ObserverPermissionUser';
-            $created['email'] = 'observer-permission@example.com';
-            $this->post('/users', $created)->assertSessionHasNoErrors();
-            $this->assertSame([$direct->getKey()], $userModel::where('name', $created['name'])->firstOrFail()->$relation->modelKeys());
-        } finally {
-            Event::forget('eloquent.created: '.$userModel);
-        }
+        $this->exercisePermissionViews($user, $legacy);
+        $this->exercisePermissionCreation($userModel, $role, $direct, $relation, $legacy);
         $this->put('/users/'.$user->id, ['name' => $user->name, 'email' => $user->email, 'role' => [$role->getKey()], 'permissions_present' => 0])->assertSessionHasNoErrors();
         $this->assertSame([$direct->getKey()], $user->fresh()->$relation->modelKeys());
         $this->put('/users/'.$user->id, ['name' => $user->name, 'email' => $user->email, 'role' => [$role->getKey()]])->assertSessionHasNoErrors();
@@ -318,6 +311,39 @@ class RoleIntegrationsTest extends TestCase
         $this->put('/users/'.$user->id, array_merge($data, ['permissions' => [$direct->getKey()]]))->assertSessionHasNoErrors();
         $this->assertCount(0, $user->fresh()->$relation);
         $this->get('/users/create')->assertDontSee('name="permissions[]"', false);
+    }
+
+    private function exercisePermissionViews($user, bool $legacy): void
+    {
+        foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $this->get('/users/create')->assertOk()->assertSee('name="permissions[]"', false);
+            $this->get('/users/'.$user->id.'/edit')->assertOk()->assertSee('Direct permission')->assertSee('Inherited permission');
+            $this->get('/users/'.$user->id)->assertOk()->assertSee('Direct permission');
+            if ($legacy) {
+                $this->get('/users/'.$user->id.'/edit')->assertSee('Level 1');
+            }
+        }
+    }
+
+    private function exercisePermissionCreation(string $userModel, $role, $direct, string $relation, bool $legacy): void
+    {
+        $created = ['name' => 'PermissionUser', 'email' => 'permission@example.com', 'password' => 'password', 'password_confirmation' => 'password', 'role' => $role->getKey(), 'permissions' => [$direct->getKey()]];
+        $this->post('/users', $created)->assertSessionHasNoErrors();
+        $this->assertSame([$direct->getKey()], $userModel::where('name', 'PermissionUser')->firstOrFail()->$relation->modelKeys());
+        Event::listen('eloquent.created: '.$userModel, function ($createdUser) use ($direct, $legacy) {
+            $createdUser->syncPermissions($legacy ? [$direct->getKey()] : [$direct]);
+        });
+
+        try {
+            unset($created['permissions']);
+            $created['name'] = 'ObserverPermissionUser';
+            $created['email'] = 'observer-permission@example.com';
+            $this->post('/users', $created)->assertSessionHasNoErrors();
+            $this->assertSame([$direct->getKey()], $userModel::where('name', $created['name'])->firstOrFail()->$relation->modelKeys());
+        } finally {
+            Event::forget('eloquent.created: '.$userModel);
+        }
     }
 
     private function exerciseInstaller(string $userModel, string $roleModel): void

@@ -15,6 +15,7 @@ module.exports = defineConfig({
     outputDir: './runtime/native-results',
     webServer: {
         command: 'php -S 127.0.0.1:19855 tests/browser/native-server.php',
+        cwd: __dirname + '/../..',
         url: 'http://127.0.0.1:19855/login',
         reuseExistingServer: !process.env.CI,
         timeout: 30000,
