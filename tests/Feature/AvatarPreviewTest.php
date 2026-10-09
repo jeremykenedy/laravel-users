@@ -4,6 +4,8 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use jeremykenedy\laravelusers\Models\UserSetting;
 use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
@@ -98,6 +100,51 @@ class AvatarPreviewTest extends TestCase
         $this->get('/users/settings/avatar-preview/unknown')->assertNotFound();
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('laravelusers_settings', 0);
+    }
+
+    public function test_email_based_previews_use_distinct_example_addresses_and_force_the_selected_style(): void
+    {
+        $this->enable();
+        $actor = $this->user(['email' => 'private@example.org']);
+        $this->actingAs($actor);
+        Http::fake();
+        Mail::fake();
+        Notification::fake();
+        $samples = [
+            'profile'      => 'jordan.ellis@example.com',
+            'edit'         => 'casey.morgan@example.com',
+            'profile_dark' => 'taylor.reed@example.com',
+            'edit_dark'    => 'avery.parker@example.com',
+        ];
+
+        foreach (array_merge(['gravatar'], Avatar::GRAVATAR_STYLES) as $style) {
+            $response = $this->postJson('/users/settings/avatar-preview', ['avatar_source' => $style])->assertOk();
+            $sources = [];
+            foreach ($samples as $kind => $email) {
+                $source = $response->json('avatars.'.$kind.'.avatar.src');
+                $sources[] = $source;
+                $url = parse_url($source);
+                parse_str($url['query'], $query);
+                $this->assertSame('https', $url['scheme']);
+                $this->assertSame('www.gravatar.com', $url['host']);
+                $this->assertSame('/avatar/'.hash('sha256', $email), $url['path']);
+                $this->assertSame($style === 'gravatar' ? '404' : $style, $query['d']);
+                $this->assertSame('g', $query['r']);
+                $this->assertSame($style === 'gravatar' ? null : 'y', $query['f'] ?? null);
+                $response->assertDontSee($email)->assertDontSee(hash('sha256', $actor->email));
+            }
+            $this->assertCount(4, array_unique($sources));
+            $this->assertSame($response->json('avatars'), $this->postJson('/users/settings/avatar-preview', ['avatar_source' => $style])->assertOk()->json('avatars'));
+        }
+
+        $this->assertSame('private@example.org', $actor->fresh()->email);
+        $this->assertSame('initials', config('laravelusers.avatar.source'));
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('laravelusers_settings', 0);
+        Http::assertNothingSent();
+        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
+        Notification::assertNothingSent();
     }
 
     public function test_only_supported_avatar_sources_are_accepted(): void
