@@ -88,7 +88,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_deleted_actors_end_the_session(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $actor->delete();
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden();
         $this->assertGuest();
@@ -96,7 +96,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_changed_target_identity_ends_the_session(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->actingAs($actor)->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertForbidden();
         $this->assertGuest();
     }

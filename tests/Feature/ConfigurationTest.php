@@ -8,48 +8,49 @@ use jeremykenedy\laravelusers\Test\TestCase;
 
 class ConfigurationTest extends TestCase
 {
+    private const ORIGINAL_DEFAULTS = [
+        'laravelUsersBladeExtended'   => 'laravelusers::layouts.app',
+        'authEnabled'                 => true,
+        'rolesEnabled'                => false,
+        'rolesMiddlwareEnabled'       => true,
+        'rolesMiddlware'              => 'role:admin',
+        'roleModel'                   => 'jeremykenedy\LaravelRoles\Models\Role',
+        'softDeletedEnabled'          => false,
+        'defaultUserModel'            => 'App\Models\User',
+        'showUsersBlade'              => 'laravelusers::usersmanagement.show-users',
+        'createUserBlade'             => 'laravelusers::usersmanagement.create-user',
+        'showIndividualUserBlade'     => 'laravelusers::usersmanagement.show-user',
+        'editIndividualUserBlade'     => 'laravelusers::usersmanagement.edit-user',
+        'enablePackageBootstapAlerts' => true,
+        'enablePagination'            => true,
+        'paginateListSize'            => 25,
+        'enableSearchUsers'           => true,
+        'enabledDatatablesJs'         => false,
+        'datatablesJsStartCount'      => 25,
+        'datatablesCssCDN'            => 'https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css',
+        'datatablesJsCDN'             => 'https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js',
+        'datatablesJsPresetCDN'       => 'https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js',
+        'tooltipsEnabled'             => true,
+        'enableBootstrapPopperJsCdn'  => true,
+        'bootstrapPopperJsCdn'        => 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js',
+        'fontAwesomeEnabled'          => true,
+        'fontAwesomeCdn'              => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
+        'enableBootstrapCssCdn'       => true,
+        'bootstrapCssCdn'             => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
+        'enableAppCss'                => true,
+        'appCssPublicFile'            => 'css/app.css',
+        'enableBootstrapJsCdn'        => true,
+        'bootstrapJsCdn'              => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
+        'enableAppJs'                 => true,
+        'appJsPublicFile'             => 'js/app.js',
+        'enablejQueryCdn'             => true,
+        'jQueryCdn'                   => 'https://code.jquery.com/jquery-3.3.1.min.js',
+    ];
+
     public function test_all_original_config_keys_and_defaults_are_preserved(): void
     {
-        $original = [
-            'laravelUsersBladeExtended'   => 'laravelusers::layouts.app',
-            'authEnabled'                 => true,
-            'rolesEnabled'                => false,
-            'rolesMiddlwareEnabled'       => true,
-            'rolesMiddlware'              => 'role:admin',
-            'roleModel'                   => 'jeremykenedy\LaravelRoles\Models\Role',
-            'softDeletedEnabled'          => false,
-            'defaultUserModel'            => 'App\Models\User',
-            'showUsersBlade'              => 'laravelusers::usersmanagement.show-users',
-            'createUserBlade'             => 'laravelusers::usersmanagement.create-user',
-            'showIndividualUserBlade'     => 'laravelusers::usersmanagement.show-user',
-            'editIndividualUserBlade'     => 'laravelusers::usersmanagement.edit-user',
-            'enablePackageBootstapAlerts' => true,
-            'enablePagination'            => true,
-            'paginateListSize'            => 25,
-            'enableSearchUsers'           => true,
-            'enabledDatatablesJs'         => false,
-            'datatablesJsStartCount'      => 25,
-            'datatablesCssCDN'            => 'https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css',
-            'datatablesJsCDN'             => 'https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js',
-            'datatablesJsPresetCDN'       => 'https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js',
-            'tooltipsEnabled'             => true,
-            'enableBootstrapPopperJsCdn'  => true,
-            'bootstrapPopperJsCdn'        => 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js',
-            'fontAwesomeEnabled'          => true,
-            'fontAwesomeCdn'              => 'https://use.fontawesome.com/releases/v5.0.6/css/all.css',
-            'enableBootstrapCssCdn'       => true,
-            'bootstrapCssCdn'             => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
-            'enableAppCss'                => true,
-            'appCssPublicFile'            => 'css/app.css',
-            'enableBootstrapJsCdn'        => true,
-            'bootstrapJsCdn'              => 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js',
-            'enableAppJs'                 => true,
-            'appJsPublicFile'             => 'js/app.js',
-            'enablejQueryCdn'             => true,
-            'jQueryCdn'                   => 'https://code.jquery.com/jquery-3.3.1.min.js',
-        ];
         $config = require __DIR__.'/../../src/config/laravelusers.php';
-        foreach ($original as $key => $default) {
+        foreach (self::ORIGINAL_DEFAULTS as $key => $default) {
             $this->assertSame($default, $config[$key]);
         }
         $this->assertSame('bootstrap4', $config['frontend']);
@@ -91,40 +92,45 @@ class ConfigurationTest extends TestCase
                 Env::getRepository()->set($name, $value);
             }
             $config = require __DIR__.'/../../src/config/laravelusers.php';
-            $this->assertSame('#19283a', $config['profileCardDarkColor']);
-            $this->assertFalse($config['profileCardDarkGradient']);
-            $this->assertSame('75', $config['profileCardDarkGradientStrength']);
-            $this->assertSame('#49340e', $config['editCardDarkColor']);
-            $this->assertTrue($config['editCardDarkGradient']);
-            $this->assertSame('0', $config['editCardDarkGradientStrength']);
-            $this->assertTrue($config['avatar']['per_user']);
-            $this->assertTrue($config['permissionsEnabled']);
-            $this->assertSame('64', $config['password']['create_max']);
-            $this->assertFalse($config['showLogout']);
-            $this->assertTrue($config['showBreadcrumbs']);
-            $this->assertFalse($config['searchDebounceEnabled']);
-            $this->assertTrue($config['tableButtonsIconOnly']);
-            $this->assertSame('3000', $config['searchDebounce']);
-            $this->assertSame('dashboard.header', $config['headerView']);
-            $this->assertTrue($config['activity']['online']);
-            $this->assertFalse($config['welcome']['enabled']);
-            $this->assertSame('#264e36', $config['profileCardColor']);
-            $this->assertTrue($config['tableViewToggle']);
-            $this->assertSame('3', $config['cardColumns']['tablet']);
-            $this->assertSame('#765400', $config['editCardColor']);
-            $this->assertSame('12', $config['password']['min']);
-            $this->assertTrue($config['password']['numbers']);
-            $this->assertFalse($config['password']['meter']);
-            $this->assertFalse($config['emails']['enabled']);
-            $this->assertSame('Hello', $config['emails']['greeting']);
-            $this->assertFalse($config['emails']['use_signoff']);
-            $this->assertSame('30', $config['emails']['reset_expire']);
-            $this->assertSame('120', $config['emails']['recipient_height']);
+            $this->assertEnvironmentOverrides($config);
         } finally {
             foreach ($values as $name => $value) {
                 Env::getRepository()->clear($name);
             }
         }
+    }
+
+    private function assertEnvironmentOverrides(array $config): void
+    {
+        $this->assertSame('#19283a', $config['profileCardDarkColor']);
+        $this->assertFalse($config['profileCardDarkGradient']);
+        $this->assertSame('75', $config['profileCardDarkGradientStrength']);
+        $this->assertSame('#49340e', $config['editCardDarkColor']);
+        $this->assertTrue($config['editCardDarkGradient']);
+        $this->assertSame('0', $config['editCardDarkGradientStrength']);
+        $this->assertTrue($config['avatar']['per_user']);
+        $this->assertTrue($config['permissionsEnabled']);
+        $this->assertSame('64', $config['password']['create_max']);
+        $this->assertFalse($config['showLogout']);
+        $this->assertTrue($config['showBreadcrumbs']);
+        $this->assertFalse($config['searchDebounceEnabled']);
+        $this->assertTrue($config['tableButtonsIconOnly']);
+        $this->assertSame('3000', $config['searchDebounce']);
+        $this->assertSame('dashboard.header', $config['headerView']);
+        $this->assertTrue($config['activity']['online']);
+        $this->assertFalse($config['welcome']['enabled']);
+        $this->assertSame('#264e36', $config['profileCardColor']);
+        $this->assertTrue($config['tableViewToggle']);
+        $this->assertSame('3', $config['cardColumns']['tablet']);
+        $this->assertSame('#765400', $config['editCardColor']);
+        $this->assertSame('12', $config['password']['min']);
+        $this->assertTrue($config['password']['numbers']);
+        $this->assertFalse($config['password']['meter']);
+        $this->assertFalse($config['emails']['enabled']);
+        $this->assertSame('Hello', $config['emails']['greeting']);
+        $this->assertFalse($config['emails']['use_signoff']);
+        $this->assertSame('30', $config['emails']['reset_expire']);
+        $this->assertSame('120', $config['emails']['recipient_height']);
     }
 
     public function test_partial_host_configuration_does_not_enable_new_email_or_password_controls(): void

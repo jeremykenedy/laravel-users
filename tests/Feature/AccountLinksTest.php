@@ -282,19 +282,7 @@ class AccountLinksTest extends TestCase
                     throw new RuntimeException('Could not start the concurrent request.');
                 }
                 if ($pid === 0) {
-                    $this->app['db']->purge('testing');
-                    while (!file_exists($directory.'/start')) {
-                        usleep(1000);
-                    }
-
-                    try {
-                        $result = $this->app->make(AccountLinks::class)->consume(basename($url));
-                        file_put_contents($directory.'/'.$index, json_encode($result));
-                        exit(0);
-                    } catch (\Throwable $exception) {
-                        file_put_contents($directory.'/'.$index, $exception->getMessage());
-                        exit(1);
-                    }
+                    $this->consumeInChild($directory, $index, $url);
                 }
                 $children[] = $pid;
             }
@@ -317,6 +305,28 @@ class AccountLinksTest extends TestCase
                 unlink($file);
             }
             rmdir($directory);
+        }
+    }
+
+    /**
+     * Forked requests must terminate before the parent PHPUnit process continues.
+     *
+     * @SuppressWarnings("PHPMD.ExitExpression")
+     */
+    private function consumeInChild(string $directory, int $index, string $url): never
+    {
+        $this->app['db']->purge('testing');
+        while (!file_exists($directory.'/start')) {
+            usleep(1000);
+        }
+
+        try {
+            $result = $this->app->make(AccountLinks::class)->consume(basename($url));
+            file_put_contents($directory.'/'.$index, json_encode($result));
+            exit(0);
+        } catch (\Throwable $exception) {
+            file_put_contents($directory.'/'.$index, $exception->getMessage());
+            exit(1);
         }
     }
 

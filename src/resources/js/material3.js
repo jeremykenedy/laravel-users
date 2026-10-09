@@ -66,8 +66,7 @@ if (root) {
 
     motion.addEventListener('change', () => attached.forEach((components, control) => update(control, components)));
 
-    const observer = new MutationObserver(mutations => {
-        if (!root) return;
+    const updateMutations = (mutations) => {
         for (const mutation of mutations) {
             if (mutation.type === 'attributes') {
                 if (attached.has(mutation.target)) update(mutation.target, attached.get(mutation.target));
@@ -75,13 +74,21 @@ if (root) {
                 mutation.addedNodes.forEach(enhanceTree);
             }
         }
+    };
 
+    const reconnectControls = () => {
         for (const [control, components] of attached) {
             const connected = root.contains(control);
             if (connected && root.contains(components.ring) && (!components.ripple || root.contains(components.ripple))) continue;
             release(control, components);
             if (connected) enhance(control);
         }
+    };
+
+    const observer = new MutationObserver(mutations => {
+        if (!root) return;
+        updateMutations(mutations);
+        reconnectControls();
     });
 
     const connect = () => {
