@@ -22,6 +22,7 @@ async function openQueuedPackage(page, framework, handleStatus) {
         await page.goto(`/__browser/${framework}?settings=1&packages=1`);
     }
     await page.goto('/users/settings#packages');
+    await page.getByRole('tab', {name: 'Packages', exact: true}).click();
     await page.locator('[data-lu-package-verify]').click();
     const install = page.locator('[data-lu-package="toast"][data-lu-package-operation="install"]');
     await expect(install).toBeEnabled();
