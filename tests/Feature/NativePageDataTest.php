@@ -2,6 +2,7 @@
 
 namespace jeremykenedy\laravelusers\Test\Feature;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\MessageBag;
@@ -204,7 +205,12 @@ class NativePageDataTest extends TestCase
 
         $data['packageQueueReady'] = true;
         $page = $this->page('laravelusers::modern.settings', $data);
-        $this->assertFalse($page['forms']['package-toast']['disabled']);
+        if (PHP_VERSION_ID >= 80200 && version_compare(Application::VERSION, '10.0.0', '>=')) {
+            $this->assertFalse($page['forms']['package-toast']['disabled']);
+        } else {
+            $this->assertTrue($page['forms']['package-toast']['disabled']);
+            $this->assertSame(trans('laravelusers::ui.packages_toast_unsupported'), collect($page['data']['packages']['choices'])->firstWhere('package', 'toast')['reason']);
+        }
         $this->assertFalse($page['forms']['package-laravel-roles-configure']['disabled']);
         $this->assertTrue($page['forms']['package-spatie']['disabled']);
     }
