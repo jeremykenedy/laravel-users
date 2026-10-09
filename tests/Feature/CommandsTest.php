@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
+use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\LocalAvatars;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Support\RolesSetup;
@@ -209,7 +210,7 @@ class CommandsTest extends TestCase
     public function test_interactive_choices_are_saved(): void
     {
         $this->artisan('laravelusers:install')
-            ->expectsChoice('CSS framework', 'bootstrap5', ['bootstrap4', 'bootstrap5', 'tailwind'])
+            ->expectsChoice('CSS framework', 'bootstrap5', Frontend::FRAMEWORKS)
             ->expectsChoice('Color theme', 'dark', ['light', 'dark', 'system'])
             ->expectsChoice('Views (existing overrides always take precedence)', 'package', ['package', 'publish'])
             ->expectsChoice('Roles package (keep preserves existing or custom integrations)', 'keep', ['keep', 'none', 'laravel-roles', 'spatie'])
