@@ -127,7 +127,7 @@ config([
     'laravelusers.searchDebounceEnabled'          => ($_COOKIE['lu-search-debounce-enabled'] ?? '1') !== '0',
     'laravelusers.searchDebounce'                 => max(0, (int) ($_COOKIE['lu-search-delay'] ?? 2000)),
     'laravelusers.dateStyle'                      => in_array($_COOKIE['lu-date-style'] ?? '', ['full', 'long', 'medium', 'short'], true) ? $_COOKIE['lu-date-style'] : 'short',
-    'laravelusers.fullWidth'                      => ($_COOKIE['lu-full-width'] ?? ($preview ? '1' : '0')) === '1',
+    'laravelusers.fullWidth'                      => ($_COOKIE['lu-full-width'] ?? '0') === '1',
     'laravelusers.account_links.enabled'          => true,
     'laravelusers.emails.throttle'                => $preview ? '10,1' : '1000,1',
     'laravelusers.emails.goodbye'                 => ($_COOKIE['lu-goodbye'] ?? '0') === '1',
@@ -256,7 +256,7 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
         ->withCookie(cookie('lu-settings', request()->query('settings', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-avatar', request()->query('avatar', 'initials'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-view-toggle', request()->query('view-toggle', '1'), 60, '/', null, false, false, false))
-        ->withCookie(cookie('lu-full-width', request()->query('full-width', (int) ($_SERVER['SERVER_PORT'] ?? 0) === 19849 ? '1' : '0'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-full-width', request()->query('full-width', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-profile-color', request()->query('profile-color', '#2458b7'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-icons-only', request()->query('icons-only', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-icons', request()->query('icons', '1'), 60, '/', null, false, false, false))
