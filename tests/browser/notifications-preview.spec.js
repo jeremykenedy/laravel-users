@@ -72,6 +72,37 @@ async function unchanged(page, baseline) {
 }
 
 for (const framework of ['bootstrap4', 'bootstrap5']) {
+    test(framework + ': preview and dismissal preserve scroll position and settings layout', async ({ page }) => {
+        const baseline = await openSettings(page, framework);
+        if (toastInstalled) await option(page, 'position', 'top-right');
+        for (const width of [390, 1440]) {
+            await page.setViewportSize({ width, height: 600 });
+            for (const driver of toastInstalled ? ['alert', 'both', 'toast'] : ['alert']) {
+                if (toastInstalled) await page.locator('#settings-notifications').selectOption(driver);
+                await previewButton(page).scrollIntoViewIfNeeded();
+                await previewButton(page).evaluate(button => button.scrollIntoView({ block: 'center', behavior: 'instant' }));
+                await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+                const measure = () => page.evaluate(() => {
+                    const button = document.querySelector('[data-lu-preview-notification]').getBoundingClientRect();
+                    const card = document.querySelector('.lu-settings-panel, .container > .card').getBoundingClientRect();
+                    return { scrollX, scrollY, buttonY: button.y, cardY: card.y, cardHeight: card.height };
+                });
+                const before = await measure();
+                await previewButton(page).click();
+                await expect(previewAlert(page)).toHaveCount(driver === 'toast' ? 0 : 1);
+                expect(await measure(), `${width}px, ${driver}, preview`).toEqual(before);
+                await previewButton(page).click();
+                expect(await measure(), `${width}px, ${driver}, repeated preview`).toEqual(before);
+                if (driver !== 'toast') {
+                    await previewAlert(page).getByRole('button', { name: 'Close', exact: true }).click();
+                    await expect(previewAlert(page)).toHaveCount(0);
+                    expect(await measure(), `${width}px, ${driver}, dismissal`).toEqual(before);
+                }
+            }
+        }
+        await unchanged(page, baseline);
+    });
+
     test(framework + ': notification preview works with Toast absent and keeps unsaved alert choices local', async ({ page }) => {
         test.skip(toastInstalled, 'Requires the core install without the optional Toast package.');
         const baseline = await openSettings(page, framework);

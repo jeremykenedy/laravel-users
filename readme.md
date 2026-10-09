@@ -39,6 +39,8 @@
   - [Install Options](#install-options)
 - [Routes](#routes)
 - [Optional Integrations](#optional-integrations)
+  - [Packages That Work Together](#packages-that-work-together)
+  - [Related Package](#related-package)
 - [Project Layout](#project-layout)
 - [Testing](#testing)
 - [Documentation](#documentation)
@@ -219,6 +221,25 @@ Management routes use authentication and the configured package middleware. Auth
 The package has no required Laravel Collective HTML or roles package dependency. Supported optional integrations include [Laravel Roles](https://github.com/jeremykenedy/laravel-roles), [Spatie Laravel Permission](https://github.com/spatie/laravel-permission), [Laravel Toast](https://github.com/jeremykenedy/laravel-toast), local DiceBear libraries, and host-provided avatar, UI, dark-mode, IP-capture, and seed services.
 
 The install and update commands can show setup instructions and configure supported optional packages. The settings page can manage package installation or removal only when the queue, worker, cache, and authorization requirements are met. A second roles package cannot be installed alongside an already detected roles integration. Read [integrations](docs/integrations.md), [roles](docs/roles.md), and [package settings](docs/settings.md) before making dependency changes.
+
+### Packages That Work Together
+
+Laravel Users fits into a collection of focused Laravel packages. Choose the parts your application needs; all of the integrations below are optional.
+
+| Package | What it brings to your application | How Laravel Users uses it |
+| --- | --- | --- |
+| [Laravel Toast](https://github.com/jeremykenedy/laravel-toast) | Configurable toast notifications with positioning, animations, progress, stacking, and dismissal controls. | Renders user-management notices through Toast or alongside inline alerts. The settings UI configures its behavior and previews unsaved options; explicit installation completes Toast setup automatically. |
+| [Laravel Roles](https://github.com/jeremykenedy/laravel-roles) | Roles, permissions, levels, and middleware for application access control. | The preferred integration for new role setups, with role assignment, optional direct permissions, and role/permission/level access rules. Existing role systems remain supported. |
+| [Laravel UI Kit](https://github.com/jeremykenedy/laravel-ui-kit) | Shared UI components for application-owned interfaces. | Setup guidance for hosts that use its components in custom or published views; selecting it does not replace the bundled screens. |
+| [Laravel Darkmode Toggle](https://github.com/jeremykenedy/laravel-darkmode-toggle) | A theme control for your host application's interface. | An alternative to the built-in theme button when your layout already manages light and dark themes. Synchronize the package theme with your host control. |
+| [Laravel IP Capture](https://github.com/jeremykenedy/laravel-ip-capture) | IP capture for host user models. | Setup guidance for application-owned IP tracking. Laravel Users' optional login activity has separate storage and does not add IP columns to your users table. |
+| [Laravel Seedster](https://github.com/jeremykenedy/laravel-seedster) | Application seeding tools. | Setup guidance for host-managed seeders. Laravel Users does not run seeds or create administrator accounts. |
+
+Spatie Laravel Permission is an alternative role integration. Official `dicebear/core` and `dicebear/styles` libraries provide optional local avatars. Required runtime dependencies are [PHP-Parser](https://github.com/nikic/PHP-Parser), for preserving host routes during setup, and [UA Parser](https://github.com/ua-parser/uap-php), for optional device and browser details.
+
+### Related Package
+
+[Laravel Notifications](https://github.com/jeremykenedy/laravel-notifications) adds an in-app notification center with bell and badge controls, read/unread tracking, mark-all-read, deletion, and a REST API. It complements Toast's immediate feedback when your application needs a place to keep and revisit notifications. It is a separate host integration; Laravel Users does not currently install it or send notices to its notification center automatically.
 
 ## Project Layout
 

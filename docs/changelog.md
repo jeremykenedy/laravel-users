@@ -6,6 +6,7 @@ Browse every published release and historical tag below. Detailed notes live in 
 
 | Version | Status | Notes |
 | --- | --- | --- |
+| 6.0.1 | Released 2026-10-09 | [Preview and container fixes](../CHANGELOG.md#v6-0-1) |
 | 6.0.0 | Released 2026-10-09 | [Changes and compatibility](../CHANGELOG.md#v6-0-0) |
 
 ## Release history

@@ -4,6 +4,21 @@ This is the canonical release history. The [documentation changelog](docs/change
 
 Published dates below are GitHub release dates in UTC. Entries marked **tag only** use the tagged commit's UTC date because no GitHub release record is available for that tag. Historical notes are checked against the published release descriptions and tagged source differences. Versions are listed by version number, including early tags whose commit dates are out of order.
 
+<a id="v6-0-1"></a>
+
+## 6.0.1 - 2026-10-09
+
+### Fixed
+
+- Keep notification previews and dismissal from changing page position or settings-card height. Unsaved options remain local to the browser.
+- Keep Bootstrap 5 containers consistent when the host stylesheet is unavailable, including public account confirmation pages.
+
+### Documentation
+
+- Document the optional packages that work with Laravel Users and the separate Laravel Notifications companion.
+- Publish documentation to GitHub Pages from the released tag. Releases now come from `master`.
+- Expand the 6.0.0 release notes with breaking changes, major and minor changes, upgrade steps, optional migrations, verification, and rollback.
+
 <a id="v6-0-0"></a>
 
 ## 6.0.0 - 2026-10-09

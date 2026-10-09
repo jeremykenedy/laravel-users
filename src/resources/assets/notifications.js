@@ -66,6 +66,21 @@
             if (driver && settings) settings.hidden = !['toast', 'both'].includes(driver.value);
         }
 
+        function alignPreviewAlert() {
+            if (!root.isConnected) {
+                window.removeEventListener('resize', alignPreviewAlert);
+                return;
+            }
+            const alert = root.querySelector('.lu-flash[data-lu-notification-preview]');
+            if (!alert) return;
+            const bounds = alert.parentElement.getBoundingClientRect();
+            alert.style.left = bounds.left + 'px';
+            alert.style.width = bounds.width + 'px';
+            const topToast = root.querySelector('[data-lu-preview-toast-stack][data-lu-toast-position^="top-"] [data-lu-toast]');
+            alert.style.top = topToast ? 'auto' : '16px';
+            alert.style.bottom = topToast ? '16px' : 'auto';
+        }
+
         function previewNotification(button) {
             const settings = button.closest('.lu-settings-notifications');
             const driver = settings.querySelector('#settings-notifications')?.value || 'alert';
@@ -85,10 +100,11 @@
                 const alert = settings.querySelector('[data-lu-preview-alert-template]').content.firstElementChild.cloneNode(true);
                 if (!settings.querySelector('[name="notifications_dismissible"][type="checkbox"]').checked) alert.querySelector('[data-lu-dismiss-alert]').remove();
                 root.querySelector('.lu-notifications').append(alert);
-                alert.scrollIntoView({block: 'nearest'});
+                alignPreviewAlert();
             }
             if (!useToast) {
                 root.querySelectorAll('[data-lu-preview-toast-stack]').forEach(stack => stack.remove());
+                alignPreviewAlert();
                 return;
             }
 
@@ -122,6 +138,7 @@
             }
             stack.append(toast);
             prepare(toast);
+            alignPreviewAlert();
         }
 
         root.addEventListener('click', event => {
@@ -131,6 +148,7 @@
             if (preview && !preview.disabled && !preview.closest('fieldset[disabled]')) previewNotification(preview);
         });
         root.addEventListener('change', event => { if (event.target.id === 'settings-notifications') initialize(); });
+        window.addEventListener('resize', alignPreviewAlert);
         new MutationObserver(records => {
             if (records.some(record => record.addedNodes.length)) initialize();
         }).observe(root, {childList: true, subtree: true});

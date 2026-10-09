@@ -27,6 +27,7 @@
 #laravelusers .lu-notification-dismiss input[type="checkbox"] { flex: 0 0 auto; margin: 0; }
 #laravelusers .lu-notification-driver { max-width: 440px; }
 #laravelusers .lu-notification-preview-actions { margin: 0 0 24px; }
+#laravelusers .lu-flash[data-lu-notification-preview] { position: fixed; top: 16px; z-index: 10900; margin: 0; }
 #laravelusers .lu-toast-settings { padding-top: 20px; border-top: 1px solid var(--lu-border, #ced4da); }
 #laravelusers .lu-toast-settings[hidden] { display: none !important; }
 #laravelusers .lu-toast-settings h3 { margin-bottom: 14px; font-size: 1rem; }

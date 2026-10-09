@@ -7,6 +7,8 @@
     --lu-soft: #f4f6fa;
     color: var(--lu-text);
     font: 16px/1.6 system-ui, sans-serif;
+    box-sizing: border-box;
+    width: 100%;
     max-width: 1160px;
     margin: auto;
     padding: 28px 24px 64px;
