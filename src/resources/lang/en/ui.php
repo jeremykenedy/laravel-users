@@ -155,6 +155,7 @@ return [
     'package_requirements_setup'          => 'Set up package requirements',
     'package_requirements_completed'      => 'Package requirements completed',
     'package_requirements_verify'         => 'Verify package requirements',
+    'package_requirements_reverify'       => 'Re-Verify package requirements',
     'package_verifying'                   => 'Checking the queue database and cache lock...',
     'package_requirements_verified'       => 'Package requirements verified. Confirm that a persistent queue worker is running on every application server.',
     'package_requirements_not_verified'   => 'Package requirements could not be verified. Check the queue database, cache lock configuration, and shared storage, then set them up again.',

@@ -20,6 +20,7 @@ class PackageRequirementsTest extends TestCase
         $this->app->setBasePath($this->directory);
         $this->app->useStoragePath($this->directory.'/storage');
         File::ensureDirectoryExists(storage_path('framework/views'));
+        File::put(base_path('composer.json'), json_encode(['autoload' => ['psr-4' => ['App\\' => 'app/']]]));
     }
 
     protected function tearDown(): void
@@ -63,6 +64,17 @@ class PackageRequirementsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'completed')
             ->assertJsonPath('queue_ready', true);
+        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            $this->get('/users/settings')->assertOk()
+                ->assertSee('<span data-lu-package-status-message>'.trans('laravelusers::ui.package_requirements_verified').'</span>', false)
+                ->assertSee('<span data-lu-package-verify-label>Re-Verify package requirements</span>', false)
+                ->assertSee('data-lu-package-status-verified', false);
+        }
+        Schema::drop('laravelusers_package_jobs');
+        $this->get('/users/settings')->assertOk()
+            ->assertSee('<span data-lu-package-verify-label>Verify package requirements</span>', false)
+            ->assertDontSee('<span data-lu-package-verify-label>Re-Verify package requirements</span>', false);
     }
 
     public function test_existing_setup_configuration_is_preserved(): void

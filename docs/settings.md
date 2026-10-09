@@ -132,6 +132,8 @@ Configure a persistent database, Redis, SQS or Beanstalkd queue and a shared per
 
 Select your application's Laravel version in the documentation. The settings-page links select it automatically. A file cache works on one host when the web process and worker use the same cache directory; separate hosts need a shared store such as Redis or database cache.
 
+The page checks queue storage and cache locking whenever it loads. Verified requirements show a green checkmark, retain the worker reminder after a refresh, and change the button to **Re-Verify package requirements**. Re-verifying a failed setup disables package changes until the requirements pass again. This check does not confirm that a supervised worker is running; verify that separately on every application server.
+
 ```sh
 php artisan queue:work --queue=package-maintenance --timeout=360 --tries=1
 ```

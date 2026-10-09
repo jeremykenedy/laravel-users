@@ -173,6 +173,10 @@
     #laravelusers .lu-package-settings h3 { margin: 0; font-size: .875rem; font-weight: 600; }
     #laravelusers .lu-package-preferred { color: var(--lu-muted, #667085); font-size: .75rem; font-weight: 500; }
     #laravelusers .lu-package-settings p { font-size: .8rem; }
+    #laravelusers [data-lu-package-status]:not([hidden]) { display: flex; align-items: flex-start; gap: 8px; }
+    #laravelusers [data-lu-package-status-verified] { flex-shrink: 0; color: #087f5b; }
+    #laravelusers [data-lu-package-status-message] { min-width: 0; }
+    #laravelusers[data-lu-theme="dark"] [data-lu-package-status-verified] { color: #7de1ab; }
     #laravelusers .lu-package-requirement-actions { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
     #laravelusers .lu-package-requirement-actions button { justify-content: center; margin: 0; }
     #laravelusers .lu-package-settings code { display: block; overflow-wrap: anywhere; font-size: .75rem; }

@@ -10,13 +10,13 @@
             <span data-lu-package-requirements-label>{{ __($packageQueueReady ? 'laravelusers::ui.package_requirements_completed' : 'laravelusers::ui.package_requirements_setup') }}</span>
         </button>
         <button type="button" class="{{ $modern ? 'lu-button lu-secondary' : 'btn btn-outline-secondary btn-sm' }}" data-lu-package-verify>
-            @include('laravelusers::partials.icon', ['name' => 'verify']) {{ __('laravelusers::ui.package_requirements_verify') }}
+            @include('laravelusers::partials.icon', ['name' => 'verify']) <span data-lu-package-verify-label>{{ __($packageQueueReady ? 'laravelusers::ui.package_requirements_reverify' : 'laravelusers::ui.package_requirements_verify') }}</span>
         </button>
     </div>
     <p class="lu-muted text-muted">{{ __('laravelusers::ui.package_requirements_hint') }}</p>
     @php($laravelDocs = 'https://laravel.com/docs/'.explode('.', \Illuminate\Foundation\Application::VERSION)[0].'.x')
     <p class="lu-package-help"><a href="{{ $laravelDocs }}/queues#introduction" target="_blank" rel="noopener noreferrer">{{ __('laravelusers::ui.packages_queue_setup') }}</a> · <a href="{{ $laravelDocs }}/queues#running-the-queue-worker" target="_blank" rel="noopener noreferrer">{{ __('laravelusers::ui.packages_worker_setup') }}</a> · <a href="{{ $laravelDocs }}/cache#atomic-locks" target="_blank" rel="noopener noreferrer">{{ __('laravelusers::ui.packages_cache_setup') }}</a></p>
-    <p data-lu-package-status role="status" hidden></p>
+    <p data-lu-package-status role="status" @unless($packageQueueReady) hidden @endunless><span data-lu-package-status-verified @unless($packageQueueReady) hidden @endunless>@include('laravelusers::partials.icon', ['name' => 'check'])</span><span data-lu-package-status-message>{{ $packageQueueReady ? __('laravelusers::ui.package_requirements_verified') : '' }}</span></p>
     <div class="lu-settings-grid">
         @foreach(['toast' => 'Laravel Toast', 'laravel-roles' => 'Laravel Roles', 'spatie' => 'Spatie Permissions'] as $package => $label)
         <div class="lu-settings-choice">

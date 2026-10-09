@@ -195,7 +195,9 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
     abort_unless(in_array($framework, ['bootstrap4', 'bootstrap5', 'tailwind'], true), 404);
     Auth::login(SoftUser::findOrFail(1));
     if ((int) ($_SERVER['SERVER_PORT'] ?? 0) !== 19849) {
-        RateLimiter::clear('laravelusers-settings-write'.sha1('1'));
+        foreach (['laravelusers-settings-write', 'laravelusers-packages-write', 'laravelusers-packages-verify'] as $limiter) {
+            RateLimiter::clear($limiter.sha1('1'));
+        }
     }
 
     return redirect('/users')->withCookie(cookie('lu-framework', $framework, 60, '/', null, false, false, false))

@@ -7,9 +7,15 @@
     const submit = form.querySelector('[type="submit"]');
     const error = form.querySelector('[data-lu-package-error]');
     const status = root.querySelector('[data-lu-package-status]');
+    const statusMessage = status.querySelector('[data-lu-package-status-message]') || status;
+    const statusIcon = status.querySelector('[data-lu-package-status-verified]');
     let busy = false;
     let requiredWord;
     let queueReady = @json((bool) ($packageQueueReady ?? false));
+    function setStatus(message, verified = false) {
+        statusMessage.textContent = message;
+        if (statusIcon) statusIcon.hidden = !verified;
+    }
     function updateButtons() {
         root.querySelectorAll('[data-lu-package]').forEach(button => {
             button.disabled = busy || (button.dataset.luPackage === 'requirements' && queueReady) || button.hasAttribute('data-lu-package-blocked') || (!queueReady && button.dataset.luPackage !== 'requirements');
@@ -24,6 +30,10 @@
         }
         const warning = root.querySelector('[data-lu-package-requirements-warning]');
         if (warning) warning.hidden = queueReady;
+        const verifyLabel = root.querySelector('[data-lu-package-verify-label]');
+        if (verifyLabel) verifyLabel.textContent = queueReady
+            ? @json(__('laravelusers::ui.package_requirements_reverify'))
+            : @json(__('laravelusers::ui.package_requirements_verify'));
     }
     function ready() {
         submit.disabled = busy || !form.elements.acknowledgement.checked || form.elements.confirmation.value !== requiredWord;
@@ -52,7 +62,7 @@
         const button = event.currentTarget;
         button.disabled = true;
         status.hidden = false;
-        status.textContent = @json(__('laravelusers::ui.package_verifying'));
+        setStatus(@json(__('laravelusers::ui.package_verifying')));
         try {
             const body = new FormData();
             body.append('package', 'requirements');
@@ -66,11 +76,11 @@
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || @json(__('laravelusers::ui.package_status_failed')));
-            status.textContent = result.message;
+            setStatus(result.message, result.queue_ready === true);
             queueReady = result.queue_ready === true;
             updateButtons();
         } catch (exception) {
-            status.textContent = exception.message;
+            setStatus(exception.message);
         } finally {
             button.disabled = false;
         }
@@ -83,7 +93,7 @@
             const response = await fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin'});
             if (!response.ok) throw new Error(@json(__('laravelusers::ui.package_status_failed')));
             const result = await response.json();
-            status.textContent = result.message || (result.status === 'running' ? @json(__('laravelusers::ui.package_running')) : @json(__('laravelusers::ui.package_queued')));
+            setStatus(result.message || (result.status === 'running' ? @json(__('laravelusers::ui.package_running')) : @json(__('laravelusers::ui.package_queued'))));
             if (['completed', 'failed'].includes(result.status)) {
                 busy = false;
                 updateButtons();
@@ -91,13 +101,13 @@
                     const reload = document.createElement('a');
                     reload.href = @json(route('users.settings').'#packages');
                     reload.textContent = @json(__('laravelusers::ui.package_refresh'));
-                    status.append(document.createTextNode(' '), reload);
+                    statusMessage.append(document.createTextNode(' '), reload);
                 }
                 return;
             }
             setTimeout(() => poll(url), 2000);
         } catch (exception) {
-            status.textContent = exception.message;
+            setStatus(exception.message);
         }
     }
     form.addEventListener('submit', async event => {
@@ -109,10 +119,10 @@
             const result = await response.json();
             if (!response.ok) throw new Error(Object.values(result.errors || {}).flat().join(' ') || result.message || @json(__('laravelusers::ui.package_failed')));
             if (result.status === 'completed') {
-                busy = false; dialog.close(); status.hidden = false; status.textContent = result.message;
+                busy = false; dialog.close(); status.hidden = false; setStatus(result.message, result.queue_ready === true);
                 if (typeof result.queue_ready === 'boolean') queueReady = result.queue_ready;
                 updateButtons();
-                const reload = document.createElement('a'); reload.href = @json(route('users.settings').'#packages'); reload.textContent = @json(__('laravelusers::ui.package_refresh')); status.append(document.createTextNode(' '), reload);
+                const reload = document.createElement('a'); reload.href = @json(route('users.settings').'#packages'); reload.textContent = @json(__('laravelusers::ui.package_refresh')); statusMessage.append(document.createTextNode(' '), reload);
                 return;
             }
             const url = new URL(result.status_url, location.href);
@@ -120,7 +130,7 @@
             dialog.close();
             root.querySelectorAll('[data-lu-package]').forEach(button => { button.disabled = true; });
             status.hidden = false;
-            status.textContent = @json(__('laravelusers::ui.package_queued'));
+            setStatus(@json(__('laravelusers::ui.package_queued')));
             poll(url.href);
         } catch (exception) {
             busy = false; ready(); error.textContent = exception.message; error.hidden = false;
