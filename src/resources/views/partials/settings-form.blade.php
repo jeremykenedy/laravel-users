@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('users.settings.update') }}" class="lu-settings-form" data-lu-settings-form @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_appearance')) data-lu-avatar-preview-url="{{ route('users.settings.avatar-preview') }}" data-lu-avatar-preview-error="{{ __('laravelusers::ui.appearance_avatar_preview_failed') }}" @endif>
+<form method="POST" action="{{ route('users.settings.update') }}" class="lu-settings-form" autocomplete="off" data-lu-settings-form @if(\jeremykenedy\laravelusers\Support\UserAccess::allows('edit_appearance')) data-lu-avatar-preview-url="{{ route('users.settings.avatar-preview') }}" data-lu-avatar-preview-error="{{ __('laravelusers::ui.appearance_avatar_preview_failed') }}" @endif>
     @csrf @method('PUT')
     @if(!$settingsAvailable)<p class="lu-alert" role="status">{{ __('laravelusers::ui.settings_migration_required') }}</p>@endif
     <fieldset @if(!$settingsAvailable) disabled @endif>
