@@ -1,0 +1,5 @@
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(lu);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(lu);
+@source "../views/modern/*.blade.php";
+@source "../../Support/Frontend.php";

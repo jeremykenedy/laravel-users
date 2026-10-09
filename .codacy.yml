@@ -1,0 +1,20 @@
+---
+exclude_paths:
+  - "vendor/**"
+  - "node_modules/**"
+  - "tests/browser/runtime/**"
+  - "src/resources/views/modern/tailwind.blade.php"
+  - "src/resources/assets/tailwind.css"
+engines:
+  phpmd:
+    exclude_paths:
+      - "src/resources/views/**"
+      - "tests/Fixtures/views/**"
+  phpcs:
+    exclude_paths:
+      - "src/resources/views/**"
+      - "tests/Fixtures/views/**"
+  lizard:
+    exclude_paths:
+      - "src/resources/views/**"
+      - "tests/Fixtures/views/**"

@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible problem with Laravel Users.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Check the current documentation and search existing issues before filing.
+        Do not include credentials, real user records, email contents, or production IP addresses.
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: Include the installed version from Composer.
+      placeholder: 5.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Laravel, PHP, database, and browser versions where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest sequence that reproduces the issue.
+      placeholder: |
+        1. Configure ...
+        2. Open ...
+        3. Submit ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove secrets and personal data before attaching anything.
+      render: text

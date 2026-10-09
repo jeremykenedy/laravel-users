@@ -2,7 +2,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
+                <h5 class="modal-title" id="confirmDeleteLabel">
                     {!! trans('laravelusers::modals.delete_user_title') !!}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -11,6 +11,7 @@
                 </button>
             </div>
             <div class="modal-body">
+                @include('laravelusers::partials.goodbye-options')
                 <p>
                     {!! trans('laravelusers::modals.delete_user_message') !!}
                 </p>
@@ -20,7 +21,7 @@
                     {!! trans('laravelusers::modals.delete_user_btn_cancel') !!}
                 </button>
                 <button type="button" class="btn btn-danger pull-right btn-flat" id="confirm">
-                    {!! trans('laravelusers::modals.delete_user_btn_confirm') !!}
+                    @include('laravelusers::partials.icon', ['name' => 'delete']) {!! trans('laravelusers::modals.delete_user_btn_confirm') !!}
                 </button>
             </div>
         </div>

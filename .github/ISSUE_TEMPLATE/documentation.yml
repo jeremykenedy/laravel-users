@@ -1,0 +1,20 @@
+name: Documentation correction
+description: Report missing, incorrect, or unclear documentation.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Documentation page
+      description: Link the README or guide that needs an update.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: What needs to change?
+      description: Include the incorrect or missing information and the correction if known.
+    validations:
+      required: true

@@ -1,0 +1,31 @@
+{
+  "materialize": {
+    "version": "1.0.0",
+    "source": "https://github.com/Dogfalo/materialize/blob/1.0.0/dist/css/materialize.css",
+    "license": "MIT",
+    "notices": ["materialize.txt", "normalize-3.txt", "waves.txt", "polymer.txt", "polymer-patents.txt"],
+    "sha256": "d7710a11746cca787772698d1757655babafa02d52655696f786c81d9409a0c5"
+  },
+  "bulma": {
+    "version": "1.0.4",
+    "source": "https://registry.npmjs.org/bulma/-/bulma-1.0.4.tgz",
+    "path": "package/css/bulma.css",
+    "license": "MIT",
+    "notices": ["bulma.txt"],
+    "sha256": "ee66316c24a2f62971913bce50e10847349b9cd6d05538ca54825589b75b5901"
+  },
+  "foundation": {
+    "version": "6.9.0",
+    "source": "https://github.com/foundation/foundation-sites/blob/v6.9.0/dist/css/foundation.css",
+    "license": "MIT",
+    "notices": ["foundation.txt", "normalize-8.txt"],
+    "sha256": "0cc7b60548616a63391bd3a4e865e81eb978ae255562eb49a7c6d45593f73300"
+  },
+  "material3": {
+    "package": "@material/web",
+    "version": "2.5.0",
+    "source": "https://github.com/material-components/material-web/tree/v2.5.0",
+    "license": "Apache-2.0",
+    "notices": ["material-web.txt", "lit.txt", "lit-html.txt", "lit-element.txt", "reactive-element.txt", "tslib.txt"]
+  }
+}

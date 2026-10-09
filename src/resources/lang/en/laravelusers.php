@@ -11,7 +11,7 @@ return [
     'showing-all-users'     => 'Showing All Users',
     'users-menu-alt'        => 'Show Users Management Menu',
     'create-new-user'       => 'Create New User',
-    'show-deleted-users'    => 'Show Deleted User',
+    'show-deleted-users'    => 'Show Deleted Users',
     'editing-user'          => 'Editing User :name',
     'showing-user'          => 'Showing User :name',
     'showing-user-title'    => ':name\'s Information',

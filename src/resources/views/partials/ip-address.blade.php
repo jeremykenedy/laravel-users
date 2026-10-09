@@ -1,0 +1,1 @@
+@if(filter_var($ip, FILTER_VALIDATE_IP))<a href="https://ipinfo.io/{{ $ip }}" target="_blank" rel="noopener noreferrer" title="{{ __('laravelusers::ui.lookup_ip') }}" aria-label="{{ __('laravelusers::ui.lookup_ip') }}: {{ $ip }}">{{ $ip }}</a>@else{{ $ip }}@endif

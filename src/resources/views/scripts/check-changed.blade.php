@@ -6,14 +6,14 @@
     $(this).find('.fa').toggleClass('fa-lock');
     $(this).find('span').toggleText('', '{!! trans("laravelusers::forms.cancel") !!}');
   });
-  $("input").keyup(function() {
+  $("input").on("input change", function() {
     checkChanged();
   });
   $("select").change(function() {
     checkChanged();
   });
   function checkChanged() {
-    if(!$('input').val()){
+    if(!$('#name').val()){
       $(".btn-save").hide();
     }
     else {

@@ -1,0 +1,9 @@
+@extends('laravelusers::modern.page')
+@php($tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind')
+@section('template_title', __('laravelusers::laravelusers.create-new-user'))
+@section('users_content')
+    <section class="lu-panel lu-form-card">
+    <header class="lu-heading lu-card-heading lu-page-heading"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'add-user']) <span class="lu-title-text">{{ __('laravelusers::laravelusers.create-new-user') }}</span></h1><a class="lu-button lu-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
+    @include('laravelusers::modern.form')
+    </section>
+@endsection

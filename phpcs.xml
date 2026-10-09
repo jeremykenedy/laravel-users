@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Laravel Users">
+    <description>PSR checks aligned with Laravel Pint, which owns operator spacing, line wrapping and anonymous-class formatting.</description>
+    <file>src</file>
+    <file>tests</file>
+    <arg name="extensions" value="php"/>
+    <exclude-pattern>*/resources/*</exclude-pattern>
+    <exclude-pattern>*/tests/browser/*</exclude-pattern>
+    <exclude-pattern>*/tests/Fixtures/views/*</exclude-pattern>
+    <exclude-pattern>*.blade.php</exclude-pattern>
+    <rule ref="PSR12">
+        <exclude name="PSR12.Operators.OperatorSpacing"/>
+        <exclude name="PSR12.Classes.AnonClassDeclaration.SpaceAfterKeyword"/>
+        <exclude name="PSR12.ControlStructures.ControlStructureSpacing"/>
+        <exclude name="Generic.Files.LineLength"/>
+    </rule>
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+    <rule ref="PSR2.Classes.PropertyDeclaration.Underscore">
+        <exclude-pattern>*/src/App/Http/Controllers/UsersManagementController.php</exclude-pattern>
+        <exclude-pattern>*/src/LaravelUsersServiceProvider.php</exclude-pattern>
+    </rule>
+</ruleset>

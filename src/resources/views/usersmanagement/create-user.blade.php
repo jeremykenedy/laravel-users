@@ -19,21 +19,21 @@
     <div class="container">
         @if(config('laravelusers.enablePackageBootstapAlerts'))
             <div class="row">
-                <div class="col-lg-10 offset-lg-1">
+                <div class="col-12">
                     @include('laravelusers::partials.form-status')
                 </div>
             </div>
         @endif
         <div class="row">
-            <div class="col-lg-10 offset-lg-1">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            {!! trans('laravelusers::laravelusers.create-new-user') !!}
+                    <div class="card-header lu-page-heading">
+                        <div class="lu-page-heading-content">
+                            <span class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'add-user']) <span class="lu-title-text">{!! trans('laravelusers::laravelusers.create-new-user') !!}</span></span>
                             <div class="pull-right">
                                 <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
-                                        <i class="fas fa-fw fa-reply-all" aria-hidden="true"></i>
+                                        <i class="fas fa-fw fa-reply" aria-hidden="true"></i>
                                     @endif
                                     {!! trans('laravelusers::laravelusers.buttons.back-to-users') !!}
                                 </a>
@@ -102,7 +102,7 @@
                                             <option value="">{!! trans('laravelusers::forms.create_user_ph_role') !!}</option>
                                             @if ($roles)
                                                 @foreach($roles as $role)
-                                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                    <option value="{{ $role->id }}">{{ $role->name }}@if(config('laravelusers.showRoleLevels', true) && isset($role->getAttributes()['level'])) ({{ __('laravelusers::ui.role_level', ['level' => $role->getAttributes()['level']]) }})@endif</option>
                                                 @endforeach
                                             @endif
                                         </select>
@@ -141,6 +141,7 @@
                                             </label>
                                         </div>
                                     </div>
+                                    @include('laravelusers::partials.password-meter', ['creating' => true])
                                     @if ($errors->has('password'))
                                         <span class="help-block">
                                             <strong>{{ $errors->first('password') }}</strong>
@@ -165,6 +166,7 @@
                                             </label>
                                         </div>
                                     </div>
+                                    @include('laravelusers::partials.password-confirmation')
                                     @if ($errors->has('password_confirmation'))
                                         <span class="help-block">
                                             <strong>{{ $errors->first('password_confirmation') }}</strong>
@@ -172,9 +174,14 @@
                                     @endif
                                 </div>
                             </div>
+                            @include('laravelusers::partials.avatar-source', ['modern' => false])
+                            @include('laravelusers::partials.user-appearance', ['modern' => false])
+                            @include('laravelusers::partials.user-permissions', ['modern' => false])
+    @include('laravelusers::partials.account-access', ['modern' => false])
                             <button type="submit" class="btn btn-success margin-bottom-1 mb-1 float-right">
                                 {!! trans('laravelusers::forms.create_user_button_text') !!}
                             </button>
+                            @include('laravelusers::partials.welcome-options')
                         </form>
                     </div>
                 </div>
