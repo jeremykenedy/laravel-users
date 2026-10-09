@@ -246,7 +246,7 @@ document.addEventListener('livewire:navigated', initialize);
 document.addEventListener('laravelusers-native-theme', event => {
     if (root && ['light', 'dark'].includes(event.detail.theme)) {
         root.dataset.luTheme = event.detail.theme;
-        try { window.localStorage.setItem('laravelusers-theme', event.detail.theme); } catch {}
+        try { window.localStorage.setItem('laravelusers-theme', event.detail.theme); } catch { /* Storage can be blocked while the in-memory theme still changes. */ }
     }
 });
 document.addEventListener('input', event => {

@@ -113,6 +113,7 @@ class GoodbyeTest extends TestCase
         $recipient = $this->user();
         $this->delete('/users/'.$recipient->id)->assertRedirect('/users');
         Notification::assertSentOnDemand(UserMessage::class, function ($notification, $channels, $notifiable) {
+            $this->assertSame(['mail'], $channels);
             $this->assertCount(2, $notification->accountLinks);
             $token = basename(parse_url($notification->accountLinks['restore'], PHP_URL_PATH));
             $links = $this->app->make(AccountLinks::class);

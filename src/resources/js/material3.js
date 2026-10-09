@@ -10,14 +10,14 @@ if (root) {
     const selector = `${buttons}, ${fields}`;
     const attached = new Map();
 
-    function update(control, components) {
+    const update = (control, components) => {
         if (components.ripple) {
             components.ripple.disabled = motion.matches || control.matches(':disabled, [aria-disabled="true"]');
         }
         if (control.matches(':disabled, [aria-disabled="true"]')) components.ring.visible = false;
-    }
+    };
 
-    function enhance(control) {
+    const enhance = (control) => {
         if (attached.has(control)) {
             update(control, attached.get(control));
             return;
@@ -48,21 +48,21 @@ if (root) {
         attached.set(control, components);
         container.setAttribute('data-lu-material-control', '');
         update(control, components);
-    }
+    };
 
-    function enhanceTree(node) {
+    const enhanceTree = (node) => {
         if (!(node instanceof Element)) return;
         if (node.matches(selector)) enhance(node);
         node.querySelectorAll(selector).forEach(enhance);
-    }
+    };
 
-    function release(control, components) {
+    const release = (control, components) => {
         components.ring.detach();
         components.ring.remove();
         components.ripple?.detach();
         components.ripple?.remove();
         attached.delete(control);
-    }
+    };
 
     motion.addEventListener('change', () => attached.forEach((components, control) => update(control, components)));
 
@@ -84,7 +84,7 @@ if (root) {
         }
     });
 
-    function connect() {
+    const connect = () => {
         const nextRoot = document.querySelector('#laravelusers[data-lu-css="material3"]');
         if (nextRoot !== root) {
             observer.disconnect();
@@ -95,7 +95,7 @@ if (root) {
 
         enhanceTree(root);
         observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-disabled'] });
-    }
+    };
 
     connect();
     document.addEventListener('livewire:navigated', connect);

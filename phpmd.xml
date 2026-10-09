@@ -7,11 +7,16 @@
         <exclude name="StaticAccess"/>
     </rule>
     <rule ref="rulesets/cleancode.xml/StaticAccess">
-        <exclude-pattern>*/tests/*</exclude-pattern>
-        <exclude-pattern>tests/*</exclude-pattern>
         <properties>
             <property name="exceptions" value="
-                Composer\InstalledVersions,DiceBear\Style,Livewire\Livewire,
+                Composer\InstalledVersions,DiceBear\Style,Livewire\Livewire,Mockery,
+                jeremykenedy\laravelusers\Test\Fixtures\Account,
+                jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser,
+                jeremykenedy\laravelusers\Test\Fixtures\Role,
+                jeremykenedy\laravelusers\Test\Fixtures\RoleUser,
+                jeremykenedy\laravelusers\Test\Fixtures\SoftUser,
+                jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser,
+                jeremykenedy\laravelusers\Test\Fixtures\User,
                 Illuminate\Support\Arr,Illuminate\Support\Carbon,Illuminate\Support\Str,Illuminate\Support\ServiceProvider,
                 Illuminate\Database\Eloquent\Model,Illuminate\Http\Request,
                 Illuminate\Support\Facades\Blade,Illuminate\Support\Facades\Bus,Illuminate\Support\Facades\DB,

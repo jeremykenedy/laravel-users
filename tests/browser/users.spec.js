@@ -1,6 +1,10 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const { startPackageWorker } = require('./package-worker.cjs');
+const { execFileSync } = require('node:child_process');
+const path = require('node:path');
+
+const toastInstalled = execFileSync('php', ['-r', 'require $argv[1]; echo class_exists(Jeremykenedy\\LaravelToast\\Providers\\ToastServiceProvider::class) ? "1" : "0";', path.join(__dirname, '../../vendor/autoload.php')], { encoding: 'utf8' }) === '1';
 
 test.use({ timezoneId: 'America/Los_Angeles' });
 
@@ -156,7 +160,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.locator('#settings-profile-color').fill('#264e36');
         await page.locator('#settings-edit-color').fill('#705000');
         await page.locator('#settings-profile-gradient').uncheck();
-        await expect(page.locator('#settings-notifications')).toHaveCount(0);
+        await expect(page.locator('#settings-notifications')).toHaveCount(toastInstalled ? 1 : 0);
         await page.getByRole('button', { name: 'Save settings', exact: true }).click();
         await expect(page.locator('.lu-flash')).toContainText('User settings saved.');
         await page.locator('.lu-flash').getByRole('button', { name: 'Close', exact: true }).click();

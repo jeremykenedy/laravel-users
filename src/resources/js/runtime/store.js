@@ -282,7 +282,7 @@ export function createNativeStore(page, runtime) {
         toggleTheme() {
             state.page.theme = state.page.theme === 'dark' ? 'light' : 'dark';
             document.getElementById('laravelusers').dataset.luTheme = state.page.theme;
-            try { window.localStorage.setItem('laravelusers-theme', state.page.theme); } catch {}
+            try { window.localStorage.setItem('laravelusers-theme', state.page.theme); } catch { /* Storage can be blocked while the in-memory theme still changes. */ }
             emit();
         },
     };

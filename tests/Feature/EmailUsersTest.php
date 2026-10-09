@@ -170,6 +170,7 @@ class EmailUsersTest extends TestCase
         $user = $this->user();
         $this->actingAs($user)->post('/users/email', ['action' => 'reset', 'ids' => [$user->id]])->assertSessionHasNoErrors();
         Notification::assertSentOnDemand(ResetUserPassword::class, function ($notification, $channels, $recipient) use ($user) {
+            $this->assertSame(['mail'], $channels);
             $token = basename(parse_url($notification->url, PHP_URL_PATH));
             parse_str(parse_url($notification->url, PHP_URL_QUERY), $query);
             $this->assertSame($user->email, $query['email']);

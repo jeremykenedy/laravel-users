@@ -142,6 +142,7 @@ class AccountLinksTest extends TestCase
         $this->actingAs($admin)->from('/users/deleted')->post('/users/email', $this->message(['ids' => [$one->id, $two->id], 'message' => '<img src=x onerror=alert(1)>', 'use_greeting' => 1, 'greeting' => 'Hi', 'include_name' => 1]))->assertRedirect('/users/deleted')->assertSessionHasNoErrors();
         $urls = [];
         Notification::assertSentOnDemand(UserMessage::class, function ($notification, $channels, $recipient) use (&$urls) {
+            $this->assertSame(['mail'], $channels);
             $mail = $notification->toMail($recipient);
             $this->assertSame('laravelusers::emails.deleted-user', $mail->markdown);
             $this->assertSame(120, $mail->viewData['accountMinutes']);

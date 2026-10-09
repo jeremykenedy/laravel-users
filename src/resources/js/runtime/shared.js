@@ -124,7 +124,8 @@ export function passwordFeedback(value, confirmation, config) {
     const checks = { length: length >= rules.min && (rules.max === null || length <= rules.max), mixed_case: /\p{Ll}/u.test(value) && /\p{Lu}/u.test(value), numbers: /\p{N}/u.test(value), symbols: /[^\p{L}\p{N}\s]/u.test(value) };
     let score = Number(checks.length) + Number(length >= Math.max(12, rules.min)) + Number(checks.mixed_case) + Number(checks.numbers && checks.symbols);
     if (!checks.length || ['mixed_case', 'numbers', 'symbols'].some(rule => getOwnValue(rules, rule) && !getOwnValue(checks, rule))) score = Math.min(score, 1);
-    return { score, label: getOwnValue(config.strength_labels, Math.max(0, score - 1)), checks, mismatch: Boolean(value || confirmation) && value !== confirmation };
+    const feedback = { score, label: getOwnValue(config.strength_labels, Math.max(0, score - 1)), checks, mismatch: Boolean(value || confirmation) && value !== confirmation };
+    return feedback;
 }
 
 export function observeDialogs(root, dismiss) {

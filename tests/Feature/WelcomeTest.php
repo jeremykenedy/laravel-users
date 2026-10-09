@@ -101,6 +101,7 @@ class WelcomeTest extends TestCase
         $user = User::where('email', 'new@example.com')->firstOrFail();
         $this->assertFalse(Hash::check('password123', $user->password));
         Notification::assertSentOnDemand(WelcomeUser::class, function ($notification, $channels, $recipient) use ($user) {
+            $this->assertSame(['mail'], $channels);
             parse_str(parse_url($notification->resetUrl, PHP_URL_QUERY), $query);
             $token = basename(parse_url($notification->resetUrl, PHP_URL_PATH));
             $this->assertEquals($user->email, $query['email']);

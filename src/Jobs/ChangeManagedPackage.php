@@ -102,7 +102,7 @@ class ChangeManagedPackage implements ShouldQueue
         }
         if (in_array($record['operation'], ['install', 'configure'], true) && !empty($record['setup'])) {
             PackageOperations::update($this->id, ['stage' => 'setup', 'message' => trans('laravelusers::ui.package_configuring')]);
-            if (!$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn ($text) => null)) {
+            if (!$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn () => null)) {
                 throw new RuntimeException('Package setup failed. Review the application logs before retrying setup from settings.');
             }
         }

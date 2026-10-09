@@ -3,7 +3,6 @@
 namespace jeremykenedy\laravelusers\Test;
 
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
@@ -11,6 +10,7 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 class TestCase extends OrchestraTestCase
 {
+    /** {@inheritdoc} */
     protected function getPackageProviders($app)
     {
         return [LaravelUsersServiceProvider::class];
@@ -34,13 +34,13 @@ class TestCase extends OrchestraTestCase
 
     protected function defineRoutes($router)
     {
-        Route::get('login', function () {
+        $router->get('login', function () {
             return 'Login';
         })->name('login');
-        Route::get('register', function () {
+        $router->get('register', function () {
             return 'Register';
         })->name('register');
-        Route::post('logout', function () {
+        $router->post('logout', function () {
             return 'Logout';
         })->name('logout');
     }
