@@ -7,6 +7,7 @@ use jeremykenedy\laravelusers\Console\InstallCommand;
 use jeremykenedy\laravelusers\Test\TestCase;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
+use ReflectionProperty;
 use RuntimeException;
 
 class NativePromptsTest extends TestCase
@@ -17,18 +18,30 @@ class NativePromptsTest extends TestCase
         if (!class_exists(Prompt::class) || !method_exists(Prompt::class, 'fake')) {
             $this->markTestSkipped('This Laravel version uses the console compatibility fallback.');
         }
-        Prompt::flushState();
+        $this->resetPromptState();
         $this->app->instance('env', 'local');
     }
 
     protected function tearDown(): void
     {
         if (class_exists(Prompt::class)) {
-            Prompt::flushState();
+            $this->resetPromptState();
             Prompt::interactive(false);
         }
         $this->app->instance('env', 'testing');
         parent::tearDown();
+    }
+
+    private function resetPromptState(): void
+    {
+        if (method_exists(Prompt::class, 'flushState')) {
+            Prompt::flushState();
+
+            return;
+        }
+        foreach (['shouldFallback' => false, 'fallbacks' => []] as $name => $value) {
+            (new ReflectionProperty(Prompt::class, $name))->setValue(null, $value);
+        }
     }
 
     public function test_native_selections_and_suggestions_preserve_current_defaults(): void

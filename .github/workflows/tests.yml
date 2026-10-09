@@ -47,6 +47,9 @@ jobs:
       - name: Enable Laravel 8 SQLite migration rollback tests
         if: matrix.laravel == '8'
         run: composer require --dev 'doctrine/dbal:^3.0' --no-update --no-interaction
+      - name: Select oldest supported PHP parser
+        if: matrix.laravel == '8'
+        run: composer require 'nikic/php-parser:4.18.0' --no-update --no-interaction
       - name: Install supported dependencies
         if: ${{ !matrix.legacy }}
         run: composer update --prefer-dist --no-interaction ${{ matrix.dependencies == 'lowest' && '--prefer-lowest --prefer-stable' || '' }}

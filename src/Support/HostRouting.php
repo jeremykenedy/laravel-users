@@ -39,7 +39,7 @@ class HostRouting
         }
         $source = $this->files->get($path);
         $lexer = null;
-        if (method_exists($this->factory, 'createForNewestSupportedVersion')) {
+        if (!method_exists($this->factory, 'create')) {
             $parser = $this->factory->createForNewestSupportedVersion();
         } else {
             $lexer = new Emulative(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos']]);

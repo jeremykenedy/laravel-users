@@ -96,6 +96,123 @@
             td.append(label);
         }
     }
+    function avatarCell(row, details) {
+        if (!avatarColumn) return;
+        const fragment = root.querySelector('#lu-avatar-template').content.cloneNode(true);
+        const avatar = fragment.querySelector('.lu-avatar');
+        avatar.style.width = details.size + 'px';
+        avatar.style.height = details.size + 'px';
+        const initials = avatar.querySelector('[data-lu-initials]');
+        initials.textContent = details.initials;
+        initials.hidden = details.fallback !== 'initials';
+        avatar.querySelector('svg').hidden = details.fallback === 'initials';
+        if (details.fallback === 'initials') avatar.querySelector('svg').setAttribute('hidden', '');
+        if (details.src) {
+            const image = document.createElement('img');
+            image.alt = '';
+            image.loading = 'lazy';
+            image.referrerPolicy = 'no-referrer';
+            image.src = details.src;
+            avatar.append(image);
+        }
+        cell(row, '').append(fragment);
+    }
+    function selectionCell(row, user) {
+        if (!bulk) return;
+        const selection = cell(row, '');
+        selection.dataset.luSelectionCell = '';
+        if (String(user.id) === String(currentUser) || !options.selectable) return;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox'; checkbox.value = user.id; checkbox.dataset.luSelect = '';
+        checkbox.setAttribute('aria-label', options.selectUser.replace(':name', user.name));
+        selection.append(checkbox);
+    }
+    function emailCell(row, email) {
+        const td = cell(row, emailLinks ? '' : email);
+        if (!emailLinks) return;
+        const link = document.createElement('a');
+        link.href = 'mailto:' + email;
+        link.textContent = email;
+        if (tooltips) link.title = options.emailUser;
+        td.append(link);
+    }
+    function presenceCell(row, details) {
+        if (!onlineColumn) return;
+        const presence = cell(row, '');
+        presence.dataset.luValue = details.online === true ? 'online' : 'offline';
+        if (details.online !== true) return;
+        const badge = document.createElement('span');
+        badge.className = 'lu-badge lu-online';
+        badge.textContent = options.online;
+        presence.append(badge);
+    }
+    function loginDetailsCell(row, details) {
+        if (!loginDetailsColumn) return;
+        const fields = ['device', 'os', 'browser', 'ip_address'];
+        const detail = document.createElement('span');
+        detail.className = 'lu-login-details';
+        detail.title = fields.map(field => details[field]).filter(Boolean).join(' / ');
+        fields.forEach(field => {
+            if (!details[field]) return;
+            const item = document.createElement('span');
+            item.dataset.luLoginField = field;
+            if (field === 'ip_address') {
+                const link = document.createElement('a');
+                link.href = 'https://ipinfo.io/' + encodeURIComponent(details[field]);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.title = options.lookupIp;
+                link.setAttribute('aria-label', options.lookupIp + ': ' + details[field]);
+                link.textContent = details[field];
+                item.append(link);
+            } else {
+                item.textContent = details[field];
+            }
+            detail.append(item);
+        });
+        cell(row, '').append(detail);
+    }
+    function actionCell(row, user, userUrl) {
+        const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);
+        actions.querySelector('[data-lu-show]').href = userUrl;
+        const edit = actions.querySelector('[data-lu-edit]');
+        if (edit) edit.href = userUrl + '/edit';
+        actions.querySelectorAll('[data-lu-user-action]').forEach(function (action) {
+            action.action = action.dataset.luActionTemplate.replace('__USER_ID__', encodeURIComponent(user.id));
+            if (String(user.id) === String(currentUser)) action.remove();
+        });
+        actions.querySelectorAll('[data-lu-email-action]').forEach(button => { button.dataset.luEmailUser = user.id; button.dataset.luEmailName = user.name; });
+        const deletion = actions.querySelector('[data-lu-delete-action]');
+        if (deletion && String(user.id) === String(currentUser)) deletion.remove();
+        else if (deletion) {
+            deletion.action = userUrl;
+            if (deletion.hasAttribute('data-lu-confirm')) deletion.dataset.luConfirm = options.confirmDelete.replace(':name', user.name);
+        }
+        cell(row, '').append(actions);
+    }
+    function renderUser(user, activity, avatars) {
+        const row = document.createElement('tr');
+        row.dataset.luUser = String(user.id);
+        avatarCell(row, avatars[user.id] || { initials: '?', size: 40, fallback: 'icon' });
+        selectionCell(row, user);
+        cell(row, user.id);
+        const name = cell(row, '');
+        const link = document.createElement('a');
+        link.href = baseUrl + '/' + encodeURIComponent(user.id);
+        link.textContent = user.name;
+        if (tooltips) link.title = options.viewUser;
+        name.append(link);
+        emailCell(row, user.email);
+        if (roles) cell(row, (user.roles || []).map(role => role.name).join(', '));
+        const details = activity[user.id] || {};
+        presenceCell(row, details);
+        if (createdColumn) dateCell(row, user.created_at);
+        if (updatedColumn) dateCell(row, user.updated_at);
+        if (loginColumn) dateCell(row, details.last_login_at, options.noLogins);
+        loginDetailsCell(row, details);
+        actionCell(row, user, link.href);
+        results.append(row);
+    }
     form.addEventListener('reset', reset);
     input.addEventListener('input', function () {
         clearTimeout(timer);
@@ -125,112 +242,7 @@
             const avatars = payload.avatars || {};
             if (current !== request || current.signal.aborted) return;
             results.replaceChildren();
-            users.forEach(function (user) {
-                const row = document.createElement('tr');
-                row.dataset.luUser = String(user.id);
-                if (avatarColumn) {
-                    const details = avatars[user.id] || { initials: '?', size: 40, fallback: 'icon' };
-                    const fragment = root.querySelector('#lu-avatar-template').content.cloneNode(true);
-                    const avatar = fragment.querySelector('.lu-avatar');
-                    avatar.style.width = details.size + 'px';
-                    avatar.style.height = details.size + 'px';
-                    const initials = avatar.querySelector('[data-lu-initials]');
-                    initials.textContent = details.initials;
-                    initials.hidden = details.fallback !== 'initials';
-                    avatar.querySelector('svg').hidden = details.fallback === 'initials';
-                    if (details.fallback === 'initials') avatar.querySelector('svg').setAttribute('hidden', '');
-                    if (details.src) {
-                        const image = document.createElement('img');
-                        image.alt = '';
-                        image.loading = 'lazy';
-                        image.referrerPolicy = 'no-referrer';
-                        image.src = details.src;
-                        avatar.append(image);
-                    }
-                    cell(row, '').append(fragment);
-                }
-                if (bulk) {
-                    const selection = cell(row, '');
-                    selection.dataset.luSelectionCell = '';
-                    if (String(user.id) !== String(currentUser) && options.selectable) {
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox'; checkbox.value = user.id; checkbox.dataset.luSelect = '';
-                        checkbox.setAttribute('aria-label', options.selectUser.replace(':name', user.name));
-                        selection.append(checkbox);
-                    }
-                }
-                cell(row, user.id);
-                const name = cell(row, '');
-                const link = document.createElement('a');
-                link.href = baseUrl + '/' + encodeURIComponent(user.id);
-                link.textContent = user.name;
-                if (tooltips) link.title = options.viewUser;
-                name.append(link);
-                const email = cell(row, emailLinks ? '' : user.email);
-                if (emailLinks) {
-                    const mail = document.createElement('a');
-                    mail.href = 'mailto:' + user.email;
-                    mail.textContent = user.email;
-                    if (tooltips) mail.title = options.emailUser;
-                    email.append(mail);
-                }
-                if (roles) cell(row, (user.roles || []).map(role => role.name).join(', '));
-                const details = activity[user.id] || {};
-                if (onlineColumn) {
-                    const presence = cell(row, '');
-                    presence.dataset.luValue = details.online === true ? 'online' : 'offline';
-                    if (details.online === true) {
-                        const badge = document.createElement('span');
-                        badge.className = 'lu-badge lu-online';
-                        badge.textContent = options.online;
-                        presence.append(badge);
-                    }
-                }
-                if (createdColumn) dateCell(row, user.created_at);
-                if (updatedColumn) dateCell(row, user.updated_at);
-                if (loginColumn) dateCell(row, details.last_login_at, options.noLogins);
-                if (loginDetailsColumn) {
-                    const summary = ['device', 'os', 'browser', 'ip_address'].map(field => details[field]).filter(Boolean).join(' / ');
-                    const detail = document.createElement('span');
-                    detail.className = 'lu-login-details'; detail.title = summary;
-                    ['device', 'os', 'browser', 'ip_address'].forEach(field => {
-                        if (!details[field]) return;
-                        const item = document.createElement('span');
-                        item.dataset.luLoginField = field;
-                        if (field === 'ip_address') {
-                            const link = document.createElement('a');
-                            link.href = 'https://ipinfo.io/' + encodeURIComponent(details[field]);
-                            link.target = '_blank';
-                            link.rel = 'noopener noreferrer';
-                            link.title = options.lookupIp;
-                            link.setAttribute('aria-label', options.lookupIp + ': ' + details[field]);
-                            link.textContent = details[field];
-                            item.append(link);
-                        } else {
-                            item.textContent = details[field];
-                        }
-                        detail.append(item);
-                    });
-                    cell(row, '').append(detail);
-                }
-                const actions = root.querySelector('#lu-row-actions').content.cloneNode(true);
-                actions.querySelector('[data-lu-show]').href = link.href;
-                const edit = actions.querySelector('[data-lu-edit]');
-                if (edit) edit.href = link.href + '/edit';
-                actions.querySelectorAll('[data-lu-user-action]').forEach(function (action) {
-                    action.action = action.dataset.luActionTemplate.replace('__USER_ID__', encodeURIComponent(user.id));
-                    if (String(user.id) === String(currentUser)) action.remove();
-                });
-                actions.querySelectorAll('[data-lu-email-action]').forEach(button => { button.dataset.luEmailUser = user.id; button.dataset.luEmailName = user.name; });
-                const deletion = actions.querySelector('[data-lu-delete-action]');
-                if (deletion && String(user.id) === String(currentUser)) deletion.remove();
-                else if (deletion) {
-                    deletion.action = link.href;
-                    if (deletion.hasAttribute('data-lu-confirm')) deletion.dataset.luConfirm = options.confirmDelete.replace(':name', user.name);
-                }
-                cell(row, '').append(actions);
-                results.append(row);
-            });
+            users.forEach(user => renderUser(user, activity, avatars));
             if (!users.length) {
                 const row = document.createElement('tr');
                 cell(row, options.noResults).colSpan = 4 + Number(bulk) + Number(avatarColumn) + Number(createdColumn) + Number(updatedColumn) + Number(roles) + Number(onlineColumn) + Number(loginColumn) + Number(loginDetailsColumn);
