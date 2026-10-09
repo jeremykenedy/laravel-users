@@ -244,6 +244,8 @@ return [
     'appearance_hint'                         => 'Individual choices override the global view card settings. The edit card uses the global edit color.',
     'appearance_migration_required'           => 'Publish and run the optional appearance preferences migration before saving an individual color or gradient.',
     'settings_notifications'                  => 'Notifications',
+    'notification_preview'                    => 'Preview notification',
+    'notification_preview_message'            => 'This is a preview notification. Your settings have not been saved.',
     'settings_notification_style'             => 'Notification style',
     'settings_notification_alert'             => 'Inline alerts',
     'settings_notification_toast'             => 'Laravel Toast',

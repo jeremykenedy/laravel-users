@@ -1,7 +1,5 @@
 @if(!empty($userToasts))
-    @if(class_exists(\Jeremykenedy\LaravelToast\Support\ToastAnimations::class))
-        @once<style>{!! \Jeremykenedy\LaravelToast\Support\ToastAnimations::css() !!}</style>@endonce
-    @endif
+    @include('laravelusers::partials.toast-animations')
     @foreach(collect($userToasts)->groupBy('position') as $position => $toasts)
         <div class="lu-toast-stack" data-lu-toast-position="{{ $position }}" aria-live="polite">
             @foreach($toasts as $toast)
