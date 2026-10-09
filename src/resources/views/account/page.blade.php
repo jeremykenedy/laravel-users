@@ -2,7 +2,7 @@
 @section('template_title', __('laravelusers::ui.account_title'))
 @section('users_content')
 <section class="lu-profile lu-account-card" @include('laravelusers::partials.appearance-attributes', ['appearance' => $profileAppearance ?? null])>
-    <header class="lu-profile-header"><h1>@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::ui.account_title') }}</h1></header>
+    <header class="lu-profile-header"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::ui.account_title') }}</h1></header>
     <div class="lu-account-body">
         <aside class="lu-account-identity">
             @include('laravelusers::partials.user-identity')

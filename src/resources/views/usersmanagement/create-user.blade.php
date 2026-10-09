@@ -29,7 +29,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            {!! trans('laravelusers::laravelusers.create-new-user') !!}
+                            <span class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'add-user']) {!! trans('laravelusers::laravelusers.create-new-user') !!}</span>
                             <div class="pull-right">
                                 <a href="{{ route('users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="left" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))

@@ -29,7 +29,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            {!! trans('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]) !!}
+                            <span class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'edit']) {!! trans('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]) !!}</span>
                             <div class="pull-right">
                                 <a href="{{ route(($deletedUser ?? false) ? 'users.deleted' : 'users') }}" class="btn btn-light btn-sm float-right" data-toggle="tooltip" data-placement="top" title="{!! trans('laravelusers::laravelusers.tooltips.back-users') !!}">
                                     @if(config('laravelusers.fontAwesomeEnabled'))
@@ -227,4 +227,3 @@
         @include('laravelusers::scripts.tooltips')
     @endif
 @endsection
-

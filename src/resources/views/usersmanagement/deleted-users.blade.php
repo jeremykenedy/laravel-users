@@ -11,7 +11,7 @@
     <div class="container users-table">
         @if(config('laravelusers.enablePackageBootstapAlerts'))@include('laravelusers::partials.form-status')@endif
         <section class="card">
-            <header class="card-header d-flex justify-content-between align-items-center"><h1 class="h5 mb-0">{{ __('laravelusers::laravelusers.show-deleted-users') }}</h1><a class="btn btn-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
+            <header class="card-header d-flex justify-content-between align-items-center"><h1 class="h5 mb-0 lu-list-title">@include('laravelusers::partials.icon', ['name' => 'delete']) {{ __('laravelusers::laravelusers.show-deleted-users') }}</h1><a class="btn btn-secondary" href="{{ route('users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></header>
             @include('laravelusers::partials.bulk-actions', ['modern' => false, 'deleted' => true])
         <div class="card-body table-responsive">
                 <table data-lu-view="deleted" class="table table-striped" data-lu-table>
