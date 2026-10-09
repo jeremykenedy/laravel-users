@@ -107,6 +107,7 @@ class GoodbyeTest extends TestCase
 
     public function test_goodbye_links_use_cleanup_expiration_and_are_consumed_once(): void
     {
+        $this->travelTo(Carbon::parse('2026-10-08 12:00:00 UTC'));
         (require dirname(__DIR__, 2).'/src/database/account-links/2026_10_08_000000_create_laravelusers_account_links_table.php')->up();
         config(['laravelusers.emails.goodbye' => true, 'laravelusers.emails.goodbye_auto_send' => true, 'laravelusers.account_links.enabled' => true, 'laravelusers.cleanup.enabled' => true, 'laravelusers.emails.goodbye_restore' => true, 'laravelusers.emails.goodbye_force_delete' => true, 'laravelusers.emails.goodbye_retention' => true, 'laravelusers.emails.goodbye_expiry_mode' => 'cleanup']);
         $recipient = $this->user();
