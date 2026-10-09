@@ -122,8 +122,8 @@
     #laravelusers .lu-account-confirm > a { margin-top: 24px; }
     @media (max-width: 760px) { #laravelusers .lu-account-body, #laravelusers .lu-account-settings-grid { grid-template-columns: 1fr; } #laravelusers .lu-account-identity .lu-profile-identity { min-height: 0; flex-direction: row; text-align: left; padding: 24px 20px; } #laravelusers .lu-account-summary { padding: 16px 20px; } #laravelusers .lu-account-content { padding: 0 20px; } }
     @media (max-width: 520px) { #laravelusers .lu-account-grid { grid-template-columns: 1fr; gap: 0; } #laravelusers .lu-settings-tabs { padding: 12px 18px; } }
-    #laravelusers .lu-user-appearance { min-width: 0; margin: 20px 0; padding: 16px; border: 1px solid var(--lu-border, #ced4da); border-radius: 6px; }
-    #laravelusers .lu-user-appearance legend { float: none; width: auto; padding: 0 6px; font-size: .875rem; }
+    #laravelusers .lu-user-appearance { min-width: 0; margin: 0; padding: 0; border: 0; }
+    #laravelusers .lu-user-appearance > legend { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     #laravelusers input[type="color"] { width: 72px; height: 38px; padding: 3px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; background: var(--lu-bg, #fff); vertical-align: middle; cursor: pointer; }
     #laravelusers .lu-appearance-inherit { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; font-size: .875rem; }
     #laravelusers .lu-appearance-inherit input { margin: 0; }
