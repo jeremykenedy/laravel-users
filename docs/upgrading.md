@@ -10,7 +10,7 @@ Composer updates retain Blade and Bootstrap 4 unless you have explicitly selecte
 
 ## Version transitions
 
-Version 6.0.0 is prepared for 2026-10-09 and remains unreleased pending final runtime verification. Compare your installed version in `composer.lock` with the published target before changing the host application. The [changelog](changelog.md) indexes every historical tag and links the canonical release notes.
+Version 6.0.0 was released on 2026-10-09 with Blade, Bootstrap 4 and Bootstrap 5. Compare your installed version in `composer.lock` with the published target before changing the host application. The [changelog](changelog.md) indexes every historical tag and links the canonical release notes.
 
 | From | To | What to review |
 | --- | --- | --- |

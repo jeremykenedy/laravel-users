@@ -2,11 +2,11 @@
 
 Browse every published release and historical tag below. Detailed notes live in the [canonical changelog](../CHANGELOG.md), so corrections and new release entries have one source. See [upgrading](upgrading.md) for migration guidance and the [roadmap](roadmap.md) for deferred work.
 
-## Prepared release
+## Latest release
 
 | Version | Status | Notes |
 | --- | --- | --- |
-| 6.0.0 | Unreleased; planned for 2026-10-09 | [Prepared changes and compatibility](../CHANGELOG.md#v6-0-0) |
+| 6.0.0 | Released 2026-10-09 | [Changes and compatibility](../CHANGELOG.md#v6-0-0) |
 
 ## Release history
 

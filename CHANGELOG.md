@@ -6,9 +6,7 @@ Published dates below are GitHub release dates in UTC. Entries marked **tag only
 
 <a id="v6-0-0"></a>
 
-## 6.0.0 - Unreleased
-
-Planned release date: **2026-10-09**. These notes describe the prepared release; the tag and release remain pending final runtime verification.
+## 6.0.0 - 2026-10-09
 
 ### Compatibility
 
@@ -48,6 +46,10 @@ Planned release date: **2026-10-09**. These notes describe the prepared release;
 - Recover package status polling from temporary Composer dependency-discovery errors and show the current completion state after the automatic refresh.
 - Persist explicit role selections over stale role environment overrides while preserving unrelated values, private file permissions, and environment-file symlinks. Default and `keep` selections leave the environment unchanged.
 - Preserve unsaved email edits when returning from preview, clear closed compositions, maintain search focus after dialogs, and apply account gradient highlights when saved.
+- Synchronize gradient-strength labels when appearance controls initialize or change, and use readable Bootstrap 5 backgrounds for role, access-level, and direct-permission badges. Render translated access-level labels as plain text.
+- Attach notification handlers before enabling preview and dismissal controls, so the first click works after a page load.
+
+[Release](https://github.com/jeremykenedy/laravel-users/releases/tag/v6.0.0) | [Changes](https://github.com/jeremykenedy/laravel-users/compare/V5.0.0...v6.0.0)
 
 <a id="v5-0-0"></a>
 

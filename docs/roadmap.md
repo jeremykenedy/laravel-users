@@ -1,12 +1,12 @@
 # Roadmap
 
-Laravel Users is preparing version 6.0.0 around **Blade with Bootstrap 4 and Bootstrap 5**. Bootstrap 4 remains the default. The release work includes user management, optional account settings, authorized package setup, email workflows, appearance controls, and consistent page layouts.
+Laravel Users 6.0.0 supports **Blade with Bootstrap 4 and Bootstrap 5**. Bootstrap 4 remains the default. The release work includes user management, optional account settings, authorized package setup, email workflows, appearance controls, and consistent page layouts.
 
-See the [prepared release notes](../CHANGELOG.md#v6-0-0) for the implemented changes. Publication remains pending final runtime verification.
+See the [6.0.0 release notes](../CHANGELOG.md#v6-0-0) for the implemented changes.
 
 ## Current release scope
 
-| Area | Included in the prepared release |
+| Area | Included in 6.0.0 |
 | --- | --- |
 | Screen runtime | Server-rendered Blade pages |
 | CSS | Bootstrap 4 by default; Bootstrap 5 by explicit choice |
