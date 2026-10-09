@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use jeremykenedy\LaravelRoles\Middleware\VerifyRole;
 use jeremykenedy\LaravelRoles\RolesServiceProvider;
 use jeremykenedy\laravelusers\Models\UserSetting;
+use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\UserActivity;
 use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
@@ -126,7 +127,7 @@ class RoleIntegrationsTest extends TestCase
         $this->put('/users/'.$user->id, ['name' => $user->name, 'email' => $user->email, 'role' => [(string) $editor->getKey(), (string) $admin->getKey()]])->assertSessionHasNoErrors();
         $this->assertEqualsCanonicalizing([$admin->getKey(), $editor->getKey()], $user->fresh()->roles->modelKeys());
         $this->postJson('/search-users', ['user_search_box' => 'roleuser'])->assertOk()->assertJsonCount(2, '0.roles');
-        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+        foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
             config(['laravelusers.frontend' => $framework]);
             $this->get('/users')->assertOk()->assertSee('Administrator')->assertSee('Editor');
             $this->get('/users/'.$user->id)->assertOk()->assertSee('Administrator')->assertSee('Editor');
@@ -266,7 +267,7 @@ class RoleIntegrationsTest extends TestCase
         $data = ['name' => $user->name, 'email' => $user->email, 'role' => [$role->getKey()], 'permissions_present' => 1, 'permissions' => [$direct->getKey()]];
         $this->put('/users/'.$user->id, $data)->assertSessionHasNoErrors();
         $this->assertSame([$direct->getKey()], $user->fresh()->$relation->modelKeys());
-        foreach (['bootstrap4', 'bootstrap5', 'tailwind'] as $framework) {
+        foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
             config(['laravelusers.frontend' => $framework]);
             $this->get('/users/create')->assertOk()->assertSee('name="permissions[]"', false);
             $this->get('/users/'.$user->id.'/edit')->assertOk()->assertSee('Direct permission')->assertSee('Inherited permission');
