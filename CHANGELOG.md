@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep package pages, inline alerts and breadcrumbs within the same container width, with a full-width header divider and additional space below breadcrumbs.
+- Link the header brand to an available application home route, falling back to the users directory, and remove its hover underline.
+- Compact login details in the account menu with aligned rows and full-value tooltips.
 - Complete Toast setup automatically after installation, refresh package availability after queued changes and show completed setup as a plain checkmarked sentence.
 - Verify the package worker with a nonce before enabling dependency changes; preserve requirements status separately from operation progress.
 - Add configurable Toast behavior and the Alerts and Toast notification choice while retaining inline alerts by default.

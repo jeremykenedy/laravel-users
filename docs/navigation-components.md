@@ -61,6 +61,8 @@ document.documentElement.addEventListener('lu:theme', event => {
 
 The menu displays the authenticated user's escaped name and configured avatar in a circle. It respects global saved settings and opt-in per-user avatar preferences. Missing images show the configured fallback. Guests receive no account menu. Without logout, the component shows the avatar/name without an empty dropdown.
 
+When latest-login details are enabled, the dropdown uses compact rows for the date, IP address, device, operating system and browser. Long values are shortened to fit the menu and retain their full text in a tooltip.
+
 The component does not create authentication routes or replace the application's logout behavior. Hide logout with `:show-logout="false"`, or supply your application's POST route. Keep the default web session/CSRF middleware in the host layout's route group.
 
 ## Publish and customize
