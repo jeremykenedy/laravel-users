@@ -15,6 +15,9 @@
 | [Optional integrations](integrations.md) | Optional UI and host services with explicit setup. |
 | [Upgrading](upgrading.md) | Version transitions, published overrides, opt-in migrations, deployment checks, and rollback. |
 | [Testing](testing.md) | PHP and browser suites, CI matrix, accessibility, and isolated preview fixtures. |
-| [Changelog](../CHANGELOG.md) | Release-specific changes and unreleased work. |
+| [Changelog](changelog.md) | Every published version and historical tag, linked to the canonical release notes. |
+| [Roadmap](roadmap.md) | Current release scope and deferred CSS frameworks and application runtimes. |
 
 Start with [upgrading](upgrading.md) for an existing application. New applications should run the installer after setting up their user model and authentication. No package command creates administrator accounts or silently enables optional tracking, account links, or role integrations.
+
+Detailed release entries are maintained in the root [CHANGELOG.md](../CHANGELOG.md).

@@ -56,10 +56,8 @@ This release supports Blade with Bootstrap 4 and Bootstrap 5. Bootstrap 4 remain
 | --- | --- | --- |
 | Bootstrap 4, legacy | Default | Included |
 | Bootstrap 5.3 | Optional | Included |
-| Tailwind, Materialize, Material Design 3, Bulma, Foundation | Deferred | Planned for later releases |
-| Livewire, Vue, React, Svelte | Deferred | Planned for later releases |
 
-Only Blade and the two Bootstrap choices are offered by the release installer. Other frameworks will be added separately after their own feature and browser checks.
+Only Blade and the two Bootstrap choices are offered by the release installer. Deferred CSS frameworks and application runtimes are tracked separately in the [roadmap](docs/roadmap.md), with release dates and order still to be determined.
 
 The package's documented compatibility suite covers Laravel 8 through 13, with framework and PHP versions paired in the [CI matrix](.github/workflows/tests.yml). Older Laravel applications should use a package version compatible with their framework and PHP runtime. See [framework setup and commands](docs/commands.md).
 
@@ -111,7 +109,7 @@ Sign in with an account authorized by the host application's middleware, then op
 <a href="{{ route('users') }}">Manage users</a>
 ```
 
-See [standalone navigation components](docs/navigation-components.md) for the Blade controls that can be embedded in a host layout. Livewire, Vue, React, Svelte and the remaining CSS frameworks are reserved for later releases.
+See [standalone navigation components](docs/navigation-components.md) for the Blade controls that can be embedded in a host layout, and the [roadmap](docs/roadmap.md) for future frontend work.
 
 ## Features
 
@@ -128,6 +126,8 @@ See [standalone navigation components](docs/navigation-components.md) for the Bl
 - Configure password strength rules and confirmation feedback for account creation and editing.
 - Customize independent light/dark card colors, gradient highlight colors and strength, with inherited per-user overrides.
 - Choose inline alerts, installed Laravel Toast notifications, or both, with configurable Toast behavior.
+- Preview unsaved notification choices in the browser before saving settings.
+- Use consistent page icons, headers, tabs, and content width across the Bootstrap interfaces.
 - Install, configure, and remove supported optional packages through authorized settings controls with worker verification and visible progress.
 - Add a signed-in account page with profile, avatar, appearance, email, password, and account-removal controls.
 - Use the theme toggle and user menu as standalone Blade components.
@@ -200,7 +200,7 @@ Install, update, and switch share flags for runtimes, CSS, views, themes, role p
 | Option | Values | Purpose |
 | --- | --- | --- |
 | `--framework` / `--css` | `bootstrap4`, `bootstrap5` | Select the CSS framework. |
-| `--frontend` | `blade`, `livewire`, `vue`, `react`, `svelte` | Select the bundled screen implementation. |
+| `--frontend` | `blade` | Select the screen runtime supported by this release. |
 | `--theme` | `light`, `dark`, `system` | Set the initial theme. |
 | `--views` | `package`, `publish` | Use bundled views or publish missing templates. |
 | `--force` | flag | Back up and replace published views when `--views=publish` is selected. |
@@ -274,7 +274,9 @@ All guides are available in the [`docs/` folder](docs/index.md):
 - [Global settings and access rules](docs/settings.md)
 - [Testing and CI](docs/testing.md)
 - [Upgrade and rollback guide](docs/upgrading.md)
-- [Version history](CHANGELOG.md)
+- [Changelog and historical versions](docs/changelog.md)
+- [Roadmap and future frontend choices](docs/roadmap.md)
+- [Canonical release notes](CHANGELOG.md)
 
 ## Screenshots
 

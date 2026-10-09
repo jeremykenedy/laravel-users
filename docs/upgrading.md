@@ -10,7 +10,7 @@ Composer updates retain Blade and Bootstrap 4 unless you have explicitly selecte
 
 ## Version transitions
 
-The changes on this branch are unreleased. Do not treat the branch name as a published version. Compare your installed version in `composer.lock` with the target release before changing the host application.
+Version 6.0.0 is prepared for 2026-10-09 and remains unreleased pending final runtime verification. Compare your installed version in `composer.lock` with the published target before changing the host application. The [changelog](changelog.md) indexes every historical tag and links the canonical release notes.
 
 | From | To | What to review |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ Do not upgrade a PHP 7 host directly to the current package. Resolve the host's 
 | Activity | Latest login storage and online presence remain off until enabled. Login capture needs its separate migration. No user columns are added. |
 | Avatars | The avatar column and per-user preferences remain opt-in. Per-user preferences need their separate migration and existing users inherit global settings. |
 | Deleted users | Uses the host's existing SoftDeletes implementation. Separate table views and bulk controls do not add a deleted_at column or change deletion behavior. |
-| Email | Sending is always explicit. Creation welcome/password setup and deleted-account links are unchecked. The optional settings page can save global welcome availability and template defaults, subject to the existing email config flags. Queue, broker, route, and authorization are host-owned. |
+| Email | Email features remain off by default. Creation welcome/password setup and deleted-account links are unchecked. Automatic goodbye notices require explicit configuration. The optional settings page can save global welcome availability and template defaults, subject to the existing email flags. Queue, broker, route, and authorization are host-owned. |
 | Account links | Off by default; requires a separate migration. Encrypted, action-bound links require confirmation and are single use. Never expire is an explicit unchecked choice and can be disabled. |
 | Roles | Existing integration stays unchanged. Optional Spatie support and installer choices do not install or migrate anything silently. Direct permissions are separately opt-in. Shared role levels stay host-owned. |
 | Notifications/packages | Inline alerts remain the default. Explicit Toast installation completes setup automatically and retains existing notification settings. Web dependency changes require a dedicated gate, verified worker and typed confirmation. |
@@ -55,7 +55,7 @@ Install, update, switch and the standalone publisher now export versioned assets
 
 The setup commands use PHP-Parser to add the impersonation-state guard to an existing `routes/web.php`. Review the route diff before rebuilding route caches. These entries are conditional on the middleware class being available, so an older package can still load the file after rollback. Invalid host PHP or a route file changed during setup stops the command. Impersonation remains disabled unless explicitly enabled; [the guide](impersonation.md) covers authorization, expiration and application listeners.
 
-The optional Bootstrap 5 Blade views live under `laravelusers::modern`. Custom published templates and explicitly configured view names still win. Other CSS frameworks and application runtimes will be added in later releases.
+The optional Bootstrap 5 Blade views live under `laravelusers::modern`. Custom published templates and explicitly configured view names still win. Other CSS frameworks and application runtimes are deferred on the [roadmap](roadmap.md); no delivery order or dates are assigned.
 
 Modern views use their own search and accessible confirmation modals. They provide optional table sorting, column filters, persistent column visibility, and a mobile entry layout without jQuery or legacy DataTables. Bootstrap 4 retains its existing modal and DataTables integrations. Pagination remains server-side. Table controls act on displayed rows; use search for matches across pages or disable pagination for a complete in-memory table.
 
