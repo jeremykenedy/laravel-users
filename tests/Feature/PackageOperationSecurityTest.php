@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Gate;
 use jeremykenedy\laravelusers\Jobs\ChangeManagedPackage;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageOperations;
 use jeremykenedy\laravelusers\Support\UserSettings;
+use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
 use RuntimeException;
 
@@ -88,6 +90,34 @@ class PackageOperationSecurityTest extends TestCase
         $this->assertSame('completed', Cache::get('laravelusers.package.'.$job->id)['status']);
     }
 
+    public function test_duplicate_delivery_during_claim_cannot_cancel_the_first_worker(): void
+    {
+        [$job] = $this->queue();
+        $checking = false;
+        $this->packages->shouldReceive('check')->andReturnUsing(function () use ($job, &$checking) {
+            if ($checking) {
+                return;
+            }
+            $checking = true;
+            $duplicate = \Mockery::mock(ComposerPackages::class);
+            $duplicate->shouldNotReceive('changeFromSettings');
+            (clone $job)->handle($this->packages, $duplicate, new UserSettings());
+        });
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $ownedWhenComposerStarted = false;
+        $composer->shouldReceive('changeFromSettings')->once()->andReturnUsing(function () use ($job, &$ownedWhenComposerStarted) {
+            $ownedWhenComposerStarted = Cache::get('laravelusers.packages.owner') === $job->lockOwner
+                && Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess();
+
+            return true;
+        });
+
+        $job->handle($this->packages, $composer, new UserSettings());
+
+        $this->assertTrue($ownedWhenComposerStarted, 'The first worker must retain its operation ownership through the claim.');
+        $this->assertSame('completed', Cache::get('laravelusers.package.'.$job->id)['status']);
+    }
+
     public function test_status_only_exposes_public_operation_fields(): void
     {
         [$job, $url] = $this->queue();
@@ -102,9 +132,67 @@ class PackageOperationSecurityTest extends TestCase
         $response->assertHeader('Cache-Control', 'no-store, private');
     }
 
-    private function queue(): array
+    public function test_expired_queued_operation_cannot_run_when_delivered_later(): void
     {
-        $response = $this->actingAs($this->user())->postJson('/users/settings/packages', ['package' => 'spatie', 'operation' => 'install', 'confirmation' => 'continue', 'acknowledgement' => 1])->assertStatus(202);
+        $this->requireProgress();
+        [$job, $url] = $this->queue();
+        $this->makeStale($job);
+        $this->getJson($url)->assertOk()->assertJsonPath('status', 'failed');
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $composer->shouldNotReceive('changeFromSettings');
+
+        $job->handle($this->packages, $composer, new UserSettings());
+
+        $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
+        $this->assertFalse(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+    }
+
+    public function test_expiring_an_old_operation_preserves_the_newer_operation_and_owner(): void
+    {
+        $this->requireProgress();
+        $actor = $this->user();
+        [$old, $oldUrl] = $this->queue($actor);
+        Cache::restoreLock('laravelusers.packages', $old->lockOwner)->release();
+        [$new] = $this->queue($actor);
+        $this->makeStale($old);
+
+        $this->getJson($oldUrl)->assertOk()->assertJsonPath('status', 'failed');
+
+        $this->assertSame($new->id, PackageOperations::latest($actor)['id']);
+        $this->assertSame($new->lockOwner, Cache::get('laravelusers.packages.owner'));
+        $this->assertTrue(Cache::restoreLock('laravelusers.packages', $new->lockOwner)->isOwnedByCurrentProcess());
+    }
+
+    public function test_another_actor_cannot_inspect_or_expire_a_queued_operation(): void
+    {
+        $this->requireProgress();
+        [$job, $url] = $this->queue();
+        $this->makeStale($job);
+
+        $this->actingAs($this->user())->getJson($url)->assertNotFound();
+
+        $this->assertSame('queued', Cache::get('laravelusers.package.'.$job->id)['status']);
+        $this->assertSame($job->lockOwner, Cache::get('laravelusers.packages.owner'));
+        $this->assertTrue(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+    }
+
+    private function makeStale(ChangeManagedPackage $job): void
+    {
+        config(['laravelusers.settings.packages.start_timeout' => 30]);
+        $key = 'laravelusers.package.'.$job->id;
+        Cache::put($key, array_replace(Cache::get($key), ['queued_at' => now()->subSeconds(31)->timestamp]), now()->addDay());
+    }
+
+    private function requireProgress(): void
+    {
+        if (!class_exists(PackageOperations::class)) {
+            $this->markTestSkipped('This regression requires package operation progress tracking.');
+        }
+    }
+
+    private function queue(?User $actor = null): array
+    {
+        $response = $this->actingAs($actor ?? $this->user())->postJson('/users/settings/packages', ['package' => 'spatie', 'operation' => 'install', 'confirmation' => 'continue', 'acknowledgement' => 1])->assertStatus(202);
 
         return [Bus::dispatched(ChangeManagedPackage::class)->last(), $response->json('status_url')];
     }
