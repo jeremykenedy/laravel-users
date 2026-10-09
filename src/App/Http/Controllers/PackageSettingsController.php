@@ -16,7 +16,8 @@ class PackageSettingsController extends Controller
 {
     public function __construct()
     {
-        if ($middleware = config('laravelusers.middleware', [])) {
+        $middleware = config('laravelusers.middleware', []);
+        if ($middleware) {
             $this->middleware($middleware);
         }
         if (config('laravelusers.rolesEnabled', false) && config('laravelusers.rolesMiddlwareEnabled', true)) {

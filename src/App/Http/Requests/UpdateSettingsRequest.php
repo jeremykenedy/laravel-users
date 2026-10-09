@@ -23,22 +23,26 @@ class UpdateSettingsRequest extends FormRequest
     {
         $user = $this->user();
         $roles = $user instanceof Model && RoleAccess::available($user);
+        $appearance = UserAccess::allows('edit_appearance');
+        $optionalAppearance = $appearance ? 'sometimes' : 'prohibited';
+        $requiredAppearance = $appearance ? 'required' : 'prohibited';
+        $notifications = UserAccess::allows('edit_notifications') ? 'sometimes' : 'prohibited';
         $rules = [
-            'profile_dark_color'             => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
-            'edit_dark_color'                => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
-            'profile_dark_gradient'          => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'boolean'],
-            'edit_dark_gradient'             => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'boolean'],
-            'profile_dark_gradient_strength' => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'integer', 'min:0', 'max:100'],
-            'edit_dark_gradient_strength'    => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'integer', 'min:0', 'max:100'],
-            'profile_gradient'               => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'boolean'],
-            'edit_gradient'                  => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'boolean'],
-            'profile_gradient_strength'      => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'integer', 'min:0', 'max:100'],
-            'edit_gradient_strength'         => [UserAccess::allows('edit_appearance') ? 'sometimes' : 'prohibited', 'integer', 'min:0', 'max:100'],
-            'avatar_source'                  => [UserAccess::allows('edit_appearance') ? 'required' : 'prohibited', Rule::in(Avatar::SOURCES)],
-            'profile_color'                  => [UserAccess::allows('edit_appearance') ? 'required' : 'prohibited', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
-            'edit_color'                     => [UserAccess::allows('edit_appearance') ? 'required' : 'prohibited', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
-            'notifications_driver'           => [UserAccess::allows('edit_notifications') ? 'sometimes' : 'prohibited', Rule::in(UserNotifications::toastInstalled() ? ['alert', 'toast'] : ['alert'])],
-            'notifications_dismissible'      => [UserAccess::allows('edit_notifications') ? 'sometimes' : 'prohibited', 'boolean'],
+            'profile_dark_color'             => [$optionalAppearance, 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
+            'edit_dark_color'                => [$optionalAppearance, 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
+            'profile_dark_gradient'          => [$optionalAppearance, 'boolean'],
+            'edit_dark_gradient'             => [$optionalAppearance, 'boolean'],
+            'profile_dark_gradient_strength' => [$optionalAppearance, 'integer', 'min:0', 'max:100'],
+            'edit_dark_gradient_strength'    => [$optionalAppearance, 'integer', 'min:0', 'max:100'],
+            'profile_gradient'               => [$optionalAppearance, 'boolean'],
+            'edit_gradient'                  => [$optionalAppearance, 'boolean'],
+            'profile_gradient_strength'      => [$optionalAppearance, 'integer', 'min:0', 'max:100'],
+            'edit_gradient_strength'         => [$optionalAppearance, 'integer', 'min:0', 'max:100'],
+            'avatar_source'                  => [$requiredAppearance, Rule::in(Avatar::SOURCES)],
+            'profile_color'                  => [$requiredAppearance, 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
+            'edit_color'                     => [$requiredAppearance, 'string', 'regex:/\A#[a-f0-9]{6}\z/i'],
+            'notifications_driver'           => [$notifications, Rule::in(UserNotifications::toastInstalled() ? ['alert', 'toast'] : ['alert'])],
+            'notifications_dismissible'      => [$notifications, 'boolean'],
             'access'                         => [$roles ? 'sometimes' : 'prohibited', 'array:'.implode(',', UserAccess::ACTIONS)],
         ];
         if (!$roles) {

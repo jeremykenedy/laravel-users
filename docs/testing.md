@@ -17,11 +17,17 @@ CI tests these combinations:
 
 Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. The Laravel 8 SQLite job adds Doctrine DBAL 3.x only to its test dependencies so migration rollback is exercised using the framework's supported schema tools. Package users do not inherit CI-only Composer flags.
 
-Scrutinizer uses the Jammy build image with PHP 8.2 and a SQLite version supported by Laravel. It runs PHPUnit coverage, static analysis, and `composer lint` in its named analysis node. The repository configuration explicitly lists these commands so website build overrides cannot omit the test suite. Pint checks the same repository standard locally and in both CI services. Website analysis and coding-style settings remain active; the obsolete CodeSniffer wrapper is replaced by the package's lint command.
+GitHub Actions runs the compatibility matrix, optional integration tests, Pint, dependency audits, PHP coverage, documentation linting, and the Playwright suite. StyleCI, CodeFactor, and Codacy provide separate code-quality checks.
 
 The quality job exports coverage for inspection. It does not yet enforce the requested 100% coverage target. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations. Local results also do not confirm GitHub Actions or external quality ratings for an unpublished commit.
 
+Codacy excludes dependency directories, temporary browser data, and generated Tailwind output. PHP analyzers inspect package PHP rather than treating Blade templates as standalone PHP files. `phpmd.xml` permits Laravel facades and the package's existing stateless helpers while retaining complexity and unused-code checks. `.markdownlint.json` allows the banner, badges, and screenshot tables required by this README. Tool configuration files must be enabled in Codacy after they are available on its default analysis branch.
+
 Activity tests exercise an HTTP login and Laravel authentication events. They cover disabled defaults, latest-login replacement, trusted proxies, custom models, string identifiers, expiry, multiple sessions, logout, session regeneration, cleanup, and migration rollback. Store failures must be reported without preventing login. Activity records stay out of the default search JSON. Default listing metadata excludes login IP and agent details. Bundled tables request those fields explicitly when the login-details column is enabled. Listing tests check one query for login records rather than a query per row.
+
+Command tests cover native Laravel Prompts with simulated key presses as well as the older console fallback. Publication tests verify real asset hashes, idempotent releases, preserved custom files, failed staging, malformed manifests, and rejected symbolic links. AST tests preserve route aliases, namespaces, comments, dynamic expressions, and concurrent host edits. Invalid PHP stops setup before configuration or assets are written.
+
+Impersonation tests reject modified or legacy session state before host routes execute, verify guard and target binding, restore the actor on revoked access, retain the exit route after expiration, and suppress package login activity on both transitions. Ordinary host requests remain unchanged when the feature is disabled.
 
 ## Browser suite
 
@@ -39,9 +45,11 @@ Legacy search regression tests cover both `application/json` responses decoded b
 
 The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Tailwind loads its bundled stylesheet. Browser artifacts are uploaded on CI failure. Tests that only pass on retry also fail CI.
 
+Published-asset browser tests verify CSS and JavaScript content types, working tabs and search, and the `.laravel-users-main-card` boundary at 375x812, 768x1024, and 1440x900. The fixture uses the checked-out package views so stale Testbench publications cannot mask a source change.
+
 ## Asset builds
 
-`npm run build` compiles prefixed Tailwind utilities into the bundled Blade stylesheet. Commit the generated stylesheet with source changes. CI rebuilds it and fails if the generated result differs from the committed version. No build runs during Composer installation in consuming applications.
+`npm run build` compiles prefixed Tailwind utilities into the bundled Blade stylesheet and its public CSS asset. Commit both generated files with source changes. CI rebuilds them and fails if the generated results differ from the committed versions. No build runs during Composer installation in consuming applications.
 
 ## Manual checks
 

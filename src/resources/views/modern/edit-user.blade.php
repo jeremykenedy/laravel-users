@@ -1,6 +1,6 @@
 @extends('laravelusers::modern.page')
 @php($tailwind = \jeremykenedy\laravelusers\Support\Frontend::framework() === 'tailwind')
-@section('template_title', __('laravelusers::laravelusers.editing-user', ['name' => $user->name]))
+@section('template_title', __('laravelusers::laravelusers.editing-user', ['name' => e($user->name)]))
 @section('users_content')
     <section class="lu-profile lu-edit-card">
     <header class="lu-profile-header"><h1 class="lu-list-title">@include('laravelusers::partials.icon', ['name' => 'user']) {{ __('laravelusers::laravelusers.editing-user', ['name' => $user->name]) }}</h1><div class="lu-actions">@if(!($deletedUser ?? false) && \jeremykenedy\laravelusers\Support\UserAccess::allows('view_users'))<a class="lu-button lu-secondary" href="{{ route('users.show', $user->id) }}">@include('laravelusers::partials.icon', ['name' => 'show']) {{ __('laravelusers::ui.view_user') }}</a>@endif<a class="lu-button lu-secondary" href="{{ route(($deletedUser ?? false) ? 'users.deleted' : 'users') }}">@include('laravelusers::partials.icon', ['name' => 'reply']) {{ __('laravelusers::ui.back') }}</a></div></header>

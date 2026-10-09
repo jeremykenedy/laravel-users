@@ -47,6 +47,7 @@ return [
     'impersonation_started'               => 'You are now impersonating this user.',
     'impersonation_stopped'               => 'You are back to your own account.',
     'impersonation_actor_missing'         => 'The original administrator account is no longer available. Your session has been ended.',
+    'impersonation_expired'               => 'Impersonation ended because the session expired or your access changed.',
     'impersonation_banner'                => 'Impersonating :user',
     'impersonation_exit'                  => 'Exit impersonation',
     'impersonation_target'                => 'Impersonate user',

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
+use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
@@ -103,6 +104,15 @@ if (is_file(config_path('laravelusers-packages.php'))) {
     config(['laravelusers-packages' => require config_path('laravelusers-packages.php')]);
 }
 PackageRequirements::load();
+if (($_COOKIE['lu-published-assets'] ?? '0') === '1') {
+    $app->make(PublicAssets::class)->publish();
+}
+Route::get('/vendor/laravelusers/releases/{release}/{asset}', function ($release, $asset) {
+    return response()->file(public_path('vendor/laravelusers/releases/'.$release.'/'.$asset), [
+        'Content-Type' => str_ends_with($asset, '.css') ? 'text/css' : 'text/javascript',
+    ]);
+})->where('release', '[a-f0-9]{64}')->where('asset', '[a-z0-9-]+\.(?:css|js)');
+View::replaceNamespace('laravelusers', dirname(__DIR__, 2).'/src/resources/views');
 Gate::define('manage-laravelusers-settings', fn ($user) => $user->getKey() === 1);
 Gate::define('manage-laravelusers-packages', fn ($user) => $user->getKey() === 1);
 View::composer('laravelusers::partials.package-settings', function ($view) use ($preview) {
@@ -206,9 +216,10 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
         ->withCookie(cookie('lu-search-debounce-enabled', request()->query('search-debounce', '1'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-search-delay', request()->query('search-delay', '2000'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-date-style', request()->query('date-style', 'short'), 60, '/', null, false, false, false))
-        ->withCookie(cookie('lu-responsive-table', request()->query('responsive-table', '1'), 60, '/', null, false, false, false));
+        ->withCookie(cookie('lu-responsive-table', request()->query('responsive-table', '1'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-published-assets', request()->query('published-assets', '0'), 60, '/', null, false, false, false));
 });
-EncryptCookies::except(['lu-framework', 'lu-goodbye', 'lu-accounts', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-avatar-preferences', 'lu-appearance', 'lu-settings', 'lu-packages', 'lu-responsive-table', 'lu-icons-only', 'lu-search-debounce-enabled', 'lu-search-delay', 'lu-date-style', 'lu-profile-color', 'lu-view-toggle', 'lu-full-width']);
+EncryptCookies::except(['lu-framework', 'lu-goodbye', 'lu-accounts', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-avatar-preferences', 'lu-appearance', 'lu-settings', 'lu-packages', 'lu-responsive-table', 'lu-icons-only', 'lu-search-debounce-enabled', 'lu-search-delay', 'lu-date-style', 'lu-profile-color', 'lu-view-toggle', 'lu-full-width', 'lu-published-assets']);
 Route::post('/logout', function () {
     Auth::logout();
 

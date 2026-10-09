@@ -33,15 +33,27 @@ class UserSettings
         if (!config('laravelusers.settings.enabled', false) || !$this->available()) {
             return;
         }
-        $settings = $this->model()->newQuery()->find('global');
-        $account = $this->model()->newQuery()->find('account');
-        foreach ($account->value ?? [] as $key => $value) {
+        $records = $this->model()->newQuery()->whereIn('key', ['global', 'account', 'emails', 'cleanup'])->get()->keyBy('key');
+        $this->loadAccount($records->get('account')?->value ?? []);
+        $emails = $records->get('emails')?->value ?? [];
+        $this->loadEmailTemplates($emails['templates'] ?? []);
+        $this->loadEmailOptions($emails);
+        $this->loadCleanup($records->get('cleanup')?->value ?? []);
+        $this->loadGlobal($records->get('global')?->value ?? []);
+    }
+
+    private function loadAccount(array $values): void
+    {
+        foreach ($values as $key => $value) {
             if (in_array($key, ['enabled', 'settings_enabled'], true)) {
                 config(['laravelusers.account.'.$key => (bool) $value]);
             }
         }
-        $emails = $this->model()->newQuery()->find('emails');
-        foreach ($emails->value['templates'] ?? [] as $action => $contents) {
+    }
+
+    private function loadEmailTemplates(array $templates): void
+    {
+        foreach ($templates as $action => $contents) {
             if (in_array($action, ['welcome', 'reset', 'restore', 'force_delete', 'goodbye'], true)) {
                 foreach (['subject', 'message'] as $key) {
                     if (isset($contents[$key]) && is_string($contents[$key])) {
@@ -50,28 +62,41 @@ class UserSettings
                 }
             }
         }
+    }
+
+    private function loadEmailOptions(array $values): void
+    {
         foreach (['goodbye', 'goodbye_on_delete', 'goodbye_auto_send', 'goodbye_restore', 'goodbye_force_delete', 'goodbye_retention', 'goodbye_show_expiry'] as $key) {
-            if (isset($emails->value[$key])) {
-                config(['laravelusers.emails.'.$key => (bool) $emails->value[$key]]);
+            if (isset($values[$key])) {
+                config(['laravelusers.emails.'.$key => (bool) $values[$key]]);
             }
         }
-        if (isset($emails->value['welcome_enabled'])) {
-            config(['laravelusers.welcome.enabled' => (bool) $emails->value['welcome_enabled'] && config('laravelusers.emails.enabled', false) && config('laravelusers.emails.welcome', true)]);
+        if (isset($values['welcome_enabled'])) {
+            config(['laravelusers.welcome.enabled' => (bool) $values['welcome_enabled'] && config('laravelusers.emails.enabled', false) && config('laravelusers.emails.welcome', true)]);
         }
         foreach (['goodbye_expiry_mode', 'goodbye_duration', 'goodbye_unit'] as $key) {
-            if (isset($emails->value[$key])) {
-                config(['laravelusers.emails.'.$key => $emails->value[$key]]);
+            if (isset($values[$key])) {
+                config(['laravelusers.emails.'.$key => $values[$key]]);
             }
         }
-        $cleanup = $this->model()->newQuery()->find('cleanup');
-        foreach ($cleanup->value ?? [] as $key => $value) {
+    }
+
+    private function loadCleanup(array $values): void
+    {
+        foreach ($values as $key => $value) {
             if (in_array($key, ['enabled', 'amount', 'unit'], true)) {
                 config(['laravelusers.cleanup.'.$key => $value]);
             }
         }
-        foreach ($settings->value ?? [] as $key => $value) {
-            if (in_array($key, array_merge(self::APPEARANCE, ['notifications.driver', 'notifications.dismissible', 'access', 'impersonation.enabled']), true)) {
-                config(['laravelusers.'.$key => $value !== null && in_array($key, ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'notifications.dismissible', 'impersonation.enabled'], true) ? (bool) $value : $value]);
+    }
+
+    private function loadGlobal(array $values): void
+    {
+        $keys = array_merge(self::APPEARANCE, ['notifications.driver', 'notifications.dismissible', 'access', 'impersonation.enabled']);
+        $booleans = ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'notifications.dismissible', 'impersonation.enabled'];
+        foreach ($values as $key => $value) {
+            if (in_array($key, $keys, true)) {
+                config(['laravelusers.'.$key => $value !== null && in_array($key, $booleans, true) ? (bool) $value : $value]);
             }
         }
     }

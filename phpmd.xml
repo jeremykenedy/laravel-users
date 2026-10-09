@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Laravel Users">
+    <description>Analyze package PHP while allowing Laravel facades and stateless helpers.</description>
+    <exclude-pattern>*/resources/views/*</exclude-pattern>
+    <exclude-pattern>*/tests/Fixtures/views/*</exclude-pattern>
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="StaticAccess"/>
+    </rule>
+    <rule ref="rulesets/cleancode.xml/StaticAccess">
+        <properties>
+            <property name="exceptions" value="
+                Composer\InstalledVersions,DiceBear\Style,
+                Illuminate\Support\Carbon,Illuminate\Support\Str,Illuminate\Support\ServiceProvider,
+                Illuminate\Support\Facades\Auth,Illuminate\Support\Facades\Cache,
+                Illuminate\Support\Facades\File,Illuminate\Support\Facades\Gate,
+                Illuminate\Support\Facades\Hash,Illuminate\Support\Facades\Log,
+                Illuminate\Support\Facades\Route,Illuminate\Support\Facades\Validator,
+                Illuminate\Support\Facades\View,Illuminate\Validation\Rule,
+                Illuminate\Validation\ValidationException,
+                Jeremykenedy\LaravelToast\Facades\Toast,Spatie\Permission\Guard,
+                jeremykenedy\laravelusers\Console\ConsolePrompts,
+                jeremykenedy\laravelusers\Support\AccountPreferences,
+                jeremykenedy\laravelusers\Support\AppearancePreferences,
+                jeremykenedy\laravelusers\Support\AvatarPreferences,
+                jeremykenedy\laravelusers\Support\DeletedUserRetention,
+                jeremykenedy\laravelusers\Support\EmailContent,
+                jeremykenedy\laravelusers\Support\Frontend,
+                jeremykenedy\laravelusers\Support\GoodbyeEmail,
+                jeremykenedy\laravelusers\Support\LocalAvatars,
+                jeremykenedy\laravelusers\Support\PackageRequirements,
+                jeremykenedy\laravelusers\Support\PasswordRules,
+                jeremykenedy\laravelusers\Support\RoleAccess,
+                jeremykenedy\laravelusers\Support\UserAccess,
+                jeremykenedy\laravelusers\Support\UserNotifications,
+                jeremykenedy\laravelusers\Support\UserPermissions,
+                jeremykenedy\laravelusers\Support\UserRoles"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml"/>
+    <rule ref="rulesets/design.xml"/>
+    <rule ref="rulesets/unusedcode.xml"/>
+</ruleset>

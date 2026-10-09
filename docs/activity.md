@@ -23,7 +23,7 @@ Set `activity.online` to `true`. No migration is required. Choose a persistent `
 
 Authenticated requests refresh the current session. A user is online if any tracked session has activity within `activity.online_seconds` (default 300). Logout removes that session only. Session regeneration retains the tracking token; expired sessions are pruned during updates. Closing a browser becomes offline after the inactivity window.
 
-The directory and detail views show status on page load. Search JSON remains unchanged; select a search result to see current details. No polling endpoint, timer, or global middleware is added. Status indicates recent authenticated activity rather than a live network connection.
+The directory and detail views show status on page load. Search includes an activity envelope when the corresponding columns are enabled. There is no presence polling endpoint. Status indicates recent authenticated activity rather than a live network connection. [Impersonation](impersonation.md) suppresses package login and presence updates until the original actor has been restored.
 
 ## Application usage
 

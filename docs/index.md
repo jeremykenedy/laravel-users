@@ -11,6 +11,7 @@
 | [Emails](emails.md) | Templates, previews, bulk recipients, expiration, welcome mail, and deleted-account links. |
 | [Avatars](avatars.md) | Global sources, per-user preferences, migration, inheritance, and safe fallbacks. |
 | [Login activity](activity.md) | Latest login, browser/device/IP information, online sessions, storage, and cleanup. |
+| [Impersonation](impersonation.md) | Optional role-restricted sessions, verification, expiration, middleware and activity behavior. |
 | [Optional integrations](integrations.md) | Optional UI and host services with explicit setup. |
 | [Upgrading](upgrading.md) | Version transitions, published overrides, opt-in migrations, deployment checks, and rollback. |
 | [Testing](testing.md) | PHP and browser suites, CI matrix, accessibility, and isolated preview fixtures. |

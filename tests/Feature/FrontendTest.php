@@ -8,6 +8,19 @@ use jeremykenedy\laravelusers\Test\TestCase;
 
 class FrontendTest extends TestCase
 {
+    public function test_saved_names_cannot_close_the_document_title_on_show_or_edit(): void
+    {
+        $name = '</title><script>alert(1)</script>';
+        $user = $this->user(['name' => $name]);
+        $this->actingAs($user);
+        foreach (Frontend::FRAMEWORKS as $framework) {
+            config(['laravelusers.frontend' => $framework]);
+            foreach (['/users/'.$user->id, '/users/'.$user->id.'/edit'] as $url) {
+                $this->get($url)->assertOk()->assertDontSee($name, false)->assertSee(e($name), false);
+            }
+        }
+    }
+
     public function test_card_grid_counts_use_config_and_reject_invalid_css(): void
     {
         $this->actingAs($this->user());

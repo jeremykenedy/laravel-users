@@ -19,14 +19,15 @@ class ConsolePrompts
 
     public static function search(Command $command, string $label, array $options, string $default, bool $interactive): string
     {
-        if (self::usesNativePrompts($command, $interactive) && function_exists('Laravel\\Prompts\\search')) {
-            return (string) \Laravel\Prompts\search(
+        if (self::usesNativePrompts($command, $interactive) && function_exists('Laravel\\Prompts\\suggest')) {
+            $choices = array_values(array_unique(array_merge(in_array($default, $options, true) ? [$default] : [], $options)));
+
+            return (string) \Laravel\Prompts\suggest(
                 $label,
-                fn (string $query): array => array_values(array_filter(
-                    $options,
-                    fn (string $option): bool => str_contains(mb_strtolower($option), mb_strtolower($query))
-                )),
-                placeholder: 'Type to filter the supported options...'
+                $choices,
+                default: $default,
+                placeholder: 'Type to filter the supported options...',
+                validate: fn (string $value): ?string => in_array($value, $choices, true) ? null : 'Choose a supported CSS framework.'
             );
         }
 
@@ -44,11 +45,25 @@ class ConsolePrompts
 
     public static function text(Command $command, string $label, string $default, bool $interactive): string
     {
+        if (self::usesNativePrompts($command, $interactive) && $default !== '' && function_exists('Laravel\\Prompts\\suggest')) {
+            return \Laravel\Prompts\suggest($label, [$default], default: $default);
+        }
         if (self::usesNativePrompts($command, $interactive) && function_exists('Laravel\\Prompts\\text')) {
             return \Laravel\Prompts\text($label, default: $default);
         }
 
         return (string) $command->ask($label, $default);
+    }
+
+    public static function note(Command $command, string $message, bool $interactive): void
+    {
+        if (self::usesNativePrompts($command, $interactive) && function_exists('Laravel\\Prompts\\note')) {
+            \Laravel\Prompts\note($message);
+
+            return;
+        }
+
+        $command->line($message);
     }
 
     public static function intro(Command $command, string $title, string $description): void

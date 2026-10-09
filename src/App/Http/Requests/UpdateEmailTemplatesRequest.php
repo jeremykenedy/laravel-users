@@ -17,6 +17,11 @@ class UpdateEmailTemplatesRequest extends FormRequest
 
     public function rules(): array
     {
+        return $this->templateRules() + $this->goodbyeRules();
+    }
+
+    private function templateRules(): array
+    {
         $rules = [
             'templates'         => ['required', 'array:welcome,reset,restore,force_delete,goodbye'],
             'goodbye'           => ['required', 'boolean'],
@@ -29,20 +34,19 @@ class UpdateEmailTemplatesRequest extends FormRequest
             $rules['templates.'.$action.'.message'] = ['required_with:templates.'.$action, 'string', 'max:'.max(1, (int) config('laravelusers.emails.max_length', 10000))];
         }
 
+        return $rules;
+    }
+
+    private function goodbyeRules(): array
+    {
+        $rules = [];
         foreach (['goodbye_auto_send', 'goodbye_retention', 'goodbye_show_expiry'] as $key) {
             $rules[$key] = ['sometimes', 'boolean'];
         }
         foreach (['restore', 'force_delete'] as $action) {
-            $rules['goodbye_'.$action] = ['sometimes', 'boolean', Rule::in(config('laravelusers.softDeletedEnabled', false) && config('laravelusers.account_links.enabled', false) && config('laravelusers.account_links.'.$action, true) && UserAccess::allows($action === 'restore' ? 'restore_users' : 'force_delete') ? [0, 1] : [0])];
+            $rules['goodbye_'.$action] = ['sometimes', 'boolean', Rule::in($this->accountActionAllowed($action) ? [0, 1] : [0])];
         }
-        $modes = ['custom'];
-        if (config('laravelusers.cleanup.enabled', false)) {
-            $modes[] = 'cleanup';
-        }
-        if (config('laravelusers.account_links.allow_never_expire', true)) {
-            $modes[] = 'never';
-        }
-        $rules['goodbye_expiry_mode'] = ['sometimes', Rule::in($modes)];
+        $rules['goodbye_expiry_mode'] = ['sometimes', Rule::in($this->expiryModes())];
         $rules['goodbye_duration'] = ['required_if:goodbye_expiry_mode,custom', 'nullable', 'integer', 'min:1', 'max:525600', function ($attribute, $value, $fail) {
             $unit = $this->input('goodbye_unit');
             $factor = is_string($unit) ? (['minutes' => 1, 'hours' => 60, 'days' => 1440][$unit] ?? 1) : 1;
@@ -53,5 +57,25 @@ class UpdateEmailTemplatesRequest extends FormRequest
         $rules['goodbye_unit'] = ['required_with:goodbye_duration', 'nullable', Rule::in(['minutes', 'hours', 'days'])];
 
         return $rules;
+    }
+
+    private function accountActionAllowed(string $action): bool
+    {
+        return config('laravelusers.softDeletedEnabled', false) && config('laravelusers.account_links.enabled', false)
+            && config('laravelusers.account_links.'.$action, true)
+            && UserAccess::allows($action === 'restore' ? 'restore_users' : 'force_delete');
+    }
+
+    private function expiryModes(): array
+    {
+        $modes = ['custom'];
+        if (config('laravelusers.cleanup.enabled', false)) {
+            $modes[] = 'cleanup';
+        }
+        if (config('laravelusers.account_links.allow_never_expire', true)) {
+            $modes[] = 'never';
+        }
+
+        return $modes;
     }
 }

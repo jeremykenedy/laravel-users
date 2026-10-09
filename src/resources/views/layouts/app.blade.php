@@ -88,7 +88,7 @@
                 <div class="container">@include('laravelusers::partials.breadcrumbs')</div>
             @endif
 
-            <main class="py-4">
+            <main class="py-4 laravel-users-main-card">
                 @yield('content')
                 <x-laravelusers::email-modal />
                 @if(config('laravelusers.footerView'))@include(config('laravelusers.footerView'))@endif

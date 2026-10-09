@@ -98,7 +98,7 @@
             <a class="lu-button" data-lu-edit>@include('laravelusers::partials.icon', ['name' => 'edit']) {{ __('laravelusers::ui.edit') }}</a>
         @endif
         @if($canImpersonateUsers ?? false)
-            <form method="POST" data-lu-impersonate>
+            <form method="POST" data-lu-user-action data-lu-action-template="{{ route('users.impersonate', ['id' => '__USER_ID__']) }}">
                 @csrf
                 <button class="lu-button lu-secondary" type="submit">@include('laravelusers::partials.icon', ['name' => 'secret-agent']) {{ __('laravelusers::ui.impersonation_target') }}</button>
             </form>

@@ -149,8 +149,9 @@ jobs:
       - run: composer update --prefer-dist --no-interaction
       - run: npm ci
       - run: npm audit
+      - run: npm run lint:docs
       - run: npm run build
-      - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php
+      - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php src/resources/assets/tailwind.css
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:browser
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

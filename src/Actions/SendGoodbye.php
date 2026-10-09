@@ -25,29 +25,55 @@ class SendGoodbye
             || (!config('laravelusers.emails.goodbye_auto_send', false) && empty($data['send_goodbye']))) {
             return;
         }
+        [$options, $urls] = $this->accountOptions($user);
+        $contents = array_replace($this->contents($data), $options);
+        $contents['showLinkExpiry'] = (bool) config('laravelusers.emails.goodbye_show_expiry', true);
+        $this->notifications->send((new AnonymousNotifiable())->route('mail', $user->email), new UserMessage($user->name, $contents, $urls));
+    }
+
+    private function contents(array $data): array
+    {
         $defaults = EmailContent::defaults('goodbye');
         foreach (['use_greeting' => true, 'greeting' => 'Hi', 'include_name' => true, 'use_signoff' => true, 'signoff' => 'Thanks', 'signoff_name' => ''] as $key => $value) {
             $defaults[$key] = config('laravelusers.emails.'.$key, $value);
         }
-        $contents = array_replace($defaults, $data['goodbye'] ?? [], ['action' => 'goodbye']);
+
+        return array_replace($defaults, $data['goodbye'] ?? [], ['action' => 'goodbye']);
+    }
+
+    private function accountOptions(Model $user): array
+    {
+        if (!in_array(SoftDeletes::class, class_uses_recursive($user), true) || !$user->trashed()) {
+            return [[], []];
+        }
+        $contents = [];
         $actions = [];
-        if (in_array(SoftDeletes::class, class_uses_recursive($user), true) && $user->trashed()) {
-            foreach (['restore', 'force_delete'] as $action) {
-                if (config('laravelusers.emails.goodbye_'.$action, false)) {
-                    $actions[] = $action;
-                }
-            }
-            if (config('laravelusers.cleanup.enabled', false) && config('laravelusers.emails.goodbye_retention', false)) {
-                $contents['retentionUntil'] = DeletedUserRetention::expiresAt($user)->toIso8601String();
-            }
-            if ($actions) {
-                $mode = config('laravelusers.emails.goodbye_expiry_mode', 'custom');
-                $minutes = $mode === 'never' ? 0 : (int) config('laravelusers.emails.goodbye_duration', 60) * (['minutes' => 1, 'hours' => 60, 'days' => 1440][config('laravelusers.emails.goodbye_unit', 'minutes')] ?? 1);
-                $urls = $mode === 'cleanup' ? $this->links->issueForCleanup($user, $actions) : $this->links->issue($user, $actions, $minutes);
-                $contents['linkExpiry'] = $mode === 'cleanup' ? DeletedUserRetention::expiresAt($user)->toIso8601String() : ($minutes === 0 ? null : now()->addMinutes($minutes)->toIso8601String());
+        foreach (['restore', 'force_delete'] as $action) {
+            if (config('laravelusers.emails.goodbye_'.$action, false)) {
+                $actions[] = $action;
             }
         }
-        $contents['showLinkExpiry'] = (bool) config('laravelusers.emails.goodbye_show_expiry', true);
-        $this->notifications->send((new AnonymousNotifiable())->route('mail', $user->email), new UserMessage($user->name, $contents, $urls ?? []));
+        if (config('laravelusers.cleanup.enabled', false) && config('laravelusers.emails.goodbye_retention', false)) {
+            $contents['retentionUntil'] = DeletedUserRetention::expiresAt($user)->toIso8601String();
+        }
+        if ($actions === []) {
+            return [$contents, []];
+        }
+        [$urls, $expiry] = $this->accountLinks($user, $actions);
+        $contents['linkExpiry'] = $expiry;
+
+        return [$contents, $urls];
+    }
+
+    private function accountLinks(Model $user, array $actions): array
+    {
+        $mode = config('laravelusers.emails.goodbye_expiry_mode', 'custom');
+        if ($mode === 'cleanup') {
+            return [$this->links->issueForCleanup($user, $actions), DeletedUserRetention::expiresAt($user)->toIso8601String()];
+        }
+        $unit = ['minutes' => 1, 'hours' => 60, 'days' => 1440][config('laravelusers.emails.goodbye_unit', 'minutes')] ?? 1;
+        $minutes = $mode === 'never' ? 0 : (int) config('laravelusers.emails.goodbye_duration', 60) * $unit;
+
+        return [$this->links->issue($user, $actions, $minutes), $minutes === 0 ? null : now()->addMinutes($minutes)->toIso8601String()];
     }
 }

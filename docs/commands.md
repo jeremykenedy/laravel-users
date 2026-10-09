@@ -1,6 +1,8 @@
 # Artisan setup commands
 
-Install and update use Laravel Prompts for interactive screens when it is available in the host Laravel version. Older supported applications retain a Symfony Console prompt fallback. Both paths work with the existing Blade frontend and retain Bootstrap 4 unless another supported CSS framework is selected. They reject cached configuration before changing files.
+Install and update use Laravel Prompts for interactive screens when it is available in the host Laravel version. The screens include a title, autocomplete choices, a selection table, publication spinners, notes and a completion message. Pressing Enter retains the current CSS selection. Older supported applications retain a Symfony Console prompt fallback. Both paths work with the existing Blade frontend and retain Bootstrap 4 unless another supported CSS framework is selected. They reject cached configuration before changing files.
+
+The implementations are `InstallCommand`, `UpdateCommand`, `SwitchCommand`, and `PublishCommand` under `src/App/Console/Commands/`, in the `jeremykenedy\laravelusers\App\Console\Commands` namespace. The former `jeremykenedy\laravelusers\Console` classes remain available for applications that reference them directly. Update and switch share the installer's validation and file operations.
 
 ## Install
 
@@ -68,11 +70,11 @@ Framework and theme selections live in `config/laravelusers-ui.php`. Role select
 
 ## Publishing
 
-The standalone package publisher is available as `laravelusers:publish` or `laravel-users:publish`. It uses Laravel's `laravelusers` publish group for configuration, views, and translations. Existing host files are retained by default.
+The standalone package publisher is available as `laravelusers:publish` or `laravel-users:publish`. It uses Laravel's `laravelusers` publish group for configuration, views, and translations, then publishes versioned public assets. Existing host files are retained by default.
 
 | Command | Files |
 | --- | --- |
-| `php artisan laravelusers:publish` | Main config, all views, and translations. |
+| `php artisan laravelusers:publish` | Main config, all views, translations and versioned public assets. |
 | `php artisan vendor:publish --tag=laravelusers` | Main config, all views, and translations. |
 | `php artisan vendor:publish --tag=laravelusers-settings-migrations` | Optional global settings storage. |
 | `php artisan vendor:publish --tag=laravelusers-appearance-migrations` | Optional individual card colors, gradients and gradient strength. |
@@ -87,7 +89,13 @@ The standalone package publisher is available as `laravelusers:publish` or `lara
 
 Laravel's `vendor:publish --force` overwrites files without the setup commands' backup step. Use the reviewed update workflow for customized views. Composer updates never run migrations. Database setup requires one of the explicit setup or migration options above; no command seeds roles or grants administrators.
 
-Bootstrap assets are controlled by the existing CDN and host-asset settings. Tailwind's prefixed stylesheet is compiled and shipped as a Blade asset. There is no package public JavaScript directory to publish, and consuming applications do not need a Node build for bundled views. Run `npm run build` in your application after changing its own asset sources or CSS framework imports. Custom Vite layouts can use `@vite` and disable the package's `enableAppCss` and `enableAppJs` settings.
+Install, update, switch and publish export the bundled styles and directory script to `public/vendor/laravelusers/`. Each release uses content hashes. Files are staged and verified under an exclusive filesystem lock; `manifest.json` is replaced only after the release is complete. Existing asset URLs remain available for pages loaded before an update. Custom files in that directory are retained.
+
+Modern views use published assets when their hashes match the installed package. They use the bundled inline fallback when assets are absent, outdated or damaged, so an ordinary Composer update does not leave existing pages without styles or scripts. Bootstrap 4 retains its existing script stack. Bootstrap CDN settings and host assets remain separate from the package assets.
+
+The commands require write access to the package's public directory and `storage/app/laravelusers`. Run them during deployment before making a release read-only. Consuming applications do not need a Node build for these bundled assets. Run `npm run build` in your application after changing its own asset sources or CSS imports. Custom Vite layouts can use `@vite` and disable the package's `enableAppCss` and `enableAppJs` settings.
+
+Install, update and switch parse an existing `routes/web.php` with PHP-Parser and add the [impersonation-state middleware](impersonation.md). Existing route groups, aliases, comments and dynamic configuration are preserved. The generated entries check that the middleware class exists, so rolling back to a package version without that class leaves them inactive. Invalid PHP or a concurrent route edit stops the command. Applications without that file use the service provider's middleware registration; no route stub is generated. The standalone publish command does not edit routes, Vite configuration, Tailwind configuration or dependency manifests.
 
 ## Recovery
 

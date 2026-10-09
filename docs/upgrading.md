@@ -48,6 +48,10 @@ Do not upgrade a PHP 7 host directly to the current package. Resolve the host's 
 2. Run `php artisan laravelusers:update --framework=bootstrap5` or use `tailwind`.
 3. Choose a default theme and whether to publish views.
 4. Check custom layouts and assets. Remove duplicate framework stylesheets from the layout if needed.
+
+Install, update, switch and the standalone publisher now export versioned assets to `public/vendor/laravelusers/`. Run `php artisan laravelusers:update --no-interaction` as part of deployment to refresh them while retaining current settings. Unpublished or stale assets retain the bundled fallback. Allow writes to the package public directory and `storage/app/laravelusers` during this step. Host Vite and Tailwind configuration is retained.
+
+The setup commands use PHP-Parser to add the impersonation-state guard to an existing `routes/web.php`. Review the route diff before rebuilding route caches. These entries are conditional on the middleware class being available, so an older package can still load the file after rollback. Invalid host PHP or a route file changed during setup stops the command. Impersonation remains disabled unless explicitly enabled; [the guide](impersonation.md) covers authorization, expiration and application listeners.
 5. Run host application tests and rebuild the configuration cache.
 
 Modern views live under `laravelusers::modern`. They share form and page partials across Bootstrap 5 and Tailwind. They do not rewrite existing Bootstrap 4 view overrides. Explicitly configured custom view names still win, even if you select a modern framework.

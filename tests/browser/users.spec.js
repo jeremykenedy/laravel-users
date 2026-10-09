@@ -307,6 +307,7 @@ async function setTheme(page, theme) {
     const toggle = page.locator('#lu-theme');
     if (!await toggle.isVisible()) {
         await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        await expect(page.locator('.navbar-collapse')).toHaveClass(/\bshow\b/);
     }
     for (let clicks = 0; clicks < 3; clicks++) {
         const current = await toggle.locator('svg:not([hidden])').getAttribute('data-theme-icon');
@@ -606,6 +607,57 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
     });
 }
 
+async function expectCardGrid(page, body) {
+    for (const [width, columns] of [[390, 1], [768, 2], [1025, 3], [1100, 3], [1600, 4]]) {
+        await page.setViewportSize({ width, height: 1000 });
+        expect(await body.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+}
+
+async function expectEqualActionWidths(body) {
+    for (const user of ['Alex Rivers', 'Morgan Hayes']) {
+        const actions = body.locator('tr').filter({ hasText: user }).locator('.lu-button, .lu-email-toggle');
+        const widths = await actions.evaluateAll(items => items.map(item => item.getBoundingClientRect().width));
+        expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1);
+        for (const button of await actions.all()) {
+            expect(await button.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+        }
+    }
+}
+
+async function expectMobileListControls(page) {
+    const controls = page.locator('.lu-table-toolbar').locator(':scope > button, :scope > details > summary, :scope > .lu-mobile-sort');
+    expect(await controls.evaluateAll(items => items.map(item => item.getAttribute('aria-label') || item.querySelector('label')?.textContent.trim()))).toEqual(['Table view', 'Card view', 'Columns', 'Filters', 'Sort', 'Select all', 'Deselect all']);
+    const sizes = await controls.evaluateAll(items => items.map(item => ({ y: item.getBoundingClientRect().y, width: item.getBoundingClientRect().width, font: getComputedStyle(item).fontSize })));
+    expect(Math.max(...sizes.map(item => item.y)) - Math.min(...sizes.map(item => item.y))).toBeLessThan(1);
+    expect(Math.max(...sizes.map(item => item.width)) - Math.min(...sizes.map(item => item.width))).toBeLessThan(1);
+    expect(sizes.every(item => item.font === '0px')).toBe(true);
+    for (const button of await page.locator('.lu-button:visible').all()) {
+        if (await button.evaluate(element => getComputedStyle(element).fontSize) !== '0px') continue;
+        const box = await button.boundingBox();
+        const icon = await button.locator('svg').boundingBox();
+        expect(Math.abs(box.x + box.width / 2 - icon.x - icon.width / 2)).toBeLessThan(1);
+        expect(Math.abs(box.y + box.height / 2 - icon.y - icon.height / 2)).toBeLessThan(1);
+    }
+}
+
+async function expectCardActionPosition(body, framework) {
+    for (const row of await body.locator('tr').all()) {
+        const card = await row.boundingBox();
+        const actions = row.locator(framework === 'bootstrap4' ? '.btn' : '.lu-button, .lu-email-toggle');
+        for (const action of await actions.all()) {
+            const box = await action.boundingBox();
+            expect(Math.abs(card.y + card.height - box.y - box.height - 17)).toBeLessThan(2);
+        }
+        if (framework !== 'bootstrap4') {
+            const first = await actions.first().boundingBox();
+            const last = await actions.last().boundingBox();
+            expect(Math.abs((first.x + last.x + last.width) / 2 - card.x - card.width / 2)).toBeLessThan(1);
+        }
+    }
+}
+
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
     test(`${framework}: card view grid, labels, and saved view choices`, async ({ page }) => {
         await page.goto(`/__browser/${framework}`);
@@ -617,11 +669,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(currentUser.getByRole('button', { name: /Delete/ })).toHaveCount(0);
         await expect(currentUser.locator('[data-lu-select]')).toHaveCount(0);
         await expect(currentUser.locator('[data-lu-selection-cell]')).toHaveCSS('position', 'absolute');
-        for (const [width, columns] of [[390, 1], [768, 2], [1025, 3], [1100, 3], [1600, 4]]) {
-            await page.setViewportSize({ width, height: 1000 });
-            expect(await body.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
-            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        }
+        await expectCardGrid(page, body);
         await setTheme(page, 'dark');
         const colors = await body.locator('tr').first().evaluate(element => ({
             card: getComputedStyle(element).backgroundColor,
@@ -631,51 +679,14 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         if (framework !== 'bootstrap4') {
             const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
             expect(result.violations).toEqual([]);
-        }
-        if (framework !== 'bootstrap4') {
-            for (const user of ['Alex Rivers', 'Morgan Hayes']) {
-                const row = body.locator('tr').filter({ hasText: user });
-                const actions = row.locator('.lu-button, .lu-email-toggle');
-                const widths = await actions.evaluateAll(items => items.map(item => item.getBoundingClientRect().width));
-                expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1);
-                for (const button of await actions.all()) {
-                    expect(await button.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
-                }
-            }
+            await expectEqualActionWidths(body);
         }
         await page.setViewportSize({ width: 390, height: 1000 });
-        const controls = page.locator('.lu-table-toolbar').locator(':scope > button, :scope > details > summary, :scope > .lu-mobile-sort');
-        expect(await controls.evaluateAll(items => items.map(item => item.getAttribute('aria-label') || item.querySelector('label')?.textContent.trim()))).toEqual(['Table view', 'Card view', 'Columns', 'Filters', 'Sort', 'Select all', 'Deselect all']);
-        const sizes = await controls.evaluateAll(items => items.map(item => ({ y: item.getBoundingClientRect().y, width: item.getBoundingClientRect().width, font: getComputedStyle(item).fontSize })));
-        expect(Math.max(...sizes.map(item => item.y)) - Math.min(...sizes.map(item => item.y))).toBeLessThan(1);
-        expect(Math.max(...sizes.map(item => item.width)) - Math.min(...sizes.map(item => item.width))).toBeLessThan(1);
-        expect(sizes.every(item => item.font === '0px')).toBe(true);
-        for (const button of await page.locator('.lu-button:visible').all()) {
-            if (await button.evaluate(element => getComputedStyle(element).fontSize) !== '0px') continue;
-            const box = await button.boundingBox();
-            const icon = await button.locator('svg').boundingBox();
-            expect(Math.abs(box.x + box.width / 2 - icon.x - icon.width / 2)).toBeLessThan(1);
-            expect(Math.abs(box.y + box.height / 2 - icon.y - icon.height / 2)).toBeLessThan(1);
-        }
+        await expectMobileListControls(page);
         const accessibility = await new AxeBuilder({ page }).include('[data-lu-table]').include('.lu-table-toolbar').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         expect(accessibility.violations).toEqual([]);
         await page.setViewportSize({ width: 768, height: 1000 });
-        for (const row of await body.locator('tr').all()) {
-            const card = await row.boundingBox();
-            for (const action of await row.locator(framework === 'bootstrap4' ? '.btn' : '.lu-button, .lu-email-toggle').all()) {
-                const box = await action.boundingBox();
-                expect(Math.abs(card.y + card.height - box.y - box.height - 17)).toBeLessThan(2);
-            }
-        }
-        if (framework !== 'bootstrap4') {
-            for (const row of await body.locator('tr').all()) {
-                const card = await row.boundingBox();
-                const actions = row.locator(framework === 'bootstrap4' ? '.btn' : '.lu-button, .lu-email-toggle');
-                const first = await actions.first().boundingBox();
-                const last = await actions.last().boundingBox();
-                expect(Math.abs((first.x + last.x + last.width) / 2 - card.x - card.width / 2)).toBeLessThan(1);
-            }
-        }
+        await expectCardActionPosition(body, framework);
         const avatarCell = body.locator('td:has(.lu-avatar)').first();
         if (framework === 'bootstrap5') {
             await expect(avatarCell).toHaveCSS('background-color', 'rgb(36, 88, 183)');

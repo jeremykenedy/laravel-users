@@ -111,6 +111,9 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | --- | --- | --- |
 | `laravelUsersBladeExtended` | `LARAVEL_USERS_LARAVEL_USERS_BLADE_EXTENDED` | `laravelusers::layouts.app` |
 | `middleware` | `LARAVEL_USERS_MIDDLEWARE` | `[]`; comma-separated middleware |
+| `impersonation.enabled` | `LARAVEL_USERS_IMPERSONATION_ENABLED` | `false` |
+| `impersonation.timeout` | `LARAVEL_USERS_IMPERSONATION_TIMEOUT` | `60`; minutes, bounded to 1 through 1,440 |
+| `impersonation.middleware` | `LARAVEL_USERS_IMPERSONATION_MIDDLEWARE` | `[]`; comma-separated middleware |
 | `frontend` | `LARAVEL_USERS_FRONTEND` | `bootstrap4` |
 | `theme` | `LARAVEL_USERS_THEME` | `light` |
 | `themeToggle` | `LARAVEL_USERS_THEME_TOGGLE` | `false` |

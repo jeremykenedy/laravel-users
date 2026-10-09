@@ -97,6 +97,7 @@ return [
     'access'        => is_array($access) ? $access : [],
     'impersonation' => [
         'enabled'    => env('LARAVEL_USERS_IMPERSONATION_ENABLED', false),
+        'timeout'    => env('LARAVEL_USERS_IMPERSONATION_TIMEOUT', 60),
         'middleware' => array_filter(array_map('trim', explode(',', env('LARAVEL_USERS_IMPERSONATION_MIDDLEWARE', '')))),
     ],
     'notifications' => [

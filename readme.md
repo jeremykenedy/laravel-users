@@ -18,9 +18,6 @@
 
 <p align="center">
     <a href="https://www.codefactor.io/repository/github/jeremykenedy/laravel-users"><img src="https://www.codefactor.io/repository/github/jeremykenedy/laravel-users/badge" alt="CodeFactor"></a>
-    <a href="https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/build-status/master"><img src="https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/build.png?b=master" alt="Scrutinizer Build Status"></a>
-    <a href="https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/?branch=master"><img src="https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality"></a>
-    <a href="https://scrutinizer-ci.com/code-intelligence"><img src="https://scrutinizer-ci.com/g/jeremykenedy/laravel-users/badges/code-intelligence.svg?b=master" alt="Code Intelligence Status"></a>
 </p>
 
 <p align="center">
@@ -51,15 +48,17 @@
 
 The package ships server-rendered Blade views. Bootstrap 4 remains the default for existing installations. Bootstrap 5 and Tailwind CSS are opt-in view styles. Changing CSS does not replace routes, models, application authentication, or custom views.
 
-| Application views | CSS framework | Status |
-| --- | --- | --- |
-| Blade | Bootstrap 4 | Supported and default |
-| Blade | Bootstrap 5 | Supported, opt-in |
-| Blade | Tailwind CSS | Supported, opt-in |
-| Livewire | Host application link/integration | No package-native Livewire screens |
-| Vue | Host application link/integration | No package-native Vue screens |
-| React | Host application link/integration | No package-native React screens |
-| Svelte | Host application link/integration | No package-native Svelte screens |
+| CSS framework | Blade | Livewire | Vue 3 | React | Svelte |
+| --- | --- | --- | --- | --- | --- |
+| Bootstrap 4 | Supported, default | Not bundled | Not bundled | Not bundled | Not bundled |
+| Bootstrap 5.3 | Supported, opt-in | Not bundled | Not bundled | Not bundled | Not bundled |
+| Tailwind CSS 4 | Supported, opt-in | Not bundled | Not bundled | Not bundled | Not bundled |
+| Materialize | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
+| Material Design 3 | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
+| Bulma | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
+| Foundation | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
+
+Livewire, Vue, React, and Svelte applications can link to the package's Blade routes. Native screens for those runtimes and the additional CSS frameworks are still pending. Unsupported selections are rejected before setup changes application files.
 
 The package's documented compatibility suite covers Laravel 8 through 13, with framework and PHP versions paired in the [CI matrix](.github/workflows/tests.yml). Older Laravel applications should use a package version compatible with their framework and PHP runtime. See [framework setup and commands](docs/commands.md).
 
@@ -89,7 +88,7 @@ The original publish command remains available:
 php artisan vendor:publish --tag=laravelusers
 ```
 
-The package also provides `php artisan laravelusers:publish` for the same package files, with `laravel-users:publish` as an alias. It publishes configuration, translations, and views while preserving existing host files. The bundled templates do not depend on Laravel Collective HTML. If you have custom published views, check them for their own form-builder calls before removing a host application's dependency.
+The package also provides `php artisan laravelusers:publish`, with `laravel-users:publish` as an alias. It publishes configuration, translations, views, and versioned assets in `public/vendor/laravelusers/` while preserving existing host files. Install and update also publish these assets. The bundled templates do not depend on Laravel Collective HTML. If you have custom published views, check them for their own form-builder calls before removing a host application's dependency.
 
 ## Quick Start
 
@@ -125,6 +124,7 @@ Vue, React, Svelte, and Livewire applications can link to the Blade routes, but 
 - Customize light and dark profile-card colors, gradient strength, notification style, and user account settings.
 - Add a signed-in account page with profile, avatar, appearance, email, password, and account-removal controls.
 - Use the theme toggle and user menu as standalone Blade components.
+- Impersonate another account with role-based authorization, expiring sessions, verified state, and an exit control when explicitly enabled.
 - Keep new account settings, cleanup, activity, and package-management features disabled unless explicitly enabled.
 
 See [configuration](docs/configuration.md) and the individual feature guides for defaults, requirements, and upgrade notes.
@@ -179,13 +179,13 @@ The package includes its modern CSS assets. Run `npm run build` only when changi
 | `laravelusers:install` | Configure the package and select optional integrations. |
 | `laravelusers:update` | Refresh view choices and optional integration setup while preserving config. |
 | `laravelusers:switch` | Apply explicit CSS, theme, view, avatar, role, or notification choices. |
-| `laravelusers:publish` | Publish package configuration, views, and translations; `laravel-users:publish` is an alias. |
+| `laravelusers:publish` | Publish configuration, views, translations and versioned public assets; `laravel-users:publish` is an alias. |
 | `laravelusers:setup-accounts` | Publish optional account, avatar, and appearance migrations; `--migrate` runs them. |
 | `laravelusers:setup-package` | Configure an installed Toast or roles package. |
 | `laravelusers:prune-deleted` | Permanently remove soft-deleted users when scheduled cleanup is enabled. |
 | `laravelusers:prune-account-links` | Remove expired account-link records. |
 
-All setup commands share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for install, update, and switch. `--no-interaction` uses current settings and does not prompt. `--force` backs up published views before replacement. The full option list, package publishing tags, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
+All setup commands share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for install, update, and switch. `--no-interaction` uses current settings and does not prompt. `--force` backs up published views before replacement. Setup commands publish versioned assets and register the impersonation-state guard in an existing host web routes file. The full option list, publishing safeguards, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
 
 ## Routes
 
@@ -262,14 +262,14 @@ These screenshots use sample accounts from the isolated preview application. The
   </tr>
 </table>
 
-
 ## Project Layout
 
 ```text
 src/
   Actions/                 Account, email, and user operations
   App/Http/                Controllers, middleware, and requests
-  Console/                 Artisan setup and maintenance commands
+  App/Console/Commands/    Install, update, switch and publish commands
+  Console/                 Compatible command classes and maintenance commands
   Support/                 Package integrations and configuration
   database/                Opt-in package migrations
   resources/views/         Blade screens, components, and email templates
@@ -289,6 +289,7 @@ All guides are available in the [`docs/` folder](docs/index.md):
 - [Configuration and environment variables](docs/configuration.md)
 - [Email templates, previews, expiration, and account recovery](docs/emails.md)
 - [Optional integrations](docs/integrations.md)
+- [User impersonation and session security](docs/impersonation.md)
 - [Standalone navigation components](docs/navigation-components.md)
 - [Roles, permissions, and middleware](docs/roles.md)
 - [Routes and authorization](docs/routes.md)

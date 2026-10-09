@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add versioned public assets to install, update, switch, and standalone publish commands, with staging, hash verification, publication locks, and a bundled fallback.
+- Use native Laravel Prompts for supported interactive environments while preserving current defaults and the older console fallback.
+- Protect impersonation on host web routes with encrypted session proofs, current authorization checks, configurable expiration, and session rotation.
+- Parse host route changes with PHP-Parser while preserving custom routes, comments, dynamic middleware, and rollback compatibility.
 - Add independent global and per-user dark-mode card colors, gradient switches and strength controls while preserving existing appearance defaults.
 - Fix settings overflow caused by hidden fieldset legends and link to Laravel queue, worker and cache setup instructions.
 

@@ -11,14 +11,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use jeremykenedy\laravelusers\Actions\BulkUsers;
 use jeremykenedy\laravelusers\Actions\CreateUser;
 use jeremykenedy\laravelusers\Actions\EmailUsers;
 use jeremykenedy\laravelusers\Actions\PreviewUserEmail;
 use jeremykenedy\laravelusers\Actions\SendGoodbye;
+use jeremykenedy\laravelusers\Actions\UpdateUser;
 use jeremykenedy\laravelusers\Actions\UpdateUserSettings;
 use jeremykenedy\laravelusers\App\Http\Middleware\UserAccessMiddleware;
 use jeremykenedy\laravelusers\App\Http\Requests\BulkUsersRequest;
@@ -26,7 +25,7 @@ use jeremykenedy\laravelusers\App\Http\Requests\CreateUserRequest;
 use jeremykenedy\laravelusers\App\Http\Requests\DeleteUserRequest;
 use jeremykenedy\laravelusers\App\Http\Requests\EmailUsersRequest;
 use jeremykenedy\laravelusers\App\Http\Requests\UpdateSettingsRequest;
-use jeremykenedy\laravelusers\Rules\PlainTextName;
+use jeremykenedy\laravelusers\App\Http\Requests\UpdateUserRequest;
 use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\AppearancePreferences;
 use jeremykenedy\laravelusers\Support\Avatar;
@@ -35,7 +34,6 @@ use jeremykenedy\laravelusers\Support\DeletedUsers;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
-use jeremykenedy\laravelusers\Support\PasswordRules;
 use jeremykenedy\laravelusers\Support\RoleAccess;
 use jeremykenedy\laravelusers\Support\UserAccess;
 use jeremykenedy\laravelusers\Support\UserActivity;
@@ -262,76 +260,18 @@ class UsersManagementController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(UpdateUserRequest $request, int $id, UpdateUser $update): RedirectResponse
     {
-        $userModel = config('laravelusers.defaultUserModel');
-        $user = $request->route()->getName() === 'users.deleted.update' ? (new DeletedUsers())->query()->findOrFail($id) : $userModel::findOrFail($id);
-        $emailCheck = ($request->input('email') !== '') && ($request->input('email') !== $user->email);
-        $passwordCheck = $request->filled('password');
-
-        $rules = [
-            'name' => ['required', 'string', 'max:255', new PlainTextName()],
-        ];
-
-        if ($emailCheck) {
-            $table = ($user->getConnectionName() ? $user->getConnectionName().'.' : '').$user->getTable();
-            $rules['email'] = ['required', 'email', 'max:255', Rule::unique($table)];
-        }
-
-        if ($passwordCheck) {
-            $rules['password'] = PasswordRules::validation();
-            $rules['password_confirmation'] = 'required|string|same:password';
-        }
-
-        if ($this->_rolesEnabled) {
-            $rules['role'] = ['required', function ($attribute, $value, $fail) {
-                foreach ((array) $value as $id) {
-                    if (!is_int($id) && !is_string($id)) {
-                        $fail(trans('laravelusers::ui.invalid_role'));
-                    }
-                }
-            }];
-        }
-
-        $validator = Validator::make($request->all(), array_merge($rules, UserPermissions::rules($user), AvatarPreferences::rules($user), AppearancePreferences::rules($user), AccountPreferences::rules($user)));
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput($request->except(['password', 'password_confirmation']));
-        }
-
-        $data = $validator->validated();
-        $user->getConnection()->transaction(function () use ($user, $data, $emailCheck, $passwordCheck) {
-            $user->name = strip_tags($data['name']);
-
-            if ($emailCheck) {
-                $user->email = $data['email'];
-            }
-
-            if ($passwordCheck) {
-                $user->password = Hash::make($data['password']);
-            }
-
-            if ($this->_rolesEnabled) {
-                UserRoles::assign($user, $data['role'], true);
-            }
-
-            if (UserPermissions::enabled($user) && (!empty($data['permissions_present']) || array_key_exists('permissions', $data))) {
-                UserPermissions::assign($user, $data['permissions'] ?? []);
-            }
-            $user->save();
-            AvatarPreferences::save($user, $data);
-            AppearancePreferences::save($user, $data);
-            AccountPreferences::save($user, $data);
-        });
+        $update->handle($request->target($id), $request->validated());
 
         return back()->with('success', trans('laravelusers::laravelusers.messages.update-user-success'));
     }
 
-    public function updateDeleted(Request $request, int $id): RedirectResponse
+    public function updateDeleted(UpdateUserRequest $request, int $id, UpdateUser $update): RedirectResponse
     {
         abort_unless(config('laravelusers.settings.enabled', false), 404);
 
-        return $this->update($request, $id);
+        return $this->update($request, $id, $update);
     }
 
     /**

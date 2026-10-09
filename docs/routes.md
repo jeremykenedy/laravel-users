@@ -19,6 +19,9 @@ Authentication alone does not make a user an administrator. Set host authorizati
 | POST | `/users/{id}/restore` | `users.restore` | Restore a soft-deleted user |
 | DELETE | `/users/{id}/force` | `users.force-destroy` | Permanently delete a soft-deleted user |
 | POST | `/users/bulk` | `users.bulk` | Apply an authorized bulk action |
+| POST | `/users/{id}/impersonate` | `users.impersonate` | Start authorized impersonation |
+| POST | `/users/impersonation/stop` | `users.impersonation.stop` | Restore the original signed-in account |
+| POST | `/users/settings/impersonation` | `users.settings.impersonation` | Enable or disable impersonation |
 | POST | `/search-users` | `search-users` | Search users |
 | POST | `/users/email` | `users.email` | Send an authorized email |
 | POST | `/users/email/preview` | `users.email.preview` | Preview email content |
@@ -41,4 +44,4 @@ The optional account page and settings endpoints return not found while their fe
 
 Search keeps its existing JSON response contract. Activity metadata is included only when requested by the bundled views. Login IP addresses are never added to search responses.
 
-See [configuration](configuration.md), [roles and permissions](roles.md), [settings and access rules](settings.md), [email authorization](emails.md), and [upgrade guidance](upgrading.md) before enabling optional routes.
+See [configuration](configuration.md), [roles and permissions](roles.md), [impersonation security](impersonation.md), [settings and access rules](settings.md), [email authorization](emails.md), and [upgrade guidance](upgrading.md) before enabling optional routes.

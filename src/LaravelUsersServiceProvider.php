@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Passwords\PasswordBrokerManager;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelUsersServiceProvider extends ServiceProvider
@@ -26,6 +27,9 @@ class LaravelUsersServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->callAfterResolving(Kernel::class, function ($kernel) {
+            $kernel->appendMiddlewareToGroup('web', App\Http\Middleware\VerifyImpersonationState::class);
+        });
         $this->configurePasswordExpiry();
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $settings = $this->app->make(Support\UserSettings::class);
@@ -37,7 +41,7 @@ class LaravelUsersServiceProvider extends ServiceProvider
         });
 
         if ($this->app->runningInConsole()) {
-            $this->commands([Console\InstallCommand::class, Console\UpdateCommand::class, Console\SwitchCommand::class, Console\PublishCommand::class, Console\PruneAccountLinksCommand::class, Console\SetupPackageCommand::class, Console\CleanupDeletedUsersCommand::class, Console\SetupAccountsCommand::class]);
+            $this->commands([App\Console\Commands\InstallCommand::class, App\Console\Commands\UpdateCommand::class, App\Console\Commands\SwitchCommand::class, App\Console\Commands\PublishCommand::class, Console\PruneAccountLinksCommand::class, Console\SetupPackageCommand::class, Console\CleanupDeletedUsersCommand::class, Console\SetupAccountsCommand::class]);
         }
 
         foreach ([Login::class, Authenticated::class, Logout::class] as $event) {

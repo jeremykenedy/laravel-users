@@ -4,6 +4,7 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
@@ -127,5 +128,27 @@ class GoodbyeTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_goodbye_links_respect_custom_and_nonexpiring_settings(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-08 12:00:00 UTC'));
+        (require dirname(__DIR__, 2).'/src/database/account-links/2026_10_08_000000_create_laravelusers_account_links_table.php')->up();
+        config(['laravelusers.emails.goodbye' => true, 'laravelusers.emails.goodbye_auto_send' => true, 'laravelusers.account_links.enabled' => true, 'laravelusers.emails.goodbye_restore' => true, 'laravelusers.emails.goodbye_duration' => 4, 'laravelusers.emails.goodbye_unit' => 'hours']);
+        foreach (['custom' => now()->addHours(4)->timestamp, 'never' => null] as $mode => $expiry) {
+            Notification::fake();
+            config(['laravelusers.emails.goodbye_expiry_mode' => $mode]);
+            $recipient = $this->user();
+            $this->delete('/users/'.$recipient->id)->assertRedirect('/users');
+            Notification::assertSentOnDemand(UserMessage::class, function ($notification) use ($expiry): bool {
+                $token = basename(parse_url($notification->accountLinks['restore'], PHP_URL_PATH));
+                $link = $this->app->make(AccountLinks::class)->inspect($token);
+                $this->assertNotNull($link);
+                $this->assertSame($expiry, $link->expires_at);
+                $this->assertSame($expiry, $notification->contents['linkExpiry'] === null ? null : Carbon::parse($notification->contents['linkExpiry'])->timestamp);
+
+                return true;
+            });
+        }
     }
 }

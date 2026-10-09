@@ -43,58 +43,93 @@ class ManagedPackages
         if (!isset(self::PACKAGES[$package]) || !in_array($action, ['install', 'remove'], true)) {
             $this->reject('Choose a supported package and operation.');
         }
-        $installed = $this->installed($package);
-        if ($action === 'install' && $installed) {
+        if ($action === 'install') {
+            $this->checkInstallation($package);
+        } else {
+            $this->checkRemoval($package);
+        }
+    }
+
+    private function checkInstallation(string $package): void
+    {
+        if ($this->installed($package)) {
             $this->reject('This package is already installed.');
         }
-        if ($action === 'remove' && !$installed) {
-            $this->reject('This package is not installed.');
-        }
-        if ($action === 'install' && $package !== 'toast' && ($this->installed('laravel-roles') || $this->installed('spatie'))) {
+        if ($package !== 'toast' && ($this->installed('laravel-roles') || $this->installed('spatie'))) {
             $this->reject('A roles package is already installed. Remove it and complete the application changes before installing another.');
         }
-        if ($package === 'toast' && $action === 'install' && (PHP_VERSION_ID < 80200 || version_compare(Application::VERSION, '10.0.0', '<'))) {
+        if ($package === 'toast' && (PHP_VERSION_ID < 80200 || version_compare(Application::VERSION, '10.0.0', '<'))) {
             $this->reject('Laravel Toast requires PHP 8.2 or newer and Laravel 10 or newer.');
         }
-        if ($action === 'remove' && $package !== 'toast') {
-            if (config('laravelusers.impersonation.enabled', false)) {
-                $this->reject('Removal is blocked while user impersonation is enabled. Disable impersonation before removing the roles package.');
-            }
-            $trait = $package === 'spatie' ? 'Spatie\\Permission\\Traits\\HasRoles' : 'jeremykenedy\\LaravelRoles\\Traits\\HasRoleAndPermission';
-            foreach (config('auth.providers', []) as $provider) {
-                $model = $provider['model'] ?? null;
-                if (is_string($model) && class_exists($model) && in_array($trait, class_uses_recursive($model), true)) {
-                    $this->reject('Removal is blocked: an authentication model still uses this package. Remove its trait and application references first.');
-                }
-            }
-            $model = config('laravelusers.defaultUserModel');
-            if ((is_string($model) && class_exists($model) && in_array($trait, class_uses_recursive($model), true)) || config('laravelusers.rolesEnabled')) {
-                $this->reject('Removal is blocked: Laravel Users still uses the roles integration. Disable it and remove the model trait and middleware references first.');
-            }
-            foreach (config('laravelusers.access', []) as $rule) {
-                if (($rule['mode'] ?? '') === 'restricted') {
-                    $this->reject('Removal is blocked: restricted access rules still depend on roles or permissions. Replace them with host authorization before removing the package.');
-                }
+    }
+
+    private function checkRemoval(string $package): void
+    {
+        if (!$this->installed($package)) {
+            $this->reject('This package is not installed.');
+        }
+        if ($package !== 'toast') {
+            $this->checkRoleRemoval($package);
+        }
+        $namespace = match ($package) {
+            'toast'  => 'Jeremykenedy\\LaravelToast\\',
+            'spatie' => 'Spatie\\Permission\\',
+            default  => 'jeremykenedy\\LaravelRoles\\',
+        };
+        $this->checkApplicationReferences($namespace);
+    }
+
+    private function checkRoleRemoval(string $package): void
+    {
+        if (config('laravelusers.impersonation.enabled', false)) {
+            $this->reject('Removal is blocked while user impersonation is enabled. Disable impersonation before removing the roles package.');
+        }
+        $trait = $package === 'spatie' ? 'Spatie\\Permission\\Traits\\HasRoles' : 'jeremykenedy\\LaravelRoles\\Traits\\HasRoleAndPermission';
+        foreach (config('auth.providers', []) as $provider) {
+            if ($this->modelUses($provider['model'] ?? null, $trait)) {
+                $this->reject('Removal is blocked: an authentication model still uses this package. Remove its trait and application references first.');
             }
         }
-        if ($action === 'remove') {
-            $namespace = $package === 'toast' ? 'Jeremykenedy\\LaravelToast\\' : ($package === 'spatie' ? 'Spatie\\Permission\\' : 'jeremykenedy\\LaravelRoles\\');
-            foreach (['app', 'routes', 'bootstrap', 'config'] as $directory) {
-                $path = base_path($directory);
-                if (!is_dir($path)) {
+        if ($this->modelUses(config('laravelusers.defaultUserModel'), $trait) || config('laravelusers.rolesEnabled')) {
+            $this->reject('Removal is blocked: Laravel Users still uses the roles integration. Disable it and remove the model trait and middleware references first.');
+        }
+        foreach (config('laravelusers.access', []) as $rule) {
+            if (($rule['mode'] ?? '') === 'restricted') {
+                $this->reject('Removal is blocked: restricted access rules still depend on roles or permissions. Replace them with host authorization before removing the package.');
+            }
+        }
+    }
+
+    private function modelUses(mixed $model, string $trait): bool
+    {
+        return is_string($model) && class_exists($model) && in_array($trait, class_uses_recursive($model), true);
+    }
+
+    private function checkApplicationReferences(string $namespace): void
+    {
+        foreach (['app', 'routes', 'bootstrap', 'config'] as $directory) {
+            $path = base_path($directory);
+            if (!is_dir($path)) {
+                continue;
+            }
+            foreach (File::allFiles($path) as $file) {
+                if (!$this->shouldCheckFile($file)) {
                     continue;
                 }
-                foreach (File::allFiles($path) as $file) {
-                    if ($file->getExtension() !== 'php' || str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR) || in_array($file->getFilename(), ['roles.php', 'permission.php', 'laraveltoast.php'], true) || str_starts_with($file->getFilename(), 'laravelusers')) {
-                        continue;
-                    }
-                    $contents = $file->getContents();
-                    if (stripos($contents, $namespace) !== false || stripos($contents, str_replace('\\', '\\\\', $namespace)) !== false) {
-                        $this->reject('Removal is blocked: application code still references this package in '.$file->getRelativePathname().'. Remove those references first.');
-                    }
+                $contents = $file->getContents();
+                if (stripos($contents, $namespace) !== false || stripos($contents, str_replace('\\', '\\\\', $namespace)) !== false) {
+                    $this->reject('Removal is blocked: application code still references this package in '.$file->getRelativePathname().'. Remove those references first.');
                 }
             }
         }
+    }
+
+    private function shouldCheckFile(\SplFileInfo $file): bool
+    {
+        return $file->getExtension() === 'php'
+            && !str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR)
+            && !in_array($file->getFilename(), ['roles.php', 'permission.php', 'laraveltoast.php'], true)
+            && !str_starts_with($file->getFilename(), 'laravelusers');
     }
 
     public function queueReady(): bool

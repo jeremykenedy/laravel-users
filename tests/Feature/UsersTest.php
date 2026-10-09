@@ -66,6 +66,32 @@ class UsersTest extends TestCase
         $this->assertNull($other->fresh());
     }
 
+    public function test_failed_updates_keep_passwords_out_of_old_input_and_leave_the_account_unchanged(): void
+    {
+        $user = $this->user();
+        $this->actingAs($user);
+        $this->from('/users/'.$user->id.'/edit')->put('/users/'.$user->id, [
+            'name' => 'Changed', 'email' => 'invalid', 'password' => 'newpassword', 'password_confirmation' => 'different',
+        ])->assertSessionHasErrors(['email', 'password', 'password_confirmation']);
+        $this->assertSame('Changed', session()->getOldInput('name'));
+        $this->assertNull(session()->getOldInput('password'));
+        $this->assertNull(session()->getOldInput('password_confirmation'));
+        $this->assertSame($user->name, $user->fresh()->name);
+        $this->assertSame($user->email, $user->fresh()->email);
+        $this->assertSame($user->password, $user->fresh()->password);
+    }
+
+    public function test_updates_cannot_write_unvalidated_model_attributes(): void
+    {
+        $user = $this->user();
+        $this->actingAs($user)->put('/users/'.$user->id, [
+            'name' => 'Changed', 'email' => $user->email, 'id' => 999, 'email_verified_at' => now()->toIso8601String(),
+        ])->assertSessionHas('success')->assertSessionHasNoErrors();
+        $this->assertSame('Changed', $user->fresh()->name);
+        $this->assertSame($user->id, $user->fresh()->id);
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
     public function test_auth_can_be_disabled_for_crud_but_search_keeps_its_existing_auth_requirement(): void
     {
         config(['laravelusers.authEnabled' => false]);
