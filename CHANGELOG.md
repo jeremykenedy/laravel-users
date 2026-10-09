@@ -45,6 +45,8 @@ Planned release date: **2026-10-09**. These notes describe the prepared release;
 - Recheck permissions, roles, levels, and configured middleware before queued dependency changes and during impersonation. Invalidate impersonation when the actor's credentials change.
 - Reject unauthorized goodbye-template overrides while retaining explicitly configured automatic notices; validate malformed current passwords before account changes.
 - Preserve host routes, custom configuration, published templates, and unrelated dependencies during setup; verify Composer metadata before reporting completion.
+- Recover package status polling from temporary Composer dependency-discovery errors and show the current completion state after the automatic refresh.
+- Persist explicit role selections over stale role environment overrides while preserving unrelated values, private file permissions, and environment-file symlinks. Default and `keep` selections leave the environment unchanged.
 - Preserve unsaved email edits when returning from preview, clear closed compositions, maintain search focus after dialogs, and apply account gradient highlights when saved.
 
 <a id="v5-0-0"></a>

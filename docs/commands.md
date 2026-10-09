@@ -68,7 +68,9 @@ See [roles and permissions](roles.md) for traits, middleware, migrations, guards
 | `--with=` | Print setup instructions for optional UI Kit, Toast, Darkmode Toggle, IP Capture, or Seedster. Repeat as needed. |
 | `--no-interaction` | Keep current choices or use explicit flags, with no prompts. |
 
-CSS, runtime and theme selections live in `config/laravelusers-ui.php`, using `LARAVEL_USERS_FRONTEND`, `LARAVEL_USERS_RUNTIME` and `LARAVEL_USERS_THEME`. The original `frontend` config key continues to select CSS; `runtime` selects the screen implementation. Role selections use `config/laravelusers-roles.php` only when explicitly changed. These files retain environment fallbacks. Avatar choices use `laravelusers-avatar.php`; notification defaults use `laravelusers-notifications.php`. Environment variables take precedence over command selections. Clear and rebuild configuration caches during deployment.
+CSS, runtime and theme selections live in `config/laravelusers-ui.php`, using `LARAVEL_USERS_FRONTEND`, `LARAVEL_USERS_RUNTIME` and `LARAVEL_USERS_THEME`. The original `frontend` config key continues to select CSS; `runtime` selects the screen implementation. Role selections use `config/laravelusers-roles.php` only when explicitly changed. These files retain environment fallbacks. Avatar choices use `laravelusers-avatar.php`; notification defaults use `laravelusers-notifications.php`. Environment variables take precedence over the saved configuration.
+
+An explicit successful role selection also updates its matching values in an existing `.env`, so a previous opt-out cannot silently override the selected integration. Unrelated values, file permissions, and symlinks are preserved. Default and `--roles=keep` selections leave `.env` unchanged; `--roles=none` explicitly disables the integration. The command does not modify host user models or assign administrator access. Clear and rebuild configuration caches during deployment.
 
 ## Publishing
 
