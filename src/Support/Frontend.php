@@ -88,17 +88,18 @@ class Frontend
         $prefix = $setting === 'editCardColor' ? 'editCard' : 'profileCard';
         $color = ($dark ? config('laravelusers.'.$prefix.'DarkColor') : null) ?? config('laravelusers.'.$setting, $default);
         $strength = ($dark ? config('laravelusers.'.$prefix.'DarkGradientStrength') : null) ?? config('laravelusers.'.$prefix.'GradientStrength', 50);
+        $highlight = ($dark ? config('laravelusers.'.$prefix.'DarkGradientHighlightColor') : null) ?? config('laravelusers.'.$prefix.'GradientHighlightColor', '#ffffff');
 
-        return self::gradientColors(self::colors($color, $default), $strength);
+        return self::gradientColors(self::colors($color, $default), $strength, $highlight);
     }
 
-    public static function gradientColors(array $colors, mixed $strength): array
+    public static function gradientColors(array $colors, mixed $strength, mixed $highlight = '#ffffff'): array
     {
         $strength = max(0, min(100, (int) $strength));
         $opacity = $strength / 50;
         $shade = substr($colors['shade'], 0, 7).sprintf('%02x', min(255, (int) round(hexdec(substr($colors['shade'], 7)) * $opacity)));
 
-        return array_replace($colors, ['shade' => $shade, 'highlight' => '#ffffff'.sprintf('%02x', (int) round(72 * $opacity)), 'strength' => $strength]);
+        return array_replace($colors, ['shade' => $shade, 'highlight' => self::colors($highlight, '#ffffff')['base'].sprintf('%02x', (int) round(72 * $opacity)), 'strength' => $strength]);
     }
 
     public static function colors(mixed $color, string $default = '#2458b7'): array

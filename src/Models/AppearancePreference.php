@@ -18,7 +18,7 @@ class AppearancePreference extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['user_key', 'color', 'gradient', 'gradient_strength', 'dark_color', 'dark_gradient', 'dark_gradient_strength'];
+    protected $fillable = ['user_key', 'color', 'gradient', 'gradient_strength', 'dark_color', 'dark_gradient', 'dark_gradient_strength', 'gradient_highlight_color', 'dark_gradient_highlight_color'];
 
     protected $casts = ['gradient' => 'boolean', 'gradient_strength' => 'integer', 'dark_gradient' => 'boolean', 'dark_gradient_strength' => 'integer'];
 }

@@ -37,6 +37,9 @@ class AppearancePreferences
                     $fail(trans('laravelusers::ui.appearance_migration_required'));
                 }
             }];
+            if ($available && self::highlightAvailable($user)) {
+                $rules['user_card'.$mode.'_gradient_highlight_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'];
+            }
         }
 
         return $rules;
@@ -73,6 +76,12 @@ class AppearancePreferences
         if (self::darkAvailable($user)) {
             $fields += ['dark_color' => 'user_card_dark_color', 'dark_gradient' => 'user_card_dark_gradient', 'dark_gradient_strength' => 'user_card_dark_gradient_strength'];
         }
+        if (self::highlightAvailable($user)) {
+            $fields['gradient_highlight_color'] = 'user_card_gradient_highlight_color';
+            if (self::darkAvailable($user)) {
+                $fields['dark_gradient_highlight_color'] = 'user_card_dark_gradient_highlight_color';
+            }
+        }
 
         return $fields;
     }
@@ -91,7 +100,7 @@ class AppearancePreferences
         $values = [];
         foreach (self::query($model)->whereKey(array_keys($keys))->get() as $row) {
             $values[$keys[$row->user_key]] = ['color' => $row->color, 'gradient' => $row->gradient];
-            foreach (['gradient_strength' => 'strength', 'dark_color' => 'dark_color', 'dark_gradient' => 'dark_gradient', 'dark_gradient_strength' => 'dark_strength'] as $column => $field) {
+            foreach (['gradient_strength' => 'strength', 'dark_color' => 'dark_color', 'dark_gradient' => 'dark_gradient', 'dark_gradient_strength' => 'dark_strength', 'gradient_highlight_color' => 'highlight_color', 'dark_gradient_highlight_color' => 'dark_highlight_color'] as $column => $field) {
                 if (array_key_exists($column, $row->getAttributes()) && $row->$column !== null) {
                     $values[$keys[$row->user_key]][$field] = $row->$column;
                 }
@@ -103,15 +112,15 @@ class AppearancePreferences
 
     public static function formData(Model $user): array
     {
-        return ['appearanceEnabled' => (config('laravelusers.appearance.per_user', false) || self::available($user)) && UserAccess::allows('edit_user_appearance'), 'appearanceAvailable' => self::available($user), 'appearanceStrengthAvailable' => self::strengthAvailable($user), 'appearanceDarkAvailable' => self::darkAvailable($user), 'appearancePreference' => self::listing([$user])[$user->getKey()] ?? []];
+        return ['appearanceEnabled' => (config('laravelusers.appearance.per_user', false) || self::available($user)) && UserAccess::allows('edit_user_appearance'), 'appearanceAvailable' => self::available($user), 'appearanceStrengthAvailable' => self::strengthAvailable($user), 'appearanceDarkAvailable' => self::darkAvailable($user), 'appearanceHighlightAvailable' => self::highlightAvailable($user), 'appearancePreference' => self::listing([$user])[$user->getKey()] ?? []];
     }
 
     public static function colors(iterable $users): array
     {
         $colors = [];
         foreach (self::listing($users) as $id => $values) {
-            $light = Frontend::gradientColors(Frontend::colors($values['color'] ?? config('laravelusers.profileCardColor', '#2458b7')), $values['strength'] ?? config('laravelusers.profileCardGradientStrength', 50)) + ['gradient' => (bool) ($values['gradient'] ?? config('laravelusers.profileCardGradient', true))];
-            $dark = Frontend::gradientColors(Frontend::colors($values['dark_color'] ?? config('laravelusers.profileCardDarkColor') ?? $light['base']), $values['dark_strength'] ?? config('laravelusers.profileCardDarkGradientStrength') ?? $light['strength']) + ['gradient' => (bool) ($values['dark_gradient'] ?? config('laravelusers.profileCardDarkGradient') ?? $light['gradient'])];
+            $light = Frontend::gradientColors(Frontend::colors($values['color'] ?? config('laravelusers.profileCardColor', '#2458b7')), $values['strength'] ?? config('laravelusers.profileCardGradientStrength', 50), $values['highlight_color'] ?? config('laravelusers.profileCardGradientHighlightColor', '#ffffff')) + ['gradient' => (bool) ($values['gradient'] ?? config('laravelusers.profileCardGradient', true))];
+            $dark = Frontend::gradientColors(Frontend::colors($values['dark_color'] ?? config('laravelusers.profileCardDarkColor') ?? $light['base']), $values['dark_strength'] ?? config('laravelusers.profileCardDarkGradientStrength') ?? $light['strength'], $values['dark_highlight_color'] ?? config('laravelusers.profileCardDarkGradientHighlightColor') ?? substr($light['highlight'], 0, 7)) + ['gradient' => (bool) ($values['dark_gradient'] ?? config('laravelusers.profileCardDarkGradient') ?? $light['gradient'])];
             $colors[$id] = $light + ['dark' => $dark];
         }
 
@@ -138,5 +147,10 @@ class AppearancePreferences
     public static function strengthAvailable(Model $user): bool
     {
         return self::available($user) && $user->getConnection()->getSchemaBuilder()->hasColumn((new AppearancePreference())->getTable(), 'gradient_strength');
+    }
+
+    public static function highlightAvailable(Model $user): bool
+    {
+        return self::available($user) && $user->getConnection()->getSchemaBuilder()->hasColumns((new AppearancePreference())->getTable(), ['gradient_highlight_color', 'dark_gradient_highlight_color']);
     }
 }

@@ -8,7 +8,7 @@ use jeremykenedy\laravelusers\Models\UserSetting;
 
 class UserSettings
 {
-    public const APPEARANCE = ['avatar.source', 'profileCardColor', 'editCardColor', 'profileCardGradient', 'profileCardGradientStrength', 'editCardGradient', 'editCardGradientStrength', 'profileCardDarkColor', 'profileCardDarkGradient', 'profileCardDarkGradientStrength', 'editCardDarkColor', 'editCardDarkGradient', 'editCardDarkGradientStrength'];
+    public const APPEARANCE = ['avatar.source', 'profileCardColor', 'editCardColor', 'profileCardGradient', 'profileCardGradientStrength', 'profileCardGradientHighlightColor', 'editCardGradient', 'editCardGradientStrength', 'editCardGradientHighlightColor', 'profileCardDarkColor', 'profileCardDarkGradient', 'profileCardDarkGradientStrength', 'profileCardDarkGradientHighlightColor', 'editCardDarkColor', 'editCardDarkGradient', 'editCardDarkGradientStrength', 'editCardDarkGradientHighlightColor', 'showBreadcrumbs'];
 
     public function model(): UserSetting
     {
@@ -92,8 +92,9 @@ class UserSettings
 
     private function loadGlobal(array $values): void
     {
+        ToastSettings::apply($values['toast'] ?? []);
         $keys = array_merge(self::APPEARANCE, ['notifications.driver', 'notifications.dismissible', 'access', 'impersonation.enabled']);
-        $booleans = ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'notifications.dismissible', 'impersonation.enabled'];
+        $booleans = ['profileCardGradient', 'editCardGradient', 'profileCardDarkGradient', 'editCardDarkGradient', 'showBreadcrumbs', 'notifications.dismissible', 'impersonation.enabled'];
         foreach ($values as $key => $value) {
             if (in_array($key, $keys, true)) {
                 config(['laravelusers.'.$key => $value !== null && in_array($key, $booleans, true) ? (bool) $value : $value]);
