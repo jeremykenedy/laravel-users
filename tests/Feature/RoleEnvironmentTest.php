@@ -33,7 +33,7 @@ class RoleEnvironmentTest extends TestCase
         file_put_contents($path, "APP_NAME='Preserved host'\nLARAVEL_USERS_ROLES_ENABLED=false\nLARAVEL_USERS_ROLE_MODEL='Host\\OldRole'\nLARAVEL_USERS_ROLES_MIDDLWARE_ENABLED=false\nLARAVEL_USERS_ROLES_MIDDLWARE='old-role:admin'\n");
         chmod($path, 0600);
         $settings = ['rolesEnabled' => true, 'roleModel' => 'Host\\SelectedRole', 'rolesMiddlwareEnabled' => true, 'rolesMiddlware' => 'role:Administrator'];
-        $this->mock(RolesSetup::class)->shouldReceive('configure')->once()->andReturn($settings);
+        $this->mock(RolesSetup::class)->shouldReceive('configure')->twice()->andReturn($settings);
 
         $this->artisan('laravelusers:update', ['--roles' => 'spatie', '--no-interaction' => true])->assertExitCode(0);
 
@@ -43,7 +43,51 @@ class RoleEnvironmentTest extends TestCase
         $this->assertSame('true', $values['LARAVEL_USERS_ROLES_MIDDLWARE_ENABLED']);
         $this->assertSame($settings['rolesMiddlware'], $values['LARAVEL_USERS_ROLES_MIDDLWARE']);
         $this->assertSame('Preserved host', $values['APP_NAME']);
+        clearstatcache(true, $path);
         $this->assertSame(0600, fileperms($path) & 0777);
+
+        $target = $this->directory.'/.protected-environment';
+        rename($path, $target);
+        symlink($target, $path);
+        file_put_contents($target, "APP_NAME='Preserved host'\nLARAVEL_USERS_ROLES_ENABLED=false\n");
+
+        $this->artisan('laravelusers:update', ['--roles' => 'spatie', '--no-interaction' => true])->assertExitCode(0);
+
+        clearstatcache(true, $target);
+        $this->assertTrue(is_link($path));
+        $this->assertSame(realpath($target), realpath($path));
+        $this->assertSame('true', Dotenv::parse(file_get_contents($target))['LARAVEL_USERS_ROLES_ENABLED']);
+        $this->assertSame(0600, fileperms($target) & 0777);
+        $this->assertSame([], glob($this->directory.'/.laravelusers-env-*'));
+    }
+
+    public function test_failed_environment_replacement_keeps_the_original_and_removes_the_private_temporary_file(): void
+    {
+        $path = $this->app->environmentFilePath();
+        $contents = "APP_KEY=private-host-secret\nLARAVEL_USERS_ROLES_ENABLED=false\n";
+        file_put_contents($path, $contents);
+        chmod($path, 0600);
+        $this->mock(RolesSetup::class)->shouldReceive('configure')->once()->andReturn(['rolesEnabled' => true]);
+        $files = \Mockery::mock(Filesystem::class)->makePartial();
+        $temporary = \Mockery::on(fn ($name) => str_starts_with($name, realpath($this->directory).'/.laravelusers-env-'));
+        $files->shouldReceive('put')->once()->with($temporary, \Mockery::type('string'))->andReturnUsing(function ($name, $updated): int {
+            clearstatcache(true, $name);
+            $this->assertSame(0600, fileperms($name) & 0777);
+
+            return file_put_contents($name, $updated);
+        });
+        $files->shouldReceive('move')->once()->with($temporary, realpath($path))->andReturn(false);
+        $this->app->instance(Filesystem::class, $files);
+
+        $this->artisan('laravelusers:update', ['--roles' => 'spatie', '--no-interaction' => true])
+            ->expectsOutput('Unable to update the environment file. Check its file and directory permissions, then retry.')
+            ->assertExitCode(1);
+
+        clearstatcache(true, $path);
+        $this->assertSame($contents, file_get_contents($path));
+        $this->assertSame(0600, fileperms($path) & 0777);
+        $this->assertSame([], glob($this->directory.'/.laravelusers-env-*'));
+        $this->assertFileDoesNotExist(config_path('laravelusers-roles.php'));
     }
 
     public function test_default_and_keep_leave_all_environment_values_unchanged(): void

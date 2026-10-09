@@ -19,6 +19,7 @@ use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Support\ToastSetup;
 use jeremykenedy\laravelusers\Support\UserNotifications;
+use RuntimeException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
@@ -251,7 +252,34 @@ class InstallCommand extends Command
             $entry = $name.'='.$literal.PHP_EOL;
             $contents = preg_match($pattern, $contents) ? preg_replace_callback($pattern, fn () => $entry, $contents) : rtrim($contents, "\r\n").PHP_EOL.$entry;
         }
-        $files->replace($path, $contents, fileperms($path) & 0777);
+        $this->replaceEnvironment($files, $path, $contents);
+    }
+
+    private function replaceEnvironment(Filesystem $files, string $path, string $contents): void
+    {
+        clearstatcache(true, $path);
+        $path = realpath($path) ?: $path;
+        $temporary = null;
+        $message = 'Unable to update the environment file. Check its file and directory permissions, then retry.';
+
+        try {
+            $mode = @fileperms($path);
+            $temporary = @tempnam(dirname($path), '.laravelusers-env-');
+            if ($mode === false || $temporary === false || dirname($temporary) !== dirname($path)
+                || !@chmod($temporary, $mode & 0777)
+                || @$files->put($temporary, $contents) !== strlen($contents)
+                || !@$files->move($temporary, $path)) {
+                throw new RuntimeException($message);
+            }
+        } catch (Throwable $exception) {
+            $this->error($message);
+
+            throw new RuntimeException($message, 0, $exception);
+        } finally {
+            if (is_string($temporary) && is_file($temporary)) {
+                @unlink($temporary);
+            }
+        }
     }
 
     private function frontendOptionsValid(): bool
