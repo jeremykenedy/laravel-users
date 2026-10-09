@@ -25,14 +25,14 @@ class NativePageData
         'settings'      => 'settings',
     ];
 
-    public function __construct(private Avatar $avatars, private UserActivity $activity, private DeletedUsers $deleted, private ImpersonationSession $impersonation)
+    public function __construct(private Avatar $avatars, private UserActivity $activity, private ImpersonationSession $impersonation)
     {
     }
 
     public function forView(string $view, array $data, Request $request): array
     {
         $screen = $this->screen($view);
-        $public = $screen === 'account-link';
+        $public = in_array($screen, ['account-link', 'confirm-email'], true);
         $capabilities = $public ? [] : array_combine(UserAccess::ACTIONS, array_map(fn ($action) => UserAccess::allows($action), UserAccess::ACTIONS));
         if (!UserAccess::canImpersonate()) {
             unset($capabilities['impersonate_users']);
@@ -43,7 +43,7 @@ class NativePageData
             'framework'    => Frontend::framework(),
             'theme'        => Frontend::theme(),
             'csrf'         => $request->hasSession() ? $request->session()->token() : null,
-            'urls'         => $this->urls($public),
+            'urls'         => $this->urls($public, $request, $screen),
             'features'     => $this->features($screen),
             'capabilities' => $capabilities,
             'labels'       => $this->labels(),
@@ -68,12 +68,22 @@ class NativePageData
         }
         if (in_array($screen, ['users', 'deleted-users', 'show-user'], true)) {
             $page['forms'] += $this->emailForms($screen === 'deleted-users', $request);
-            $page['forms']['delete-user'] = $this->deleteForm($request);
-            $page['forms']['restore-user'] = $this->form('restore-user', __('laravelusers::ui.restore'), null, 'POST', [], $request);
-            $page['forms']['force-delete-user'] = $this->form('force-delete-user', __('laravelusers::ui.permanently_delete'), null, 'DELETE', [], $request) + ['danger' => true, 'confirm' => __('laravelusers::ui.confirm_bulk')];
             $users = $page['data']['users'] ?? [$page['data']['user'] ?? []];
-            if (collect($users)->contains(fn ($user) => in_array('impersonate', array_column($user['actions'] ?? [], 'name'), true))) {
+            $actions = collect($users)->flatMap(fn ($user) => array_column($user['actions'] ?? [], 'name'))->all();
+            if (in_array('delete', $actions, true)) {
+                $page['forms']['delete-user'] = $this->deleteForm($request);
+            }
+            if (in_array('restore', $actions, true)) {
+                $page['forms']['restore-user'] = $this->form('restore-user', __('laravelusers::ui.restore'), null, 'POST', [], $request);
+                $page['forms']['restore-user']['submit'] = __('laravelusers::ui.restore');
+            }
+            if (in_array('force-delete', $actions, true)) {
+                $page['forms']['force-delete-user'] = $this->form('force-delete-user', __('laravelusers::ui.permanently_delete'), null, 'DELETE', [], $request) + ['danger' => true, 'confirm' => __('laravelusers::ui.confirm_bulk')];
+                $page['forms']['force-delete-user']['submit'] = __('laravelusers::ui.permanently_delete');
+            }
+            if (in_array('impersonate', $actions, true)) {
                 $page['forms']['impersonate-user'] = $this->form('impersonate-user', __('laravelusers::ui.impersonation_target'), null, 'POST', [], $request);
+                $page['forms']['impersonate-user']['submit'] = __('laravelusers::ui.confirm');
             }
         }
 
@@ -108,9 +118,32 @@ class NativePageData
         };
     }
 
-    private function urls(bool $public): array
+    private function urls(bool $public, Request $request, string $screen): array
     {
-        $names = $public ? ['login' => 'login'] : ['users' => 'users', 'deleted' => 'users.deleted', 'create' => 'users.create', 'settings' => 'users.settings', 'account' => 'users.account', 'search' => 'search-users', 'email' => 'users.email', 'email_preview' => 'users.email.preview', 'bulk' => 'users.bulk', 'logout' => 'logout'];
+        if ($public) {
+            return Route::has('login') ? ['login' => route('login')] : [];
+        }
+        $names = [];
+        foreach (['users' => ['view_users', 'users', true], 'deleted' => ['view_deleted', 'users.deleted', config('laravelusers.softDeletedEnabled', false)], 'create' => ['create_users', 'users.create', true], 'settings' => ['edit_settings', 'users.settings', config('laravelusers.settings.enabled', false)], 'search' => ['view_users', 'search-users', config('laravelusers.enableSearchUsers', true)]] as $key => [$ability, $route, $enabled]) {
+            if ($enabled && UserAccess::allows($ability)) {
+                $names[$key] = $route;
+            }
+        }
+        if ($request->user() instanceof Model) {
+            $names['logout'] = 'logout';
+            if (AccountPreferences::enabled($request->user())) {
+                $names['account'] = 'users.account';
+            }
+        }
+        if ($this->emailActions($screen === 'deleted-users')) {
+            $names['email'] = 'users.email';
+            if (config('laravelusers.emails.preview', true)) {
+                $names['email_preview'] = 'users.email.preview';
+            }
+        }
+        if (config('laravelusers.bulkActions', false) && UserAccess::selectable($screen === 'deleted-users')) {
+            $names['bulk'] = 'users.bulk';
+        }
 
         return array_map(fn ($name) => Route::has($name) ? route($name) : null, $names);
     }
@@ -202,13 +235,13 @@ class NativePageData
         $page['data']['pagination'] = $users instanceof LengthAwarePaginator ? ['enabled' => true, 'current' => $users->currentPage(), 'last' => $users->lastPage(), 'total' => $users->total(), 'from' => $users->firstItem(), 'to' => $users->lastItem(), 'previous' => $users->previousPageUrl(), 'next' => $users->nextPageUrl()] : ['enabled' => false, 'total' => count($models), 'from' => count($models) ? 1 : 0, 'to' => count($models), 'previous' => null, 'next' => null];
         $page['data']['deleted_user'] = $deleted;
         foreach ($deleted ? ['restore' => 'restore_users', 'force-delete' => 'force_delete'] : ['delete' => 'delete_users'] as $action => $ability) {
-            if (UserAccess::allows($ability)) {
+            if ($page['features']['bulk'] && UserAccess::allows($ability)) {
                 $id = 'bulk-'.$action;
                 $page['features']['bulk_actions'][] = ['name' => $action, 'label' => __('laravelusers::ui.'.($action === 'force-delete' ? 'permanently_delete' : $action)), 'form' => $id];
                 $page['forms'][$id] = $this->form($id, __('laravelusers::ui.bulk_actions'), route('users.bulk'), 'POST', [$this->field('action', '', 'hidden', str_replace('-', '_', $action)), $this->field('ids', '', 'hidden', [], ['multiple' => true])], $request) + ['confirm' => __('laravelusers::ui.confirm_bulk'), 'danger' => $action !== 'restore'];
             }
         }
-        if (config('laravelusers.emails.bulk', true)) {
+        if ($page['features']['bulk'] && config('laravelusers.emails.bulk', true)) {
             foreach ($this->emailActions($deleted) as $action) {
                 $page['features']['bulk_actions'][] = $action;
             }
@@ -474,7 +507,10 @@ class NativePageData
             }
         }
 
-        return $this->form('delete-user', __('laravelusers::ui.delete'), null, 'DELETE', $fields, $request) + ['dialog' => true, 'danger' => true, 'confirm' => config('laravelusers.confirmDelete', true) ? __('laravelusers::ui.confirm_bulk') : null];
+        $form = $this->form('delete-user', __('laravelusers::ui.delete'), null, 'DELETE', $fields, $request) + ['dialog' => true, 'danger' => true, 'confirm' => config('laravelusers.confirmDelete', true) ? __('laravelusers::ui.confirm_bulk') : null];
+        $form['submit'] = __('laravelusers::ui.delete');
+
+        return $form;
     }
 
     private function settings(array $page, array $data, Request $request): array

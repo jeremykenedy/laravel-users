@@ -66,6 +66,26 @@ class NativePageDataTest extends TestCase
         $this->assertArrayNotHasKey('email-message', $page['forms']);
         $this->assertNotContains(route('users.account'), array_column($page['data']['navigation'], 'url'));
         $this->assertNotContains(route('users.settings'), array_column($page['data']['navigation'], 'url'));
+        $this->assertArrayNotHasKey('email', $page['urls']);
+        $this->assertArrayNotHasKey('email_preview', $page['urls']);
+        $this->assertArrayNotHasKey('account', $page['urls']);
+        $this->assertArrayNotHasKey('settings', $page['urls']);
+        $this->assertArrayNotHasKey('restore-user', $page['forms']);
+        $this->assertArrayNotHasKey('force-delete-user', $page['forms']);
+    }
+
+    public function test_denied_management_actions_have_no_native_forms_or_urls(): void
+    {
+        $actor = $this->user();
+        $target = $this->user();
+        $this->actingAs($actor);
+        config(['laravelusers.settings.enabled' => true, 'laravelusers.access.create_users.mode' => 'deny', 'laravelusers.access.delete_users.mode' => 'deny', 'laravelusers.emails.enabled' => false, 'laravelusers.bulkActions' => false]);
+        $page = $this->page('laravelusers::modern.show-users', ['users' => collect([$target])]);
+
+        $this->assertArrayNotHasKey('create', $page['urls']);
+        $this->assertArrayNotHasKey('bulk', $page['urls']);
+        $this->assertArrayNotHasKey('delete-user', $page['forms']);
+        $this->assertSame([], $page['features']['bulk_actions']);
     }
 
     public function test_settings_forms_keep_nested_names_and_typed_security_confirmations(): void
@@ -99,6 +119,12 @@ class NativePageDataTest extends TestCase
         $this->assertSame([], $confirmation['data']['navigation']);
         $this->assertSame(route('users.account-link.confirm', ['token' => 'one-time-link']), $confirmation['forms']['confirmation']['action']);
         $this->assertStringNotContainsString('private-hash', json_encode($confirmation));
+
+        $email = $this->page('laravelusers::account.confirm-email', ['change' => (object) ['token_hash' => 'private-hash'], 'token' => 'email-token']);
+        $this->assertSame([], $email['data']['navigation']);
+        $this->assertSame([], $email['capabilities']);
+        $this->assertSame(['login'], array_keys($email['urls']));
+        $this->assertArrayNotHasKey('current_user', $email['data']);
     }
 
     public function test_custom_application_views_are_not_reinterpreted_as_native_screens(): void
