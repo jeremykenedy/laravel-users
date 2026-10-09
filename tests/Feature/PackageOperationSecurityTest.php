@@ -176,6 +176,52 @@ class PackageOperationSecurityTest extends TestCase
         $this->assertTrue(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
     }
 
+    public function test_configuration_requires_settings_and_package_authorization_before_queueing(): void
+    {
+        $this->installedPackage();
+        $this->actingAs($this->user());
+        $payload = ['package' => 'spatie', 'operation' => 'configure', 'confirmation' => 'continue', 'acknowledgement' => 1, 'migrate' => true];
+        Gate::define('manage-laravelusers-packages', fn () => false);
+        $this->postJson('/users/settings/packages', $payload)->assertForbidden();
+        Gate::define('manage-laravelusers-packages', fn () => true);
+        Gate::define('manage-laravelusers-settings', fn () => false);
+        $this->postJson('/users/settings/packages', $payload)->assertForbidden();
+        Gate::define('manage-laravelusers-settings', fn () => true);
+        config(['laravelusers.middleware' => ['can:configure-host-packages']]);
+        Gate::define('configure-host-packages', fn () => false);
+        $this->postJson('/users/settings/packages', $payload)->assertForbidden();
+        Bus::assertNothingDispatched();
+        $this->assertNull(Cache::get('laravelusers.packages.owner'));
+    }
+
+    public function test_configuration_worker_rechecks_grouped_authorization_before_setup_or_migrations(): void
+    {
+        $this->installedPackage();
+        $this->app->make('router')->middlewareGroup('host-package-admin', ['can:configure-host-packages']);
+        config(['laravelusers.middleware' => ['host-package-admin']]);
+        Gate::define('configure-host-packages', fn () => true);
+        $response = $this->actingAs($this->user())->postJson('/users/settings/packages', ['package' => 'spatie', 'operation' => 'configure', 'confirmation' => 'continue', 'acknowledgement' => 1, 'setup' => false, 'migrate' => true])->assertStatus(202);
+        $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+        $this->assertTrue(Cache::get('laravelusers.package.'.$job->id)['setup']);
+        Gate::define('configure-host-packages', fn () => false);
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $composer->shouldNotReceive('changeFromSettings', 'setup');
+
+        $job->handle($this->packages, $composer, new UserSettings());
+
+        $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
+        $this->assertNull(Cache::get('laravelusers.packages.owner'));
+        $this->assertFalse(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+        $this->getJson($response->json('status_url'))->assertForbidden();
+    }
+
+    private function installedPackage(): void
+    {
+        $this->packages = \Mockery::mock(ManagedPackages::class)->makePartial();
+        $this->packages->shouldReceive('installed')->with('spatie')->andReturnTrue();
+        $this->app->instance(ManagedPackages::class, $this->packages);
+    }
+
     private function makeStale(ChangeManagedPackage $job): void
     {
         config(['laravelusers.settings.packages.start_timeout' => 30]);
