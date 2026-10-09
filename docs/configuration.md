@@ -1,6 +1,8 @@
 # Configuration
 
-Every setting in `config/laravelusers.php` uses `env('NAME', default)`. An environment value overrides the bundled default. A value explicitly set in application config still takes precedence. The package preserves published config during install, update, and switch; merge the environment calls into older published files when needed. Newly generated `laravelusers-ui.php` settings also call the frontend and theme environment helpers, using command selections as their defaults. Older generated files can be refreshed with update. Rebuild Laravel's configuration cache after changing environment values.
+Every setting in `config/laravelusers.php` uses `env('NAME', default)`. An environment value overrides the bundled default. A value explicitly set in application config still takes precedence. The package preserves published config during install, update, and switch; merge the environment calls into older published files when needed. Newly generated `laravelusers-ui.php` settings also call the CSS, runtime and theme environment helpers, using command selections as their defaults. Older generated files can be refreshed with update. Rebuild Laravel's configuration cache after changing environment values.
+
+The original `frontend` key selects CSS and defaults to `bootstrap4`. The separate `runtime` key defaults to `blade`, the only released screen runtime. This release offers `bootstrap4` and `bootstrap5` for CSS. Use the [setup commands](commands.md) to change them. Composer updates never switch either choice. Custom published views remain in use.
 
 ```dotenv
 LARAVEL_USERS_THEME=system
@@ -35,7 +37,9 @@ Activity columns require their tracking setting and their column setting. `showL
 
 ## Settings and appearance
 
-See [user settings](settings.md) for migrations, host authorization gates, role/permission/level restrictions and package controls. The page and per-user appearance remain separate opt-ins. `profileCardGradient` and `editCardGradient` independently enable gradients; `profileCardGradientStrength` and `editCardGradientStrength` default to 50 and range from 0 to 100. Base colors retain their blue/yellow defaults. `profileCardDarkColor`, `profileCardDarkGradient` and `profileCardDarkGradientStrength` customize view and directory cards in dark mode; `editCardDarkColor`, `editCardDarkGradient` and `editCardDarkGradientStrength` customize edit cards. All six use corresponding `LARAVEL_USERS_*_DARK_*` environment helpers and default to null, inheriting the light appearance. The settings page offers independent dark controls, previews and reset buttons. Individual dark overrides require the separate additive dark-appearance migration and use the same appearance permission. Reset controls restore config/environment defaults globally, or inheritance individually.
+See [user settings](settings.md) for migrations, host authorization gates, role/permission/level restrictions and package controls. The page and per-user appearance remain separate opt-ins. `profileCardGradient` and `editCardGradient` independently enable gradients; `profileCardGradientStrength` and `editCardGradientStrength` default to 50 and range from 0 to 100. Base colors retain their blue/yellow defaults. `profileCardGradientHighlightColor` and `editCardGradientHighlightColor` default to white and independently select the lighter gradient color.
+
+The matching `profileCardDarkColor`, `profileCardDarkGradient`, `profileCardDarkGradientStrength`, `profileCardDarkGradientHighlightColor` and `editCardDark*` settings default to null and inherit the light appearance. All use their corresponding environment helpers. The settings page offers independent controls, live avatar previews and reset buttons in both themes. Individual dark and highlight overrides require their separate additive appearance migrations and use the same appearance permission. Reset controls restore config/environment defaults globally, or inheritance individually.
 
 Saved global settings override config fallback values only while `settings.enabled=true`. `settings.packages.enabled` also requires a dedicated gate, a persistent queue and shared cache. It never grants package access to every authenticated user.
 
@@ -116,6 +120,7 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | `impersonation.timeout` | `LARAVEL_USERS_IMPERSONATION_TIMEOUT` | `60`; minutes, bounded to 1 through 1,440 |
 | `impersonation.middleware` | `LARAVEL_USERS_IMPERSONATION_MIDDLEWARE` | `[]`; comma-separated middleware |
 | `frontend` | `LARAVEL_USERS_FRONTEND` | `bootstrap4` |
+| `runtime` | `LARAVEL_USERS_RUNTIME` | `blade` |
 | `theme` | `LARAVEL_USERS_THEME` | `light` |
 | `themeToggle` | `LARAVEL_USERS_THEME_TOGGLE` | `false` |
 | `bootstrap5CssCdn` | `LARAVEL_USERS_BOOTSTRAP5_CSS_CDN` | `https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css` |
@@ -169,13 +174,25 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | `settings.packages.gate` | `LARAVEL_USERS_SETTINGS_PACKAGES_GATE` | `manage-laravelusers-packages` |
 | `settings.packages.queue` | `LARAVEL_USERS_SETTINGS_PACKAGES_QUEUE` | `default` |
 | `settings.packages.connection` | `LARAVEL_USERS_SETTINGS_PACKAGES_CONNECTION` | `null` |
+| `settings.packages.cache` | `LARAVEL_USERS_SETTINGS_PACKAGES_CACHE` | `null` |
+| `settings.packages.start_timeout` | `LARAVEL_USERS_SETTINGS_PACKAGES_START_TIMEOUT` | `120`; seconds before an unstarted operation expires |
 | `notifications.driver` | `LARAVEL_USERS_NOTIFICATIONS_DRIVER` | `alert` |
 | `notifications.dismissible` | `LARAVEL_USERS_NOTIFICATIONS_DISMISSIBLE` | `true` |
 | `appearance.per_user` | `LARAVEL_USERS_APPEARANCE_PER_USER` | `false` |
 | `profileCardGradient` | `LARAVEL_USERS_PROFILE_CARD_GRADIENT` | `true` |
 | `profileCardGradientStrength` | `LARAVEL_USERS_PROFILE_CARD_GRADIENT_STRENGTH` | `50` |
+| `profileCardGradientHighlightColor` | `LARAVEL_USERS_PROFILE_CARD_GRADIENT_HIGHLIGHT_COLOR` | `#ffffff` |
 | `editCardGradient` | `LARAVEL_USERS_EDIT_CARD_GRADIENT` | `true` |
 | `editCardGradientStrength` | `LARAVEL_USERS_EDIT_CARD_GRADIENT_STRENGTH` | `50` |
+| `editCardGradientHighlightColor` | `LARAVEL_USERS_EDIT_CARD_GRADIENT_HIGHLIGHT_COLOR` | `#ffffff` |
+| `profileCardDarkColor` | `LARAVEL_USERS_PROFILE_CARD_DARK_COLOR` | `null`; inherit light appearance |
+| `profileCardDarkGradient` | `LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT` | `null` |
+| `profileCardDarkGradientStrength` | `LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT_STRENGTH` | `null` |
+| `profileCardDarkGradientHighlightColor` | `LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT_HIGHLIGHT_COLOR` | `null` |
+| `editCardDarkColor` | `LARAVEL_USERS_EDIT_CARD_DARK_COLOR` | `null`; inherit light appearance |
+| `editCardDarkGradient` | `LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT` | `null` |
+| `editCardDarkGradientStrength` | `LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT_STRENGTH` | `null` |
+| `editCardDarkGradientHighlightColor` | `LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT_HIGHLIGHT_COLOR` | `null` |
 | `tableTextMaxWidth` | `LARAVEL_USERS_TABLE_TEXT_MAX_WIDTH` | `240` |
 | `welcome.enabled` | `LARAVEL_USERS_WELCOME_ENABLED` | `false` |
 | `welcome.force_password_reset` | `LARAVEL_USERS_WELCOME_FORCE_PASSWORD_RESET` | `true` |
@@ -196,12 +213,29 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | `emails.message` | `LARAVEL_USERS_EMAIL_MESSAGE` | `true` |
 | `emails.reset` | `LARAVEL_USERS_EMAIL_RESET` | `true` |
 | `emails.welcome` | `LARAVEL_USERS_EMAIL_WELCOME` | `true` |
+| `emails.goodbye` | `LARAVEL_USERS_EMAIL_GOODBYE` | `false` |
+| `emails.goodbye_on_delete` | `LARAVEL_USERS_EMAIL_GOODBYE_ON_DELETE` | `false` |
+| `emails.goodbye_auto_send` | `LARAVEL_USERS_EMAIL_GOODBYE_AUTO_SEND` | `false` |
+| `emails.goodbye_restore` | `LARAVEL_USERS_EMAIL_GOODBYE_RESTORE` | `false` |
+| `emails.goodbye_force_delete` | `LARAVEL_USERS_EMAIL_GOODBYE_FORCE_DELETE` | `false` |
+| `emails.goodbye_retention` | `LARAVEL_USERS_EMAIL_GOODBYE_RETENTION` | `false` |
+| `emails.goodbye_show_expiry` | `LARAVEL_USERS_EMAIL_GOODBYE_SHOW_EXPIRY` | `true` |
+| `emails.goodbye_expiry_mode` | `LARAVEL_USERS_EMAIL_GOODBYE_EXPIRY_MODE` | `custom`; `custom`, `cleanup` or `never` |
+| `emails.goodbye_duration` | `LARAVEL_USERS_EMAIL_GOODBYE_DURATION` | `60` |
+| `emails.goodbye_unit` | `LARAVEL_USERS_EMAIL_GOODBYE_UNIT` | `minutes` |
+| `emails.date_format` | `LARAVEL_USERS_EMAIL_DATE_FORMAT` | `M j, Y g:i A T` |
+| `emails.goodbye_subject` | `LARAVEL_USERS_EMAIL_GOODBYE_SUBJECT` | `null`; bundled template text |
+| `emails.goodbye_message` | `LARAVEL_USERS_EMAIL_GOODBYE_MESSAGE` | `null` |
 | `emails.edit_welcome` | `LARAVEL_USERS_EMAIL_EDIT_WELCOME` | `true` |
 | `emails.edit_reset` | `LARAVEL_USERS_EMAIL_EDIT_RESET` | `true` |
 | `emails.welcome_subject` | `LARAVEL_USERS_EMAIL_WELCOME_SUBJECT` | `null` |
 | `emails.welcome_message` | `LARAVEL_USERS_EMAIL_WELCOME_MESSAGE` | `null` |
 | `emails.reset_subject` | `LARAVEL_USERS_EMAIL_RESET_SUBJECT` | `null` |
 | `emails.reset_message` | `LARAVEL_USERS_EMAIL_RESET_MESSAGE` | `null` |
+| `emails.restore_subject` | `LARAVEL_USERS_EMAIL_RESTORE_SUBJECT` | `null` |
+| `emails.restore_message` | `LARAVEL_USERS_EMAIL_RESTORE_MESSAGE` | `null` |
+| `emails.force_delete_subject` | `LARAVEL_USERS_EMAIL_FORCE_DELETE_SUBJECT` | `null` |
+| `emails.force_delete_message` | `LARAVEL_USERS_EMAIL_FORCE_DELETE_MESSAGE` | `null` |
 | `emails.gate` | `LARAVEL_USERS_EMAIL_GATE` | `null` |
 | `emails.throttle` | `LARAVEL_USERS_EMAIL_THROTTLE` | `10,1` |
 | `emails.password_broker` | `LARAVEL_USERS_EMAIL_PASSWORD_BROKER` | `null` |
@@ -224,6 +258,22 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | `account_links.max_expire` | `LARAVEL_USERS_ACCOUNT_LINKS_MAX_EXPIRE` | `43200` |
 | `account_links.allow_never_expire` | `LARAVEL_USERS_ACCOUNT_LINKS_ALLOW_NEVER_EXPIRE` | `true` |
 | `account_links.throttle` | `LARAVEL_USERS_ACCOUNT_LINKS_THROTTLE` | `20,1` |
+| `account.enabled` | `LARAVEL_USERS_ACCOUNT_ENABLED` | `false` |
+| `account.settings_enabled` | `LARAVEL_USERS_ACCOUNT_SETTINGS_ENABLED` | `false` |
+| `account.username_column` | `LARAVEL_USERS_ACCOUNT_USERNAME_COLUMN` | `name` |
+| `account.name_column` | `LARAVEL_USERS_ACCOUNT_NAME_COLUMN` | `null` |
+| `account.profile` | `LARAVEL_USERS_ACCOUNT_PROFILE` | `true`; effective only when account controls are enabled |
+| `account.avatar` | `LARAVEL_USERS_ACCOUNT_AVATAR` | `true` |
+| `account.appearance` | `LARAVEL_USERS_ACCOUNT_APPEARANCE` | `true` |
+| `account.email` | `LARAVEL_USERS_ACCOUNT_EMAIL` | `true` |
+| `account.password` | `LARAVEL_USERS_ACCOUNT_PASSWORD` | `true` |
+| `account.delete` | `LARAVEL_USERS_ACCOUNT_DELETE` | `true` |
+| `account.email_expire` | `LARAVEL_USERS_ACCOUNT_EMAIL_EXPIRE` | `1440`; minutes for dual-email confirmation |
+| `account.throttle` | `LARAVEL_USERS_ACCOUNT_THROTTLE` | `10,1` |
+| `account.redirect` | `LARAVEL_USERS_ACCOUNT_DELETED_REDIRECT` | `/` |
+| `cleanup.enabled` | `LARAVEL_USERS_CLEANUP_ENABLED` | `false` |
+| `cleanup.amount` | `LARAVEL_USERS_CLEANUP_AMOUNT` | `180` |
+| `cleanup.unit` | `LARAVEL_USERS_CLEANUP_UNIT` | `days` |
 | `authEnabled` | `LARAVEL_USERS_AUTH_ENABLED` | `true` |
 | `rolesEnabled` | `LARAVEL_USERS_ROLES_ENABLED` | `false` |
 | `rolesMiddlwareEnabled` | `LARAVEL_USERS_ROLES_MIDDLWARE_ENABLED` | `true` |

@@ -25,9 +25,9 @@ use Throwable;
 class InstallCommand extends Command
 {
     protected $signature = 'laravelusers:install
-        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
+        {--framework= : bootstrap4 or bootstrap5}
         {--css= : Alias for --framework}
-        {--frontend= : blade, livewire, vue, react, or svelte}
+        {--frontend= : blade}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}
@@ -247,8 +247,8 @@ class InstallCommand extends Command
         $views = $this->option('views');
 
         if ($this->input->isInteractive()) {
-            $runtime = $runtime ?? ConsolePrompts::select($this, 'Frontend runtime', array_combine(NativeRuntime::STACKS, NativeRuntime::STACKS), NativeRuntime::name(), true);
-            $framework = $framework ?? ConsolePrompts::search($this, 'CSS framework', Frontend::FRAMEWORKS, Frontend::framework(), true);
+            $runtime = $runtime ?? ConsolePrompts::select($this, 'Frontend runtime', array_combine(NativeRuntime::RELEASE_STACKS, NativeRuntime::RELEASE_STACKS), NativeRuntime::name(), true);
+            $framework = $framework ?? ConsolePrompts::search($this, 'CSS framework', Frontend::RELEASE_FRAMEWORKS, Frontend::framework(), true);
             $themes = ['light', 'dark', 'system'];
             $theme = $theme ?? ConsolePrompts::select($this, 'Color theme', array_combine($themes, $themes), Frontend::theme(), true);
             $viewChoices = ['package', 'publish'];
@@ -288,8 +288,8 @@ class InstallCommand extends Command
 
     private function runtimeValid(string $runtime): bool
     {
-        if (!in_array($runtime, NativeRuntime::STACKS, true)) {
-            $this->error('Choose --frontend='.implode(', ', NativeRuntime::STACKS).'.');
+        if (!in_array($runtime, NativeRuntime::RELEASE_STACKS, true)) {
+            $this->error('This release supports --frontend=blade. Other runtimes will be added in later releases.');
 
             return false;
         }
@@ -350,7 +350,7 @@ class InstallCommand extends Command
 
     private function frontendChoicesValid(string $framework, string $theme, string $views): bool
     {
-        return in_array($framework, Frontend::FRAMEWORKS, true)
+        return in_array($framework, Frontend::RELEASE_FRAMEWORKS, true)
             && in_array($theme, ['light', 'dark', 'system'], true)
             && in_array($views, ['package', 'publish'], true);
     }

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use jeremykenedy\laravelusers\App\Http\Controllers\AccountAccessController;
 use jeremykenedy\laravelusers\App\Http\Controllers\AccountController;
 use jeremykenedy\laravelusers\App\Http\Controllers\AccountLinksController;
+use jeremykenedy\laravelusers\App\Http\Controllers\AvatarPreviewController;
 use jeremykenedy\laravelusers\App\Http\Controllers\CleanupSettingsController;
 use jeremykenedy\laravelusers\App\Http\Controllers\EmailTemplatesController;
 use jeremykenedy\laravelusers\App\Http\Controllers\ImpersonationController;
@@ -44,6 +45,8 @@ Route::middleware(['web', 'auth'])->group(function () {
 Route::middleware('web')->group(function () {
     Route::put('users/settings/accounts', [AccountAccessController::class, 'save'])->middleware(['auth', 'throttle:10,1,laravelusers-settings-accounts'])->name('users.settings.accounts');
     Route::get('users/settings', [UsersManagementController::class, 'settings'])->middleware('auth')->name('users.settings');
+    Route::post('users/settings/avatar-preview', [AvatarPreviewController::class, 'preview'])->middleware(['auth', 'throttle:60,1,laravelusers-avatar-preview'])->name('users.settings.avatar-preview');
+    Route::get('users/settings/avatar-preview/{sample}', [AvatarPreviewController::class, 'image'])->middleware(['auth', 'throttle:60,1,laravelusers-avatar-preview-image'])->where('sample', 'profile|edit|profile_dark|edit_dark')->name('users.settings.avatar-preview.image');
     Route::put('users/settings/emails', [EmailTemplatesController::class, 'save'])->middleware(['auth', 'throttle:10,1,laravelusers-settings-emails'])->name('users.settings.emails');
     Route::put('users/settings/cleanup', [CleanupSettingsController::class, 'save'])->middleware(['auth', 'throttle:10,1,laravelusers-settings-cleanup'])->name('users.settings.cleanup');
     Route::put('users/settings', [UsersManagementController::class, 'updateSettings'])->middleware(['auth', 'throttle:10,1,laravelusers-settings-write'])->name('users.settings.update');

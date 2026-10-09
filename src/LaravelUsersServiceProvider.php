@@ -28,6 +28,8 @@ class LaravelUsersServiceProvider extends ServiceProvider
     public function boot(Kernel $kernel): void
     {
         $kernel->appendMiddlewareToGroup('web', App\Http\Middleware\VerifyImpersonationState::class);
+        $kernel->appendMiddlewareToGroup('web', App\Http\Middleware\RenderNativePage::class);
+        $this->app->booted(fn () => $this->configureLivewire());
         $this->configurePasswordExpiry();
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $settings = $this->app->make(Support\UserSettings::class);
@@ -121,6 +123,21 @@ class LaravelUsersServiceProvider extends ServiceProvider
             return get_class($manager) === PasswordBrokerManager::class ? new Support\ExpiringPasswordBrokerManager($this->app) : $manager;
         });
         $this->publishFiles();
+    }
+
+    private function configureLivewire(): void
+    {
+        if (!class_exists(\Livewire\Livewire::class) || !$this->app->bound('livewire') || !class_exists(Livewire\UsersScreen::class)) {
+            return;
+        }
+        \Livewire\Livewire::component('laravelusers.users-screen', Livewire\UsersScreen::class);
+        \Livewire\Livewire::component('laravelusers.user-table', Livewire\UserTable::class);
+        $middleware = array_merge([App\Http\Middleware\UserAccessMiddleware::class, App\Http\Middleware\AccountMiddleware::class], (array) config('laravelusers.middleware', []));
+        if (config('laravelusers.rolesEnabled', false) && config('laravelusers.rolesMiddlwareEnabled', true)) {
+            $middleware = array_merge($middleware, (array) config('laravelusers.rolesMiddlware', 'role:admin'));
+        }
+        $resolved = $this->app['router']->resolveMiddleware($middleware);
+        \Livewire\Livewire::addPersistentMiddleware(array_values(array_unique(array_map(fn ($entry) => explode(':', $entry, 2)[0], $resolved))));
     }
 
     private function configurePasswordExpiry(): void

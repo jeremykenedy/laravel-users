@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Complete Toast setup automatically after installation, refresh package availability after queued changes and show completed setup as a plain checkmarked sentence.
+- Verify the package worker with a nonce before enabling dependency changes; preserve requirements status separately from operation progress.
+- Add configurable Toast behavior and the Alerts and Toast notification choice while retaining inline alerts by default.
+- Add separate light/dark gradient highlight pickers, inherited individual preferences and live avatar-source previews.
+- Limit release setup choices to Blade with Bootstrap 4 or 5; reserve other frameworks for later releases.
+- Keep enabled breadcrumb navigation transparent and readable across the scoped CSS layers.
+- Keep process fixtures and optional Toast checks compatible with Laravel 8 and PHP 8.1.
 - Recheck actor middleware before queued package changes and on every impersonated request, including role levels and additional impersonation restrictions.
 - Invalidate impersonation after the original actor's password or remember token changes.
 - Reject unauthorized goodbye-email overrides while preserving configured automatic notices.
@@ -60,7 +67,7 @@
 - Add a quick switch command and CSS selection aliases while retaining existing command options.
 - Add regression coverage for decoded and text search responses, disabled search, and host asset switches from issue #90.
 - Keep Bootstrap 4, existing routes, config keys, and publish behavior as the default.
-- Add optional Bootstrap 5 and Tailwind Blade views with responsive forms, tables, search, and pagination.
+- Add optional Bootstrap 5 Blade views with responsive forms, tables, search, and pagination.
 - Add light, dark, and system themes with an optional persistent icon button matching Laravel Logger.
 - Add interactive install and update commands, safe view publication, and backups before forced replacement.
 - Add optional integration setup instructions without introducing runtime dependencies.

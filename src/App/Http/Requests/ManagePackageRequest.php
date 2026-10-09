@@ -19,7 +19,7 @@ class ManagePackageRequest extends FormRequest
     {
         return [
             'package'         => ['required', Rule::in(array_merge(array_keys(ManagedPackages::PACKAGES), ['requirements']))],
-            'operation'       => ['required', Rule::in($this->input('package') === 'requirements' ? ['setup', 'verify'] : ['install', 'remove'])],
+            'operation'       => ['required', Rule::in($this->input('package') === 'requirements' ? ['setup', 'verify'] : ['install', 'remove', 'configure'])],
             'confirmation'    => [Rule::when($this->input('operation') !== 'verify', ['required', Rule::in([$this->input('operation') === 'remove' ? 'remove' : 'continue'])])],
             'acknowledgement' => [Rule::when($this->input('operation') !== 'verify', ['required', 'accepted'])],
             'setup'           => ['sometimes', 'boolean'],

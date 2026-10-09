@@ -1,7 +1,12 @@
 const { test, expect } = require('@playwright/test');
+const { startPackageWorker } = require('./package-worker.cjs');
 
 const frameworks = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
 const runtimes = ['livewire', 'vue', 'react', 'svelte'];
+
+let packageWorker;
+test.beforeAll(async () => { packageWorker = await startPackageWorker(19855); });
+test.afterAll(() => { packageWorker?.kill('SIGTERM'); });
 
 for (const runtime of runtimes) {
     for (const framework of frameworks) {
@@ -190,9 +195,7 @@ for (const runtime of runtimes) {
         await expect(form.locator('[name="show_breadcrumbs"]:not([type="hidden"])')).toBeChecked();
         await expect(darkHighlight).toBeDisabled();
         await expect(darkHighlight).toHaveValue('#b14c8a');
-        await expect(page.getByRole('button', { name: 'Complete setup', exact: true })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Complete setup', exact: true })).toBeEnabled({ timeout: 20000 });
-        await page.getByRole('button', { name: 'Verify package requirements', exact: true }).click();
+        await page.getByRole('button', { name: /^(?:Re-)?Verify package requirements$/ }).click();
         await expect(page.locator('[data-lu-native-package-requirements]')).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
         const templates = page.locator('form[data-lu-native-form="email-templates"]');
         await expect(templates.locator('details summary')).toHaveCount(5);
@@ -207,45 +210,6 @@ for (const runtime of runtimes) {
         await form.locator('[name="notifications_driver"]').selectOption('alert');
         await form.getByRole('button', { name: 'Save changes', exact: true }).click();
         await expect(page.locator('.lu-breadcrumbs')).toHaveCount(0);
-        expect(errors).toEqual([]);
-    });
-}
-
-for (const runtime of runtimes) {
-    test(`${runtime} with bootstrap5 completes package setup through the actual worker`, async ({ page }) => {
-        test.setTimeout(60000);
-        const errors = [];
-        page.on('pageerror', error => errors.push(error.message));
-        await page.goto(`/__browser/bootstrap5?runtime=${runtime}&accounts=1&settings=1&packages=1&search-debounce=0`);
-        await page.getByRole('link', { name: 'User settings', exact: true }).click();
-        const configure = page.getByRole('button', { name: 'Complete setup', exact: true });
-        await expect(configure).toBeEnabled({ timeout: 20000 });
-        await configure.click();
-        const dialog = page.getByRole('dialog');
-        const save = dialog.getByRole('button', { name: 'Save changes', exact: true });
-        await expect(save).toBeDisabled();
-        await dialog.locator('[name="confirmation"]').fill('Continue');
-        await dialog.locator('[name="acknowledgement"]:not([type="hidden"])').check();
-        await expect(save).toBeDisabled();
-        await dialog.locator('[name="confirmation"]').fill('continue');
-        await expect(save).toBeEnabled();
-        const queued = page.waitForResponse(response => response.url().endsWith('/users/settings/packages') && response.request().method() === 'POST');
-        await save.click();
-        const response = await queued;
-        expect(response.status()).toBe(202);
-        const operation = await response.json();
-        expect(operation.operation).toBe('configure');
-        expect(operation.package).toBe('toast');
-        expect(new URL(operation.status_url).origin).toBe('http://127.0.0.1:19855');
-        await expect(dialog).toHaveCount(0);
-        const status = page.locator('[data-lu-package-state]');
-        await expect(status).toBeVisible();
-        await expect(status.locator('svg path')).toHaveAttribute('d', /.+/);
-        await page.reload();
-        await expect(status).toBeVisible();
-        await expect(status).toHaveAttribute('data-lu-package-state', 'completed', { timeout: 30000 });
-        await expect(status).toContainText('Package setup completed');
-        await page.screenshot({ path: `tests/browser/runtime/native-${runtime}-package-completed.png`, fullPage: true });
         expect(errors).toEqual([]);
     });
 }

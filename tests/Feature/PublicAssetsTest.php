@@ -33,7 +33,7 @@ class PublicAssetsTest extends TestCase
         foreach (['laravel-users:install', 'laravel-users:update', 'laravel-users:publish'] as $command) {
             $this->artisan($command, ['--no-interaction' => true])->assertExitCode(0);
             $manifest = json_decode($files->get(public_path('vendor/laravelusers/manifest.json')), true);
-            foreach (['modern.css', 'tailwind.css', 'users.js'] as $name) {
+            foreach (['modern.css', 'tailwind.css', 'users.js', 'runtime-vue.js', 'runtime-react.js', 'runtime-svelte.js', 'runtime-livewire.js', 'runtime-vue.licenses.json', 'runtime-react.licenses.json', 'runtime-svelte.licenses.json', 'runtime-livewire.licenses.json'] as $name) {
                 $path = public_path('vendor/laravelusers/'.$manifest['files'][$name]['path']);
                 $this->assertSame(hash('sha256', PublicAssets::contents($name)), hash_file('sha256', $path));
                 $this->assertStringContainsString('/vendor/laravelusers/releases/', PublicAssets::url($name));
@@ -85,6 +85,21 @@ class PublicAssetsTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         PublicAssets::contents('../../config/laravelusers.php');
+    }
+
+    public function test_module_assets_render_once_for_inline_and_published_delivery(): void
+    {
+        $inline = view('laravelusers::partials.asset', ['name' => 'material3.js', 'module' => true])->render();
+        $this->assertStringContainsString('type="module" data-navigate-once', $inline);
+        $this->assertStringContainsString(PublicAssets::contents('material3.js'), $inline);
+
+        (new PublicAssets(new Filesystem()))->publish();
+        $published = view('laravelusers::partials.asset', ['name' => 'material3.js', 'module' => true])->render();
+        $this->assertStringContainsString('type="module" data-navigate-once', $published);
+        $this->assertStringContainsString('src="'.PublicAssets::url('material3.js').'"', $published);
+        $classic = view('laravelusers::partials.asset', ['name' => 'users.js'])->render();
+        $this->assertStringNotContainsString('type="module"', $classic);
+        $this->assertStringNotContainsString('data-navigate-once', $classic);
     }
 
     public function test_symbolic_link_destinations_are_rejected(): void

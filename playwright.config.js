@@ -2,6 +2,8 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
     testDir: './tests/browser',
+    testIgnore: ['native.spec.js', 'native-roles.spec.js', 'native-package.spec.js'],
+    grepInvert: /\b(?:tailwind|materialize|material3|bulma|foundation):/,
     fullyParallel: false,
     workers: 1,
     retries: process.env.CI ? 1 : 0,

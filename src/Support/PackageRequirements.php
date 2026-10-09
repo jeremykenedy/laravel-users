@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 class PackageRequirements
 {
-    public function __construct(private readonly Application $app, private readonly Filesystem $files, private readonly Kernel $console)
+    public function __construct(private readonly Application $app, private readonly Filesystem $files, private readonly Kernel $console, private readonly ComposerPackages $composer)
     {
     }
 
@@ -51,27 +51,46 @@ PHP);
 
     public function verify(ManagedPackages $packages): bool
     {
+        return $this->status($packages)['queue_ready'];
+    }
+
+    public function status(ManagedPackages $packages): array
+    {
         try {
             if (!$packages->queueReady()) {
-                return false;
+                return $this->result(false, 'laravelusers::ui.package_requirements_not_verified');
             }
-
-            $connection = config('queue.connections.laravelusers-packages.connection');
-            if (!Schema::connection($connection)->hasTable('laravelusers_package_jobs')) {
-                return false;
+            $name = config('laravelusers.settings.packages.connection') ?? config('queue.default');
+            $queue = config('queue.connections.'.$name, []);
+            if (($queue['driver'] ?? null) === 'database' && !Schema::connection($queue['connection'] ?? null)->hasTable($queue['table'] ?? 'jobs')) {
+                return $this->result(false, 'laravelusers::ui.package_requirements_not_verified');
             }
-
             $lock = ManagedPackages::cache()->lock('laravelusers.requirements-verify', 10);
             if (!$lock->get()) {
-                return false;
+                return $this->result(false, 'laravelusers::ui.package_requirements_not_verified');
+            }
+            $lock->release();
+            if ($failure = $this->composer->readiness()) {
+                return $this->result(false, $failure);
+            }
+            if ($failure = PackageWorker::failure()) {
+                return $this->result(false, $failure);
+            }
+            if (!PackageWorker::verified()) {
+                PackageWorker::probe();
+
+                return $this->result(false, 'laravelusers::ui.package_worker_verifying', 'checking');
             }
 
-            $lock->release();
-
-            return true;
+            return $this->result(true, 'laravelusers::ui.package_requirements_verified');
         } catch (\Throwable) {
-            return false;
+            return $this->result(false, 'laravelusers::ui.package_requirements_not_verified');
         }
+    }
+
+    private function result(bool $ready, string $message, string $status = 'not_ready'): array
+    {
+        return ['status' => $ready ? 'completed' : $status, 'queue_ready' => $ready, 'message' => trans($message)];
     }
 
     public static function load(): void

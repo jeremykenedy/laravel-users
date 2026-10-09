@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
+const { startPackageWorker } = require('./package-worker.cjs');
 
 test.use({ timezoneId: 'America/Los_Angeles' });
 
@@ -238,6 +239,11 @@ test('standalone navigation components work without the package shell', async ({
     await expect(page.locator('#secondary-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'dark');
 });
 
+test.describe('Optional package controls', () => {
+    let packageWorker;
+    test.beforeAll(async () => { packageWorker = await startPackageWorker(19847); });
+    test.afterAll(() => { packageWorker?.kill('SIGTERM'); });
+
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
     test(`${framework}: package confirmations, removal warning and role conflict`, async ({page}) => {
         await page.goto(`/__browser/${framework}?settings=1&packages=1`);
@@ -266,16 +272,8 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await page.setViewportSize({width:390,height:844});
         const verifiedMessage = 'Package requirements verified. Confirm that a persistent queue worker is running on every application server.';
         const requirementsStatus = page.locator('[data-lu-package-status]');
-        if (!requirementsComplete) {
-            await expect(requirementsStatus).toBeHidden();
-            await setupRequirements.click();
-            const setupModal = page.locator('#lu-package-dialog');
-            await setupModal.locator('[name="confirmation"]').fill('continue');
-            await setupModal.locator('[name="acknowledgement"]').check();
-            await setupModal.getByRole('button', {name:'Confirm package change',exact:true}).click();
-            await expect(setupModal).not.toBeVisible();
-            await expect(setupRequirements).toBeDisabled();
-        }
+        await expect(requirementsStatus).toHaveText(verifiedMessage);
+        await expect(setupRequirements).toBeDisabled();
         await page.reload();
         await expect(requirementsStatus).toHaveText(verifiedMessage);
         await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
@@ -356,8 +354,35 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(requirementsStatus).toHaveText(verifiedMessage);
         await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
         await expect(setupRequirements).toBeDisabled();
+        let releaseStatus;
+        const waitingStatus = new Promise(resolve => { releaseStatus = resolve; });
+        const operationUrl = '/users/settings/packages/11111111-1111-1111-1111-111111111111';
+        const queued = {status:'queued', message:'Package change queued. Waiting for the worker.', status_url:operationUrl};
+        await page.route('**/users/settings/packages', route => route.fulfill({status:202,contentType:'application/json',body:JSON.stringify(queued)}));
+        await page.route('**' + operationUrl, async route => {
+            await waitingStatus;
+            await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({status:'completed',message:'Package setup completed. Refresh settings to enable the integration.'})});
+        });
+        try {
+            await toastInstall.click();
+            await modal.locator('[name="confirmation"]').fill('continue');
+            await modal.locator('[name="acknowledgement"]').check();
+            await submit.click();
+            const operationStatus = page.locator('[data-lu-package-operation-status]');
+            await expect(operationStatus).toContainText(queued.message);
+            await expect(operationStatus.locator('[data-lu-icon="clock"]')).toBeVisible();
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/users/settings' && response.request().method() === 'GET');
+            releaseStatus();
+            expect((await refreshed).status()).toBe(200);
+            await expect(requirementsStatus).toHaveText(verifiedMessage);
+            await expect(verifyRequirements).toHaveText('Re-Verify package requirements');
+        } finally { releaseStatus(); }
     });
+}
+});
 
+for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
     test(`${framework}: long names and emails scroll within table columns`, async ({page}) => {
         await page.goto(`/__browser/${framework}`);
         const name = 'A very long user name '.repeat(8).trim();

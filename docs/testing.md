@@ -17,7 +17,7 @@ CI tests these combinations:
 
 Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly allow Composer to resolve dependencies affected by upstream advisories so backward compatibility remains testable. The current dependency job runs `composer audit` without that exception. The Laravel 8 SQLite job adds Doctrine DBAL 3.x only to its test dependencies so migration rollback is exercised using the framework's supported schema tools. Package users do not inherit CI-only Composer flags.
 
-GitHub Actions runs the compatibility matrix, optional integration tests, Pint, dependency audits, PHP coverage, documentation linting, and the Playwright suite. StyleCI, CodeFactor, and Codacy provide separate code-quality checks.
+GitHub Actions runs the compatibility matrix, optional integration tests, Pint, dependency audits, PHP coverage, documentation linting, runtime state tests and Playwright. StyleCI, CodeFactor, and Codacy provide separate code-quality checks.
 
 The workflow uses Ubuntu 24.04 explicitly so changes to GitHub's `ubuntu-latest` label do not replace the tested operating system. Review the PHP and browser jobs before adopting a newer runner image.
 
@@ -46,22 +46,25 @@ Impersonation tests reject modified or legacy session state before host routes e
 ```sh
 npm ci
 npx playwright install chromium firefox webkit
+npm run test:runtime
 npm run test:browser
 ```
 
 Playwright starts a local PHP server on `127.0.0.1:19847`. The fixture uses an isolated SQLite database and sessions under ignored `tests/browser/runtime`. It creates sample accounts for tests only. A preview served on port 19849 uses a separate temporary runtime with three friendly sample users and the normal page size. It never shares the browser suite's injection fixture or test accounts. No application database is used. Do not serve the fixture publicly.
 
-The suite exercises all three frontends in Chromium, Firefox, and WebKit. It checks search with literal hostile-looking names, theme button cycling and keyboard activation, persistence, disabled controls, system preference changes, mobile overflow, and modern account creation, validation, editing, and deletion. Axe checks the modern form in light and dark mode. The fixture runs real CSRF middleware and submits real forms.
+The release Blade suite exercises Bootstrap 4 and 5 in Chromium, Firefox, and WebKit. It checks search with literal hostile-looking names, theme button cycling and keyboard activation, persistence, disabled controls, system preference changes, mobile overflow, and account creation, validation, editing, and deletion. Axe checks forms and settings in both themes, including enabled breadcrumbs. The fixture runs real CSRF middleware and submits real forms.
 
-Legacy search regression tests cover both `application/json` responses decoded by jQuery and JSON text returned as `text/html`, including empty results and browser errors. PHP rendering tests verify the disabled search setting and host asset switches in all three frameworks.
+Legacy search regression tests cover both `application/json` responses decoded by jQuery and JSON text returned as `text/html`, including empty results and browser errors. PHP rendering tests verify the disabled search setting and host asset switches.
 
-The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Tailwind loads its bundled stylesheet. Browser artifacts are uploaded on CI failure. Tests that only pass on retry also fail CI.
+The legacy Bootstrap 4 browser tests load its existing external CDN assets. Modern Bootstrap 5 loads its configured CSS CDN. Browser artifacts are uploaded on CI failure. Tests that only pass on retry also fail CI.
+
+Other CSS frameworks and screen runtimes are deferred. Their development fixtures do not establish released support. Release CI runs the complete Bootstrap 4 and 5 feature checks in all three browser engines.
 
 Published-asset browser tests verify CSS and JavaScript content types, working tabs and search, and the `.laravel-users-main-card` boundary at 375x812, 768x1024, and 1440x900. Theme controls must work while a later JavaScript asset is still loading. Closing an email dialog must clear its draft and preserve focus when the user moves to search. The fixture uses the checked-out package views so stale Testbench publications cannot mask a source change.
 
 ## Asset builds
 
-`npm run build` compiles prefixed Tailwind utilities into the bundled Blade stylesheet and its public CSS asset. Commit both generated files with source changes. CI rebuilds them and fails if the generated results differ from the committed versions. No build runs during Composer installation in consuming applications.
+`npm run build` compiles prefixed Tailwind utilities, scoped CSS adapters, Material web components and the four native runtime bundles with their license notices. Commit generated assets with source changes. CI rebuilds them and fails if generated results differ from the committed versions. No build runs during Composer installation in consuming applications, and the package does not overwrite host build configuration.
 
 ## Manual checks
 
@@ -89,11 +92,11 @@ The isolated automated browser fixture raises only its send/preview request limi
 
 Settings tests verify opt-in defaults, missing migrations, host gates, forbidden fields, persistence, self-lockout protection and route/search/bulk/email-preview restrictions. Real roles tests cover direct and inherited permissions, minimum levels, guards and team boundaries. Appearance tests cover nullable inheritance, strength limits, transaction behavior and cleanup after permanent Eloquent deletion.
 
-Package-management tests use a mocked Composer boundary so they cannot install or remove dependencies from the test application. They verify exact confirmation words, acknowledgement, the package allowlist, the second-roles-package block, unsafe removal, queue timeouts, pending-operation locks, status ownership, authorization revocation before execution and duplicate-job handling. Browser tests verify the warning modals, disabled confirmations, cleared fields and visible backend rejections. Composer installation is tested through the separate real optional-dependency jobs; this is distinct from testing a complete deployment's web package-removal workflow.
+Package-management tests use a mocked Composer boundary so they cannot install or remove dependencies from the test application. They verify exact confirmation words, acknowledgement, the package allowlist, the second-roles-package block, unsafe removal, queue timeouts, pending-operation locks, status ownership, authorization revocation before execution and duplicate-job handling. Worker-readiness tests require a nonce acknowledged by the selected worker rather than accepting queue storage alone. Browser tests verify warning modals, cleared fields, visible rejections, separate requirements/operation statuses, and an actual document refresh after completion. Disposable process fixtures check Composer execution separately; optional-dependency jobs run the real installers.
 
 The presentation integration matrix installs actual DiceBear core/styles and Laravel Toast on Laravel 12 and 13. It tests local SVG generation, installed notification rendering and settings availability. Package setup tests run the real optional installers, preserve host configuration, leave features disabled and reject cached configuration. A deliberately failing host migration proves that setup runs only the selected package migrations. Optional integrations remain absent from the normal dependency matrix. Each suite explicitly reports applicable skips.
 
-Standalone component browser tests render an application-owned page without `#laravelusers`, check theme persistence and synchronized controls, and verify outside-click/Escape behavior. Long-name/email tests cover bounded horizontal scrolling, keyboard access, preserved mail links and mobile card wrapping in all three frameworks. Settings browser tests include color/gradient resets, sliders, persistence, small-screen overflow and modern accessibility.
+Standalone component browser tests render an application-owned page without `#laravelusers`, check theme persistence and synchronized controls, and verify outside-click/Escape behavior. Long-name/email tests cover bounded horizontal scrolling, keyboard access, preserved mail links and mobile card wrapping. Settings browser tests include separate gradient highlight pickers, live avatar-source previews, resets, sliders, persistence, small-screen overflow and accessibility.
 
 Composer process tests use disposable application directories and local executable fixtures. They check fixed command arguments, disabled scripts/plugins, manifest refresh, malformed installed metadata, graceful worker restart, failed commands, and dependencies that remain installed. They never change the working application's Composer files. Account tests reject non-string current passwords before dispatching mail or changing an account. Navigation tests verify that host gate changes hide the management link and malformed ability names fail closed.
 

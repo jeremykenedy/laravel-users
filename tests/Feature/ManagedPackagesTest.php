@@ -175,6 +175,69 @@ class ManagedPackagesTest extends TestCase
         }
     }
 
+    public function test_toast_installation_always_runs_setup_with_the_current_framework(): void
+    {
+        $packages = $this->enable();
+        config(['laravelusers.frontend' => 'bootstrap5']);
+        $this->actingAs($this->user());
+        if (PHP_VERSION_ID < 80200 || version_compare($this->app->version(), '10.0.0', '<')) {
+            $this->postJson('/users/settings/packages', $this->payload('toast') + ['setup' => false])
+                ->assertUnprocessable()
+                ->assertJsonPath('errors.package.0', 'Laravel Toast requires PHP 8.2 or newer and Laravel 10 or newer.');
+            Bus::assertNothingDispatched();
+
+            return;
+        }
+        foreach ([[], ['setup' => false, 'migrate' => true]] as $options) {
+            $response = $this->postJson('/users/settings/packages', $this->payload('toast') + $options)->assertStatus(202);
+            $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+            $composer = \Mockery::mock(ComposerPackages::class);
+            $composer->shouldReceive('changeFromSettings')->once()->with('install', 'jeremykenedy/laravel-toast')->andReturnTrue();
+            $composer->shouldReceive('setup')->once()->with('toast', 'bootstrap5', false, \Mockery::type('callable'))->andReturnTrue();
+            $job->handle($packages, $composer, new UserSettings());
+            $this->getJson($response->json('status_url'))->assertOk()->assertJsonPath('status', 'completed')->assertJsonPath('stage', 'completed');
+        }
+    }
+
+    public function test_installed_package_setup_runs_without_reinstalling_and_keeps_server_confirmations(): void
+    {
+        $packages = $this->enable(['toast']);
+        $this->withoutMiddleware(ThrottleRequests::class);
+        $this->actingAs($this->user());
+        $payload = $this->payload('toast', 'configure');
+        $this->postJson('/users/settings/packages', array_replace($payload, ['confirmation' => 'Continue']))->assertUnprocessable()->assertJsonValidationErrors('confirmation');
+        $this->postJson('/users/settings/packages', array_replace($payload, ['acknowledgement' => false]))->assertUnprocessable()->assertJsonValidationErrors('acknowledgement');
+        $this->postJson('/users/settings/packages', $this->payload('spatie', 'configure'))->assertUnprocessable()->assertJsonValidationErrors('package');
+        Bus::assertNothingDispatched();
+
+        $response = $this->postJson('/users/settings/packages', $payload)->assertStatus(202);
+        $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+        $composer = \Mockery::mock(ComposerPackages::class);
+        $composer->shouldNotReceive('changeFromSettings');
+        $composer->shouldReceive('setup')->once()->with('toast', 'bootstrap4', false, \Mockery::type('callable'))->andReturnTrue();
+        $job->handle($packages, $composer, new UserSettings());
+        $this->getJson($response->json('status_url'))->assertOk()->assertJsonPath('status', 'completed')->assertJsonPath('message', 'Package setup completed.');
+        $this->get('/users/settings')->assertOk()->assertSee('data-lu-package-operation="configure"', false)->assertDontSee('php artisan toast:install', false);
+    }
+
+    public function test_setup_failure_is_visible_and_can_be_retried_without_composer_changes(): void
+    {
+        $packages = $this->enable(['toast']);
+        $this->actingAs($this->user());
+        foreach ([false, true] as $success) {
+            $response = $this->postJson('/users/settings/packages', $this->payload('toast', 'configure'))->assertStatus(202);
+            $job = Bus::dispatched(ChangeManagedPackage::class)->last();
+            $composer = \Mockery::mock(ComposerPackages::class);
+            $composer->shouldNotReceive('changeFromSettings');
+            $composer->shouldReceive('setup')->once()->andReturn($success);
+            $job->handle($packages, $composer, new UserSettings());
+            $status = $this->getJson($response->json('status_url'))->assertOk()->assertJsonPath('status', $success ? 'completed' : 'failed');
+            if (!$success) {
+                $status->assertJsonPath('stage', 'setup')->assertJsonPath('message', 'Package setup failed. Review the application logs, then use Complete setup in settings before enabling the integration.');
+            }
+        }
+    }
+
     public function test_composer_and_setup_failures_are_reported_without_leaving_the_package_lock_held(): void
     {
         $packages = $this->enable();

@@ -39,10 +39,22 @@ class ManagedPackages
         return array_map(fn ($package) => $this->installed($package), array_combine(array_keys(self::PACKAGES), array_keys(self::PACKAGES)));
     }
 
+    public function toastSetupComplete(): bool
+    {
+        return $this->installed('toast') && is_file(config_path('toast.php')) && UserNotifications::toastInstalled();
+    }
+
     public function check(string $package, string $action): void
     {
-        if (!isset(self::PACKAGES[$package]) || !in_array($action, ['install', 'remove'], true)) {
+        if (!isset(self::PACKAGES[$package]) || !in_array($action, ['install', 'remove', 'configure'], true)) {
             $this->reject('Choose a supported package and operation.');
+        }
+        if ($action === 'configure') {
+            if (!$this->installed($package)) {
+                $this->reject('Install this package before completing its setup.');
+            }
+
+            return;
         }
         if ($action === 'install') {
             $this->checkInstallation($package);

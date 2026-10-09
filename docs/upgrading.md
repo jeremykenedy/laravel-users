@@ -6,7 +6,7 @@ New features remain opt-in. Package email actions, creation welcome mail, passwo
 
 Keep a copy of application configuration and published views. Run the application's own tests against the package update. This package cannot test every customization in consuming applications.
 
-Composer updates retain Bootstrap 4 unless you have explicitly selected another framework. No Composer scripts publish views or change host configuration. Existing published Bootstrap 4 views continue to override bundled Bootstrap 4 views.
+Composer updates retain Blade and Bootstrap 4 unless you have explicitly selected another runtime or CSS framework. No Composer scripts publish views or change host configuration. Existing published Bootstrap 4 views continue to override bundled Bootstrap 4 views.
 
 ## Version transitions
 
@@ -20,7 +20,7 @@ The changes on this branch are unreleased. Do not treat the branch name as a pub
 | 4.3 | 4.4 | Laravel 9 compatibility changes. Review the installed PHP/framework constraints and the role package version before resolving Composer. |
 | 4.4 | 4.5 | HTML/form dependency changed to `laravellux/html`. Update any custom form overrides and the host's provider/alias setup consistently. |
 | 4.5 | 5.0 | PHP 8.4 support and removal of the package's `laravellux/html` requirement. Version 5 requires PHP 8.1 or newer. Hosts with published `Form::` views must keep their own compatible HTML package until those views are converted. |
-| 5.0 | This unreleased branch | Bootstrap 4 and original routes/config remain the defaults. Review the new view partials, strict text validation, opt-in tables, email controls, and dependency matrix below. |
+| 5.0 | 6.0 | Bootstrap 4 and original routes/config remain the defaults. Review the new view partials, strict text validation, opt-in tables, email controls, and dependency matrix below. |
 
 The historical transition notes are based on the [published releases](https://github.com/jeremykenedy/laravel-users/releases) and their tagged Composer requirements. For older patch releases with no published notes, inspect the [tag comparison](https://github.com/jeremykenedy/laravel-users/compare) and your local overrides rather than assuming they share the next minor version's changes.
 
@@ -30,7 +30,7 @@ Do not upgrade a PHP 7 host directly to the current package. Resolve the host's 
 
 | Area | Default and migration impact |
 | --- | --- |
-| Frontend | Bootstrap 4 and published overrides remain. Bootstrap 5 and Tailwind are explicit choices. No Composer hook switches frameworks. |
+| Frontend | Blade, Bootstrap 4 and published overrides remain. Bootstrap 5 requires an explicit selection. Other frameworks are deferred. No Composer hook switches frameworks. |
 | Configuration | All 36 original options and their defaults remain. New nested settings merge with bundled defaults; existing application config is preserved. Environment fallback calls must be merged into older published files if desired. |
 | Search | Fixes decoded/text JSON handling from issue #90 and escapes inserted values. Optional debounce, sorting, filtering, and column controls apply to bundled views. |
 | Validation | Create retains its six-character minimum and no default maximum. Edit retains its six-to-twenty limits and blank-password behavior. HTML usernames are rejected. Optional stronger rules apply to both forms. |
@@ -40,21 +40,22 @@ Do not upgrade a PHP 7 host directly to the current package. Resolve the host's 
 | Email | Sending is always explicit. Creation welcome/password setup and deleted-account links are unchecked. The optional settings page can save global welcome availability and template defaults, subject to the existing email config flags. Queue, broker, route, and authorization are host-owned. |
 | Account links | Off by default; requires a separate migration. Encrypted, action-bound links require confirmation and are single use. Never expire is an explicit unchecked choice and can be disabled. |
 | Roles | Existing integration stays unchanged. Optional Spatie support and installer choices do not install or migrate anything silently. Direct permissions are separately opt-in. Shared role levels stay host-owned. |
+| Notifications/packages | Inline alerts remain the default. Explicit Toast installation completes setup automatically and retains existing notification settings. Web dependency changes require a dedicated gate, verified worker and typed confirmation. |
 | Documentation/CI | New guides, current screenshots, theme-aware graphics, optional-role jobs, and browser/accessibility coverage. No release is published automatically. |
 
 ## Selecting a modern frontend
 
 1. Clear the host configuration cache if enabled.
-2. Run `php artisan laravelusers:update --framework=bootstrap5` or use `tailwind`.
+2. Run `php artisan laravelusers:update --frontend=blade --css=bootstrap5`; keep Bootstrap 4 with `--css=bootstrap4`.
 3. Choose a default theme and whether to publish views.
 4. Check custom layouts and assets. Remove duplicate framework stylesheets from the layout if needed.
+5. Run host application tests and rebuild the configuration cache.
 
 Install, update, switch and the standalone publisher now export versioned assets to `public/vendor/laravelusers/`. Run `php artisan laravelusers:update --no-interaction` as part of deployment to refresh them while retaining current settings. Unpublished or stale assets retain the bundled fallback. Allow writes to the package public directory and `storage/app/laravelusers` during this step. Host Vite and Tailwind configuration is retained.
 
 The setup commands use PHP-Parser to add the impersonation-state guard to an existing `routes/web.php`. Review the route diff before rebuilding route caches. These entries are conditional on the middleware class being available, so an older package can still load the file after rollback. Invalid host PHP or a route file changed during setup stops the command. Impersonation remains disabled unless explicitly enabled; [the guide](impersonation.md) covers authorization, expiration and application listeners.
-5. Run host application tests and rebuild the configuration cache.
 
-Modern views live under `laravelusers::modern`. They share form and page partials across Bootstrap 5 and Tailwind. They do not rewrite existing Bootstrap 4 view overrides. Explicitly configured custom view names still win, even if you select a modern framework.
+The optional Bootstrap 5 Blade views live under `laravelusers::modern`. Custom published templates and explicitly configured view names still win. Other CSS frameworks and application runtimes will be added in later releases.
 
 Modern views use their own search and accessible confirmation modals. They provide optional table sorting, column filters, persistent column visibility, and a mobile entry layout without jQuery or legacy DataTables. Bootstrap 4 retains its existing modal and DataTables integrations. Pagination remains server-side. Table controls act on displayed rows; use search for matches across pages or disable pagination for a complete in-memory table.
 
@@ -72,7 +73,7 @@ Direct `vendor:publish --force` is Laravel's original overwrite operation and do
 
 ```sh
 php artisan config:clear
-php artisan laravelusers:update --framework=bootstrap4 --theme=light --no-interaction
+php artisan laravelusers:update --frontend=blade --css=bootstrap4 --theme=light --no-interaction
 ```
 
 Existing Bootstrap 4 overrides will be used again. To undo forced publication, copy the affected files from the backup path reported by the command. Rebuild configuration and view caches as required by your deployment.
@@ -121,7 +122,7 @@ For rollback, restore the previous package constraint and lock file, restore any
 
 ## Settings, card appearance and optional package management
 
-These additions remain opt-in. Publish `laravelusers-settings-migrations` only for persistent global settings, and `laravelusers-appearance-migrations` only for individual card appearance. The latter contains separate gradient-strength and dark-appearance migrations for applications that already have the preference table. The dark migration adds nullable color, gradient and strength columns to the package preference table; it does not change the users table. Old preference tables still render and save light settings. Dark controls appear only when their columns exist. Global dark config values default to null and inherit the light palette until changed; existing callers omitting dark fields retain their saved preferences. Run unapplied migrations; do not replace or rerun an applied migration. Existing users inherit config/global choices without a backfill.
+These additions remain opt-in. Publish `laravelusers-settings-migrations` only for persistent global settings, and `laravelusers-appearance-migrations` only for individual card appearance. The latter contains separate gradient-strength, dark-appearance and gradient-highlight migrations for applications that already have the preference table. These add nullable columns to the package preference table and do not change the users table. Older tables still render and save their existing settings; new controls appear only when their columns exist. Dark config values default to null and inherit the light palette until changed. Light highlight colors default to white, preserving the previous gradient. Existing callers omitting fields retain their saved preferences. Run unapplied migrations; do not replace or rerun an applied migration. Existing users inherit config/global choices without a backfill.
 
 Define the settings gate before enabling the page. Review role/permission restrictions using an administrator and a restricted account. Global saved settings override config while enabled; individual saved colors/strength override global appearance. Reset buttons restore defaults in the form and require a save. Package controls also need their separate gate, asynchronous queue and shared cache. Keep them disabled on read-only deployments. See [settings](settings.md).
 

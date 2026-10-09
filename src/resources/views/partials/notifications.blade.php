@@ -1,8 +1,9 @@
 <div class="lu-notifications{{ isset($user) ? ' lu-notifications-profile' : '' }}">
 @if(config('laravelusers.enablePackageBootstapAlerts', true))
     @if(\jeremykenedy\laravelusers\Support\UserNotifications::useToast())
-        @once @include('toast::toasts') @endonce
-    @else
+        @once @include('laravelusers::partials.toasts') @endonce
+    @endif
+    @if(\jeremykenedy\laravelusers\Support\UserNotifications::useAlerts())
         @foreach(['message' => 'info', 'success' => 'success', 'error' => 'danger', 'warning' => 'warning'] as $status => $type)
             @if(session($status))
                 <div class="lu-flash alert alert-{{ $type }}" role="{{ $status === 'error' ? 'alert' : 'status' }}"><span>{{ session($status) }}</span>@if(config('laravelusers.notifications.dismissible', true))<button type="button" data-lu-dismiss-alert aria-label="{{ __('laravelusers::ui.close') }}">@include('laravelusers::partials.icon', ['name' => 'close'])</button>@endif</div>

@@ -10,6 +10,7 @@ use jeremykenedy\laravelusers\Actions\QueuePackageChange;
 use jeremykenedy\laravelusers\App\Http\Middleware\UserAccessMiddleware;
 use jeremykenedy\laravelusers\App\Http\Requests\ManagePackageRequest;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageOperations;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 
 class PackageSettingsController extends Controller
@@ -29,43 +30,32 @@ class PackageSettingsController extends Controller
     public function store(ManagePackageRequest $request, QueuePackageChange $change, PackageRequirements $requirements, ManagedPackages $packages): JsonResponse
     {
         if ($request->validated()['operation'] === 'verify') {
-            $verified = $requirements->verify($packages);
-
-            return response()->json([
-                'status'      => $verified ? 'completed' : 'not_ready',
-                'queue_ready' => $verified,
-                'message'     => trans($verified ? 'laravelusers::ui.package_requirements_verified' : 'laravelusers::ui.package_requirements_not_verified'),
-            ]);
+            return response()->json($requirements->status($packages))->header('Cache-Control', 'no-store, private');
         }
 
         if ($request->validated()['operation'] === 'setup') {
             $requirements->configure();
 
-            return response()->json(['status' => 'completed', 'queue_ready' => $packages->queueReady(), 'message' => trans('laravelusers::ui.package_requirements_ready')]);
+            return response()->json($requirements->status($packages))->header('Cache-Control', 'no-store, private');
         }
         $id = $change->handle($request->user(), $request->validated());
 
-        return response()->json(['id' => $id, 'status_url' => route('users.settings.packages.status', $id)], 202);
+        return response()->json(PackageOperations::forActor($id, $request->user()), 202)->header('Cache-Control', 'no-store, private');
     }
 
     public function verify(ManagePackageRequest $request, PackageRequirements $requirements, ManagedPackages $packages): JsonResponse
     {
         abort_unless($request->validated()['operation'] === 'verify', 422);
-        $verified = $requirements->verify($packages);
 
-        return response()->json([
-            'status'      => $verified ? 'completed' : 'not_ready',
-            'queue_ready' => $verified,
-            'message'     => trans($verified ? 'laravelusers::ui.package_requirements_verified' : 'laravelusers::ui.package_requirements_not_verified'),
-        ]);
+        return response()->json($requirements->status($packages))->header('Cache-Control', 'no-store, private');
     }
 
     public function status(string $id, ManagedPackages $packages): JsonResponse
     {
         abort_unless($packages->allowed(request()->user()), 403);
-        $record = ManagedPackages::cache()->get('laravelusers.package.'.$id);
-        abort_unless($record && ($record['actor'] ?? null) === (string) request()->user()->getKey(), 404);
+        $record = PackageOperations::forActor($id, request()->user());
+        abort_unless($record, 404);
 
-        return response()->json(array_diff_key($record, ['actor' => true]))->header('Cache-Control', 'no-store, private');
+        return response()->json($record)->header('Cache-Control', 'no-store, private');
     }
 }

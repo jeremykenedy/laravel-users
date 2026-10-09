@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageOperations;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PackageWorker;
 use jeremykenedy\laravelusers\Test\TestCase;
@@ -142,6 +144,30 @@ class PackageRequirementsTest extends TestCase
         $this->assertEqualsCanonicalizing(['status', 'queue_ready', 'message'], array_keys($response->json()));
         $this->assertFalse(PackageWorker::verified());
         $this->assertSame(0, DB::table('laravelusers_package_jobs')->count());
+    }
+
+    public function test_verified_requirements_remain_visible_alongside_package_operation_results(): void
+    {
+        $this->enable();
+        $actor = $this->user();
+        $this->actingAs($actor)->postJson('/users/settings/packages', $this->setupPayload())->assertOk();
+        $this->work();
+
+        foreach (['queued', 'completed', 'failed'] as $state) {
+            $message = 'Package operation '.$state.'.';
+            PackageOperations::remember((string) Str::uuid(), ['actor' => (string) $actor->getKey(), 'status' => $state, 'message' => $message]);
+            foreach (['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'] as $framework) {
+                config(['laravelusers.frontend' => $framework]);
+                $response = $this->get('/users/settings')->assertOk()
+                    ->assertSee('<span data-lu-package-status-message>'.trans('laravelusers::ui.package_requirements_verified').'</span>', false)
+                    ->assertSee('<span data-lu-package-status-message>'.$message, false)
+                    ->assertSee('data-lu-package-operation-status data-state="'.$state.'"', false)
+                    ->assertSee('<span data-lu-package-verify-label>Re-Verify package requirements</span>', false);
+                if ($state === 'completed') {
+                    $response->assertSee('data-lu-package-refresh>Refresh settings</a>', false);
+                }
+            }
+        }
     }
 
     public function test_host_composer_failure_prevents_worker_probe_dispatch(): void

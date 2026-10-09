@@ -2,9 +2,13 @@
   "name": "laravel-users-development",
   "private": true,
   "scripts": {
-    "build": "tailwindcss -i src/resources/css/tailwind.css -o src/resources/views/modern/tailwind.blade.php --minify && node scripts/build-assets.cjs",
+    "build": "tailwindcss -i src/resources/css/tailwind.css -o src/resources/views/modern/tailwind.blade.php --minify && node scripts/build-assets.cjs && npm run build:frameworks && npm run build:runtimes",
+    "build:frameworks": "node scripts/build-frameworks.cjs",
+    "build:runtimes": "npm ci --prefix src/resources/js/runtime --ignore-scripts && npm run build --prefix src/resources/js/runtime",
     "lint:docs": "node scripts/lint-docs.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:browser:native": "playwright test --config=tests/browser/native.config.cjs",
+    "test:runtime": "node --test src/resources/js/runtime/tests/*.test.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",

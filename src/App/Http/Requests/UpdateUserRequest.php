@@ -14,6 +14,7 @@ use jeremykenedy\laravelusers\Support\AccountPreferences;
 use jeremykenedy\laravelusers\Support\AppearancePreferences;
 use jeremykenedy\laravelusers\Support\AvatarPreferences;
 use jeremykenedy\laravelusers\Support\DeletedUsers;
+use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\PasswordRules;
 use jeremykenedy\laravelusers\Support\UserPermissions;
 
@@ -66,6 +67,10 @@ class UpdateUserRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
+        if (NativeRuntime::expectsJson($this)) {
+            parent::failedValidation($validator);
+        }
+
         throw new HttpResponseException(redirect()->back()->withErrors($validator)->withInput($this->except(['password', 'password_confirmation'])));
     }
 }

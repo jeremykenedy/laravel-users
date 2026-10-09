@@ -89,7 +89,7 @@ jobs:
       - run: vendor/bin/phpunit --filter 'RoleIntegrationsTest|PackageSetupIntegrationsTest'
 
   presentation-integrations:
-    name: Optional avatars and toast / Laravel ${{ matrix.laravel }}
+    name: Optional presentation / Laravel ${{ matrix.laravel }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
@@ -109,7 +109,7 @@ jobs:
       - name: Select optional presentation dependencies
         run: composer require --dev "orchestra/testbench:${{ matrix.testbench }}" 'dicebear/core:^10.7' 'dicebear/styles:^10.6' 'jeremykenedy/laravel-toast:^3.0' --no-update --no-interaction
       - run: composer update --prefer-dist --no-interaction --no-plugins
-      - run: vendor/bin/phpunit --filter 'AvatarProvidersTest|ToastIntegrationsTest|PackageSetupIntegrationsTest'
+      - run: vendor/bin/phpunit --filter 'AvatarProvidersTest|AvatarPreviewTest|ToastIntegrationsTest|ToastSettingsTest|PackageSetupIntegrationsTest|RuntimeCommandsTest'
 
   quality:
     runs-on: ubuntu-24.04
@@ -129,9 +129,9 @@ jobs:
         env:
           XDEBUG_MODE: coverage
       - name: Install optional packages for integration coverage
-        run: composer require --dev 'spatie/laravel-permission:^8.0' 'jeremykenedy/laravel-roles:^13.0' 'dicebear/core:^10.7' 'dicebear/styles:^10.6' 'jeremykenedy/laravel-toast:^3.0' --no-interaction --no-plugins
+        run: composer require --dev 'livewire/livewire:^4.4' 'spatie/laravel-permission:^8.0' 'jeremykenedy/laravel-roles:^13.0' 'dicebear/core:^10.7' 'dicebear/styles:^10.6' 'jeremykenedy/laravel-toast:^3.0' --no-interaction --no-plugins
       - run: composer audit
-      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --filter 'RoleIntegrationsTest|AvatarProvidersTest|ToastIntegrationsTest|PackageSetupIntegrationsTest' --coverage-php coverage-optional.cov
+      - run: vendor/bin/phpunit --configuration phpunit.coverage.xml --coverage-php coverage-optional.cov
         env:
           XDEBUG_MODE: coverage
       - name: Combine core and optional integration coverage
@@ -150,8 +150,13 @@ jobs:
           retention-days: 7
 
   browser:
+    name: Blade UI / ${{ matrix.browser }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
@@ -167,14 +172,15 @@ jobs:
       - run: composer update --prefer-dist --no-interaction
       - run: npm ci
       - run: npm audit
+      - run: npm run test:runtime
       - run: npm run lint:docs
       - run: npm run build
-      - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php src/resources/assets/tailwind.css
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run test:browser
+      - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php src/resources/assets
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:browser -- --project=${{ matrix.browser }} --grep-invert 'tailwind|materialize|material3|bulma|foundation'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
-          name: browser-failures
+          name: browser-failures-${{ matrix.browser }}
           path: test-results/
           retention-days: 7

@@ -36,17 +36,19 @@ class RuntimeCommandsTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_bundled_runtimes_install_with_every_css_framework_without_changing_host_build_files(): void
+    public function test_blade_installs_with_released_bootstrap_choices_without_changing_host_build_files(): void
     {
-        $this->installCombinations(['blade', 'vue', 'react', 'svelte']);
+        $this->installCombinations(['blade']);
     }
 
-    public function test_installed_livewire_provider_supports_every_css_framework(): void
+    public function test_future_runtime_is_rejected_even_when_its_provider_is_installed(): void
     {
         $this->registerLivewire();
         $this->assertTrue(InstalledVersions::isInstalled('livewire/livewire'));
         $this->assertTrue($this->app->bound('livewire'));
-        $this->installCombinations(['livewire']);
+        $this->artisan('laravelusers:install', ['--frontend' => 'livewire', '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+        $this->assertDirectoryDoesNotExist(public_path('vendor/laravelusers'));
     }
 
     private function installCombinations(array $runtimes): void
@@ -73,7 +75,7 @@ class RuntimeCommandsTest extends TestCase
         $this->mock(ComposerPackages::class)->shouldNotReceive('install', 'installMany', 'remove', 'setup');
 
         foreach ($runtimes as $runtime) {
-            foreach (Frontend::FRAMEWORKS as $framework) {
+            foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
                 $this->artisan('laravelusers:install', ['--frontend' => $runtime, '--framework' => $framework, '--views' => 'publish', '--no-interaction' => true])->assertExitCode(0);
                 $settings = require config_path('laravelusers-ui.php');
                 $this->assertSame(['framework' => $framework, 'theme' => 'light', 'runtime' => $runtime], $settings);
@@ -99,33 +101,33 @@ class RuntimeCommandsTest extends TestCase
 
     public function test_update_retains_runtime_and_custom_settings_and_republishes_valid_assets(): void
     {
-        $settings = ['framework' => 'bulma', 'theme' => 'dark', 'runtime' => 'react', 'host_setting' => ['retained' => true]];
+        $settings = ['framework' => 'bootstrap5', 'theme' => 'dark', 'runtime' => 'blade', 'host_setting' => ['retained' => true]];
         config(['laravelusers-ui' => $settings]);
         $this->artisan('laravel-users:update', ['--no-interaction' => true])->assertExitCode(0);
         $this->assertSame($settings, require config_path('laravelusers-ui.php'));
         $manifest = json_decode(file_get_contents(public_path('vendor/laravelusers/manifest.json')), true);
-        file_put_contents(public_path('vendor/laravelusers/'.$manifest['files']['runtime-react.js']['path']), 'damaged');
-        $this->assertNull(PublicAssets::url('runtime-react.js'));
+        file_put_contents(public_path('vendor/laravelusers/'.$manifest['files']['users.js']['path']), 'damaged');
+        $this->assertNull(PublicAssets::url('users.js'));
         $this->artisan('laravelusers:update', ['--no-interaction' => true])->assertExitCode(0);
-        $this->assertNotNull(PublicAssets::url('runtime-react.js'));
+        $this->assertNotNull(PublicAssets::url('users.js'));
         $this->assertSame($settings, require config_path('laravelusers-ui.php'));
     }
 
     public function test_frontend_only_switch_preserves_css_theme_and_other_settings(): void
     {
-        config(['laravelusers-ui' => ['framework' => 'foundation', 'theme' => 'system', 'host_setting' => 'retained']]);
-        $this->artisan('laravel-users:switch', ['--frontend' => 'svelte'])->assertExitCode(0);
-        $this->assertSame(['framework' => 'foundation', 'theme' => 'system', 'host_setting' => 'retained', 'runtime' => 'svelte'], require config_path('laravelusers-ui.php'));
-        $this->assertNotNull(PublicAssets::url('runtime-svelte.js'));
+        config(['laravelusers-ui' => ['framework' => 'bootstrap5', 'theme' => 'system', 'host_setting' => 'retained']]);
+        $this->artisan('laravel-users:switch', ['--frontend' => 'blade'])->assertExitCode(0);
+        $this->assertSame(['framework' => 'bootstrap5', 'theme' => 'system', 'host_setting' => 'retained', 'runtime' => 'blade'], require config_path('laravelusers-ui.php'));
+        $this->assertNotNull(PublicAssets::url('users.js'));
     }
 
     public function test_configured_runtime_remains_active_without_adding_a_new_sidecar_key(): void
     {
-        config(['laravelusers.runtime' => 'vue']);
+        config(['laravelusers.runtime' => 'blade']);
         $this->artisan('laravelusers:update', ['--no-interaction' => true])->assertExitCode(0);
         $this->assertSame(['framework' => 'bootstrap4', 'theme' => 'light'], require config_path('laravelusers-ui.php'));
-        $this->assertSame('vue', NativeRuntime::name());
-        $this->assertNotNull(PublicAssets::url('runtime-vue.js'));
+        $this->assertSame('blade', NativeRuntime::name());
+        $this->assertNotNull(PublicAssets::url('users.js'));
     }
 
     public function test_invalid_options_cannot_publish_assets_change_routes_or_configure_optional_packages(): void
@@ -150,7 +152,7 @@ class RuntimeCommandsTest extends TestCase
         $this->assertFalse($this->app->bound('livewire'));
         $this->mock(PackageRequirements::class)->shouldNotReceive('configure');
         $this->artisan('laravelusers:install', ['--frontend' => 'livewire', '--setup-packages' => true, '--no-interaction' => true])
-            ->expectsOutput('Install Livewire 3 or 4 and register its service provider before selecting --frontend=livewire.')
+            ->expectsOutput('This release supports --frontend=blade. Other runtimes will be added in later releases.')
             ->assertExitCode(1);
         $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
         $this->assertDirectoryDoesNotExist(public_path('vendor/laravelusers'));
@@ -181,6 +183,20 @@ class RuntimeCommandsTest extends TestCase
         }
     }
 
+    public function test_deferred_frameworks_are_rejected_before_changing_host_files(): void
+    {
+        $this->mock(PackageRequirements::class)->shouldNotReceive('configure');
+        $this->mock(ComposerPackages::class)->shouldNotReceive('install', 'installMany', 'remove', 'setup');
+        foreach (['livewire', 'vue', 'react', 'svelte'] as $runtime) {
+            $this->artisan('laravelusers:install', ['--frontend' => $runtime, '--setup-packages' => true, '--no-interaction' => true])->assertExitCode(1);
+        }
+        foreach (['tailwind', 'materialize', 'material3', 'bulma', 'foundation'] as $framework) {
+            $this->artisan('laravelusers:install', ['--framework' => $framework, '--setup-packages' => true, '--no-interaction' => true])->assertExitCode(1);
+        }
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+        $this->assertDirectoryDoesNotExist(public_path('vendor/laravelusers'));
+    }
+
     public function test_cached_configuration_prevents_runtime_switch_and_asset_publication(): void
     {
         $files = new Filesystem();
@@ -201,7 +217,7 @@ class RuntimeCommandsTest extends TestCase
     public function test_toast_setup_runs_for_every_css_framework_and_preserves_published_settings(): void
     {
         $this->registerToast();
-        foreach (Frontend::FRAMEWORKS as $framework) {
+        foreach (Frontend::RELEASE_FRAMEWORKS as $framework) {
             @unlink(config_path('toast.php'));
             $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => $framework, '--no-interaction' => true])->assertExitCode(0);
             $this->assertFileExists(config_path('toast.php'));
@@ -212,7 +228,7 @@ class RuntimeCommandsTest extends TestCase
         $custom = '<?php return ["position" => "bottom-left", "duration" => 10000, "host" => true];';
         file_put_contents(config_path('toast.php'), $custom);
         config(['toast.position' => 'bottom-left', 'toast.duration' => 10000]);
-        $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'material3', '--no-interaction' => true])->assertExitCode(0);
+        $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'bootstrap5', '--no-interaction' => true])->assertExitCode(0);
         $this->assertSame($custom, file_get_contents(config_path('toast.php')));
         $this->assertSame('bottom-left', config('toast.position'));
         $this->assertSame(10000, config('toast.duration'));
@@ -240,7 +256,7 @@ class RuntimeCommandsTest extends TestCase
         $this->app->instance('env', 'local');
 
         try {
-            $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'material3', '--no-interaction' => true])->assertExitCode(0);
+            $this->artisan('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'bootstrap5', '--no-interaction' => true])->assertExitCode(0);
         } finally {
             $this->app->instance('env', 'testing');
         }
@@ -256,14 +272,14 @@ class RuntimeCommandsTest extends TestCase
         $this->registerToast();
         $composer = $this->mock(ComposerPackages::class);
         $composer->shouldNotReceive('install');
-        $composer->shouldReceive('setup')->once()->with('toast', 'material3', false, Mockery::type('callable'))
-            ->andReturnUsing(fn () => $this->app->make(Kernel::class)->call('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'material3', '--no-interaction' => true]) === 0);
-        $this->artisan('laravelusers:install', ['--toast' => 'install', '--notifications' => 'both', '--framework' => 'material3', '--setup-integrations' => true, '--no-interaction' => true])->assertExitCode(0);
+        $composer->shouldReceive('setup')->once()->with('toast', 'bootstrap5', false, Mockery::type('callable'))
+            ->andReturnUsing(fn () => $this->app->make(Kernel::class)->call('laravelusers:setup-package', ['package' => 'toast', '--framework' => 'bootstrap5', '--no-interaction' => true]) === 0);
+        $this->artisan('laravelusers:install', ['--toast' => 'install', '--notifications' => 'both', '--framework' => 'bootstrap5', '--setup-integrations' => true, '--no-interaction' => true])->assertExitCode(0);
         $this->assertFileExists(config_path('toast.php'));
         $this->assertSame('bootstrap5', config('toast.css_framework'));
         $this->assertSame('blade', config('toast.frontend'));
         $this->assertSame('both', (require config_path('laravelusers-notifications.php'))['driver']);
-        $this->assertSame('material3', (require config_path('laravelusers-ui.php'))['framework']);
+        $this->assertSame('bootstrap5', (require config_path('laravelusers-ui.php'))['framework']);
     }
 
     public function test_failed_automatic_toast_setup_does_not_enable_notifications_or_write_frontend_settings(): void

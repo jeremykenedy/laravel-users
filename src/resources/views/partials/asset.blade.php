@@ -7,8 +7,8 @@
     @endif
 @else
     @if($assetUrl)
-        <script @if($module ?? false)type="module"@endif src="{{ $assetUrl }}"></script>
+        <script @if($module ?? false) type="module" data-navigate-once @elseif($once ?? false) data-navigate-once @endif src="{{ $assetUrl }}"></script>
     @else
-        <script @if($module ?? false)type="module"@endif>{!! \jeremykenedy\laravelusers\Support\PublicAssets::contents($name) !!}</script>
+        <script @if($module ?? false) type="module" data-navigate-once @elseif($once ?? false) data-navigate-once @endif>{!! \jeremykenedy\laravelusers\Support\PublicAssets::contents($name) !!}</script>
     @endif
 @endif

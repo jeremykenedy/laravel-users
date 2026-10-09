@@ -22,7 +22,7 @@ class GoodbyeEmail
     {
         return [
             'send_goodbye'         => ['sometimes', 'boolean', Rule::in(self::allowed() ? [0, 1] : [0])],
-            'goodbye'              => ['sometimes', Rule::prohibitedIf(!self::allowed()), 'array:subject,message,use_greeting,greeting,include_name,use_signoff,signoff,signoff_name'],
+            'goodbye'              => array_merge(['sometimes', 'array:subject,message,use_greeting,greeting,include_name,use_signoff,signoff,signoff_name'], self::allowed() ? [] : ['prohibited']),
             'goodbye.subject'      => ['required_with:goodbye', 'string', 'max:150', 'regex:/^[^\r\n]*$/'],
             'goodbye.message'      => ['required_with:goodbye', 'string', 'max:'.max(1, (int) config('laravelusers.emails.max_length', 10000))],
             'goodbye.use_greeting' => ['sometimes', 'boolean'],

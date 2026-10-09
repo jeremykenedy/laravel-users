@@ -1,3 +1,4 @@
+@include('laravelusers::partials.asset', ['name' => 'notifications.css'])
 <style>
     #laravelusers .lu-notifications-profile { max-width: 960px; margin-inline: auto; }
     #laravelusers .lu-flash { box-sizing: border-box; }

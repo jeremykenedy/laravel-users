@@ -8,6 +8,8 @@ class Frontend
 {
     public const FRAMEWORKS = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
 
+    public const RELEASE_FRAMEWORKS = ['bootstrap4', 'bootstrap5'];
+
     public static function stylesheet(): ?string
     {
         return match (self::framework()) {

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use jeremykenedy\laravelusers\Actions\AvatarPreview;
 use jeremykenedy\laravelusers\Actions\BulkUsers;
 use jeremykenedy\laravelusers\Actions\CreateUser;
 use jeremykenedy\laravelusers\Actions\EmailUsers;
@@ -19,6 +20,7 @@ use jeremykenedy\laravelusers\Actions\PreviewUserEmail;
 use jeremykenedy\laravelusers\Actions\SendGoodbye;
 use jeremykenedy\laravelusers\Actions\UpdateUser;
 use jeremykenedy\laravelusers\Actions\UpdateUserSettings;
+use jeremykenedy\laravelusers\App\Http\Middleware\PrepareNativeSearch;
 use jeremykenedy\laravelusers\App\Http\Middleware\UserAccessMiddleware;
 use jeremykenedy\laravelusers\App\Http\Requests\BulkUsersRequest;
 use jeremykenedy\laravelusers\App\Http\Requests\CreateUserRequest;
@@ -33,6 +35,7 @@ use jeremykenedy\laravelusers\Support\AvatarPreferences;
 use jeremykenedy\laravelusers\Support\DeletedUsers;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageOperations;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\RoleAccess;
 use jeremykenedy\laravelusers\Support\UserAccess;
@@ -77,17 +80,20 @@ class UsersManagementController extends Controller
             $this->middleware($this->_rolesMiddlware);
         }
         $this->middleware(UserAccessMiddleware::class);
+        $this->middleware(PrepareNativeSearch::class)->only('index');
     }
 
-    public function settings(UserSettings $settings, ManagedPackages $packages, PackageRequirements $requirements): View
+    public function settings(UserSettings $settings, ManagedPackages $packages, PackageRequirements $requirements, AvatarPreview $preview): View
     {
         abort_unless(config('laravelusers.settings.enabled', false), 404);
         $user = Auth::user();
         $accessAvailable = $user instanceof Model && RoleAccess::available($user);
         $roles = $accessAvailable ? RoleAccess::query($user, 'role')->get() : collect();
         $permissions = $accessAvailable ? RoleAccess::query($user, 'permission')->get() : collect();
+        $packageManagementAllowed = $user instanceof Model && $packages->allowed($user);
+        $packageRequirements = $packageManagementAllowed ? $requirements->status($packages) : null;
 
-        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $user instanceof Model && $packages->allowed($user), 'managedPackages' => $packages->listing(), 'packageQueueReady' => $requirements->verify($packages), 'impersonationEnabled' => config('laravelusers.impersonation.enabled', false)]);
+        return view(Frontend::framework() === 'bootstrap4' ? 'laravelusers::usersmanagement.settings' : 'laravelusers::modern.settings', ['settingsAvailable' => $settings->available(), 'accessAvailable' => $accessAvailable, 'levelsAvailable' => $accessAvailable && method_exists($user, 'level'), 'roles' => $roles, 'permissions' => $permissions, 'packageManagementAllowed' => $packageManagementAllowed, 'managedPackages' => $packages->listing(), 'managedPackageSetup' => ['toast' => $packages->toastSetupComplete()], 'packageQueueReady' => $packageRequirements['queue_ready'] ?? false, 'packageRequirements' => $packageRequirements, 'packageOperation' => $packageManagementAllowed ? PackageOperations::latest($user) : null, 'appearancePreviewAvatars' => UserAccess::allows('edit_appearance') ? $preview->handle(config('laravelusers.avatar.source', 'initials')) : [], 'impersonationEnabled' => config('laravelusers.impersonation.enabled', false)]);
     }
 
     public function updateSettings(UpdateSettingsRequest $request, UpdateUserSettings $update): RedirectResponse

@@ -10,9 +10,9 @@ use jeremykenedy\laravelusers\Console\InstallCommand;
 class UpdateCommand extends InstallCommand
 {
     protected $signature = 'laravelusers:update
-        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
+        {--framework= : bootstrap4 or bootstrap5}
         {--css= : Alias for --framework}
-        {--frontend= : blade, livewire, vue, react, or svelte}
+        {--frontend= : blade}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}

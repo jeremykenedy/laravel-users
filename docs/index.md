@@ -2,9 +2,9 @@
 
 | Guide | What it covers |
 | --- | --- |
-| [Artisan commands](commands.md) | Installation, updating, switching CSS, role selection, publishing, backups, and rollback. |
+| [Artisan commands](commands.md) | Installation, updating, runtime/CSS choices, optional package setup, publishing, backups, and rollback. |
 | [Routes and authorization](routes.md) | Route names, middleware, access rules, and optional user/account pages. |
-| [User settings](settings.md) | Global defaults, individual appearance, access rules, notifications, package confirmations, and queue requirements. |
+| [User settings](settings.md) | Global defaults, live avatar previews, individual appearance, access rules, Toast controls, package progress, and worker verification. |
 | [Navigation components](navigation-components.md) | Standalone theme toggle and user menu in an application-owned layout. |
 | [Configuration](configuration.md) | Configuration keys, environment variables, UI controls, layouts, and defaults. |
 | [Roles and permissions](roles.md) | Optional Laravel Roles, Spatie, custom models, guards, teams, and middleware. |

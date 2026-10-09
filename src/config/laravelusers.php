@@ -13,6 +13,7 @@ return [
 
     // Frontend choices are opt-in; composer update never changes these settings.
     'frontend' => env('LARAVEL_USERS_FRONTEND', 'bootstrap4'),
+    'runtime'  => env('LARAVEL_USERS_RUNTIME', 'blade'),
     'theme'    => env('LARAVEL_USERS_THEME', 'light'),
     // Enable the light, dark, and system icon button; false keeps the configured theme.
     'themeToggle'      => env('LARAVEL_USERS_THEME_TOGGLE', false),
@@ -88,11 +89,12 @@ return [
         'connection' => env('LARAVEL_USERS_SETTINGS_CONNECTION', null),
         'gate'       => env('LARAVEL_USERS_SETTINGS_GATE', 'manage-laravelusers-settings'),
         'packages'   => [
-            'cache'      => env('LARAVEL_USERS_SETTINGS_PACKAGES_CACHE', null),
-            'enabled'    => env('LARAVEL_USERS_SETTINGS_PACKAGES_ENABLED', false),
-            'gate'       => env('LARAVEL_USERS_SETTINGS_PACKAGES_GATE', 'manage-laravelusers-packages'),
-            'queue'      => env('LARAVEL_USERS_SETTINGS_PACKAGES_QUEUE', 'default'),
-            'connection' => env('LARAVEL_USERS_SETTINGS_PACKAGES_CONNECTION', null),
+            'cache'         => env('LARAVEL_USERS_SETTINGS_PACKAGES_CACHE', null),
+            'enabled'       => env('LARAVEL_USERS_SETTINGS_PACKAGES_ENABLED', false),
+            'gate'          => env('LARAVEL_USERS_SETTINGS_PACKAGES_GATE', 'manage-laravelusers-packages'),
+            'queue'         => env('LARAVEL_USERS_SETTINGS_PACKAGES_QUEUE', 'default'),
+            'connection'    => env('LARAVEL_USERS_SETTINGS_PACKAGES_CONNECTION', null),
+            'start_timeout' => env('LARAVEL_USERS_SETTINGS_PACKAGES_START_TIMEOUT', 120),
         ],
     ],
     'access' => is_array($access) ? $access : [],
@@ -110,18 +112,22 @@ return [
     'appearance' => [
         'per_user' => env('LARAVEL_USERS_APPEARANCE_PER_USER', false),
     ],
-    'profileCardGradient'         => env('LARAVEL_USERS_PROFILE_CARD_GRADIENT', true),
-    'profileCardGradientStrength' => env('LARAVEL_USERS_PROFILE_CARD_GRADIENT_STRENGTH', 50),
-    'editCardGradient'            => env('LARAVEL_USERS_EDIT_CARD_GRADIENT', true),
-    'editCardGradientStrength'    => env('LARAVEL_USERS_EDIT_CARD_GRADIENT_STRENGTH', 50),
+    'profileCardGradient'               => env('LARAVEL_USERS_PROFILE_CARD_GRADIENT', true),
+    'profileCardGradientStrength'       => env('LARAVEL_USERS_PROFILE_CARD_GRADIENT_STRENGTH', 50),
+    'profileCardGradientHighlightColor' => env('LARAVEL_USERS_PROFILE_CARD_GRADIENT_HIGHLIGHT_COLOR', '#ffffff'),
+    'editCardGradient'                  => env('LARAVEL_USERS_EDIT_CARD_GRADIENT', true),
+    'editCardGradientStrength'          => env('LARAVEL_USERS_EDIT_CARD_GRADIENT_STRENGTH', 50),
+    'editCardGradientHighlightColor'    => env('LARAVEL_USERS_EDIT_CARD_GRADIENT_HIGHLIGHT_COLOR', '#ffffff'),
     // Null dark-mode settings inherit the existing light-mode appearance.
-    'profileCardDarkColor'            => env('LARAVEL_USERS_PROFILE_CARD_DARK_COLOR', null),
-    'profileCardDarkGradient'         => env('LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT', null),
-    'profileCardDarkGradientStrength' => env('LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT_STRENGTH', null),
-    'editCardDarkColor'               => env('LARAVEL_USERS_EDIT_CARD_DARK_COLOR', null),
-    'editCardDarkGradient'            => env('LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT', null),
-    'editCardDarkGradientStrength'    => env('LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT_STRENGTH', null),
-    'tableTextMaxWidth'               => env('LARAVEL_USERS_TABLE_TEXT_MAX_WIDTH', 240),
+    'profileCardDarkColor'                  => env('LARAVEL_USERS_PROFILE_CARD_DARK_COLOR', null),
+    'profileCardDarkGradient'               => env('LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT', null),
+    'profileCardDarkGradientStrength'       => env('LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT_STRENGTH', null),
+    'profileCardDarkGradientHighlightColor' => env('LARAVEL_USERS_PROFILE_CARD_DARK_GRADIENT_HIGHLIGHT_COLOR', null),
+    'editCardDarkColor'                     => env('LARAVEL_USERS_EDIT_CARD_DARK_COLOR', null),
+    'editCardDarkGradient'                  => env('LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT', null),
+    'editCardDarkGradientStrength'          => env('LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT_STRENGTH', null),
+    'editCardDarkGradientHighlightColor'    => env('LARAVEL_USERS_EDIT_CARD_DARK_GRADIENT_HIGHLIGHT_COLOR', null),
+    'tableTextMaxWidth'                     => env('LARAVEL_USERS_TABLE_TEXT_MAX_WIDTH', 240),
 
     // Welcome emails are sent only when selected on the create form.
     'welcome' => [

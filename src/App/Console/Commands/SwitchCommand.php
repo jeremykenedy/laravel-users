@@ -17,9 +17,9 @@ use jeremykenedy\laravelusers\Support\ToastSetup;
 class SwitchCommand extends InstallCommand
 {
     protected $signature = 'laravelusers:switch
-        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
+        {--framework= : bootstrap4 or bootstrap5}
         {--css= : Alias for --framework}
-        {--frontend= : blade, livewire, vue, react, or svelte}
+        {--frontend= : blade}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}

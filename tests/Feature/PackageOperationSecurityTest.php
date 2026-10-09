@@ -63,7 +63,7 @@ class PackageOperationSecurityTest extends TestCase
             $observed = [
                 'status' => Cache::get('laravelusers.package.'.$job->id)['status'],
                 'owner'  => Cache::get('laravelusers.packages.owner'),
-                'locked' => Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess(),
+                'locked' => $this->operationLocked(),
             ];
 
             return true;
@@ -107,7 +107,7 @@ class PackageOperationSecurityTest extends TestCase
         $ownedWhenComposerStarted = false;
         $composer->shouldReceive('changeFromSettings')->once()->andReturnUsing(function () use ($job, &$ownedWhenComposerStarted) {
             $ownedWhenComposerStarted = Cache::get('laravelusers.packages.owner') === $job->lockOwner
-                && Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess();
+                && $this->operationLocked();
 
             return true;
         });
@@ -144,7 +144,7 @@ class PackageOperationSecurityTest extends TestCase
         $job->handle($this->packages, $composer, new UserSettings());
 
         $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
-        $this->assertFalse(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+        $this->assertFalse($this->operationLocked());
     }
 
     public function test_expiring_an_old_operation_preserves_the_newer_operation_and_owner(): void
@@ -160,7 +160,7 @@ class PackageOperationSecurityTest extends TestCase
 
         $this->assertSame($new->id, PackageOperations::latest($actor)['id']);
         $this->assertSame($new->lockOwner, Cache::get('laravelusers.packages.owner'));
-        $this->assertTrue(Cache::restoreLock('laravelusers.packages', $new->lockOwner)->isOwnedByCurrentProcess());
+        $this->assertTrue($this->operationLocked());
     }
 
     public function test_another_actor_cannot_inspect_or_expire_a_queued_operation(): void
@@ -173,7 +173,7 @@ class PackageOperationSecurityTest extends TestCase
 
         $this->assertSame('queued', Cache::get('laravelusers.package.'.$job->id)['status']);
         $this->assertSame($job->lockOwner, Cache::get('laravelusers.packages.owner'));
-        $this->assertTrue(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+        $this->assertTrue($this->operationLocked());
     }
 
     public function test_configuration_requires_settings_and_package_authorization_before_queueing(): void
@@ -211,8 +211,19 @@ class PackageOperationSecurityTest extends TestCase
 
         $this->assertSame('failed', Cache::get('laravelusers.package.'.$job->id)['status']);
         $this->assertNull(Cache::get('laravelusers.packages.owner'));
-        $this->assertFalse(Cache::restoreLock('laravelusers.packages', $job->lockOwner)->isOwnedByCurrentProcess());
+        $this->assertFalse($this->operationLocked());
         $this->getJson($response->json('status_url'))->assertForbidden();
+    }
+
+    private function operationLocked(): bool
+    {
+        $contender = Cache::lock('laravelusers.packages', 10);
+        if (!$contender->get()) {
+            return true;
+        }
+        $contender->release();
+
+        return false;
     }
 
     private function installedPackage(): void

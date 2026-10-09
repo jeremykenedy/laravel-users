@@ -67,7 +67,7 @@ class PublicAssets
         $hashes = [];
         foreach ($this->files->files(self::sourceDirectory()) as $file) {
             $name = $file->getFilename();
-            if (!preg_match('/\A[a-z0-9-]+\.(?:css|js)\z/', $name) || $file->isLink()) {
+            if (!preg_match('/\A(?:[a-z0-9-]+\.(?:css|js)|runtime-(?:livewire|vue|react|svelte)\.licenses\.json)\z/', $name) || $file->isLink()) {
                 throw new RuntimeException('The package contains an unexpected public asset.');
             }
             $contents[$name] = $this->files->get($file->getPathname());
@@ -179,7 +179,7 @@ class PublicAssets
 
     private static function source(string $name): string
     {
-        if (!preg_match('/\A[a-z0-9-]+\.(?:css|js)\z/', $name) || !is_file(self::sourceDirectory().'/'.$name)) {
+        if (!preg_match('/\A(?:[a-z0-9-]+\.(?:css|js)|runtime-(?:livewire|vue|react|svelte)\.licenses\.json)\z/', $name) || !is_file(self::sourceDirectory().'/'.$name)) {
             throw new RuntimeException('Unknown package asset.');
         }
 

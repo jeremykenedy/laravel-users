@@ -18,7 +18,7 @@
         </details>
         @foreach(['welcome', 'reset', 'restore', 'force_delete', 'goodbye'] as $action)
             @php($template = \jeremykenedy\laravelusers\Support\EmailContent::defaults($action))
-            <details class="lu-email-template"><summary>{{ __('laravelusers::ui.email_'.$action) }}</summary>
+            <details class="lu-email-template"><summary><span>{{ __('laravelusers::ui.email_template_'.$action) }}</span></summary>
                 <label for="template-{{ $action }}-subject">{{ __('laravelusers::ui.email_subject') }}</label>
                 <input class="lu-email-input" id="template-{{ $action }}-subject" name="templates[{{ $action }}][subject]" value="{{ old('templates.'.$action.'.subject', $template['subject']) }}" maxlength="150" required>
                 <label for="template-{{ $action }}-message">{{ __('laravelusers::ui.email_body') }}</label>

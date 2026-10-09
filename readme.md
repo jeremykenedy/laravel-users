@@ -50,19 +50,16 @@
 
 ## Framework Support
 
-The package ships server-rendered Blade views. Bootstrap 4 remains the default for existing installations. Bootstrap 5 and Tailwind CSS are opt-in view styles. Changing CSS does not replace routes, models, application authentication, or custom views.
+This release supports Blade with Bootstrap 4 and Bootstrap 5. Bootstrap 4 remains the default for existing applications. Switching CSS preserves routes, authentication, models, configuration, and published custom views.
 
-| CSS framework | Blade | Livewire | Vue 3 | React | Svelte |
-| --- | --- | --- | --- | --- | --- |
-| Bootstrap 4 | Supported, default | Not bundled | Not bundled | Not bundled | Not bundled |
-| Bootstrap 5.3 | Supported, opt-in | Not bundled | Not bundled | Not bundled | Not bundled |
-| Tailwind CSS 4 | Supported, opt-in | Not bundled | Not bundled | Not bundled | Not bundled |
-| Materialize | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
-| Material Design 3 | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
-| Bulma | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
-| Foundation | Not bundled | Not bundled | Not bundled | Not bundled | Not bundled |
+| CSS framework | Blade | Availability |
+| --- | --- | --- |
+| Bootstrap 4, legacy | Default | Included |
+| Bootstrap 5.3 | Optional | Included |
+| Tailwind, Materialize, Material Design 3, Bulma, Foundation | Deferred | Planned for later releases |
+| Livewire, Vue, React, Svelte | Deferred | Planned for later releases |
 
-Livewire, Vue, React, and Svelte applications can link to the package's Blade routes. Native screens for those runtimes and the additional CSS frameworks are still pending. Unsupported selections are rejected before setup changes application files.
+Only Blade and the two Bootstrap choices are offered by the release installer. Other frameworks will be added separately after their own feature and browser checks.
 
 The package's documented compatibility suite covers Laravel 8 through 13, with framework and PHP versions paired in the [CI matrix](.github/workflows/tests.yml). Older Laravel applications should use a package version compatible with their framework and PHP runtime. See [framework setup and commands](docs/commands.md).
 
@@ -84,7 +81,7 @@ composer require jeremykenedy/laravel-users
 php artisan laravelusers:install
 ```
 
-The installer keeps Bootstrap 4 as the default, detects existing package configuration through the current settings, and preserves existing configuration and published views. It offers optional settings for CSS, theme, view publishing, avatars, notifications, and integrations. Use `--no-interaction` for scripted setup. Review the [installation and update guide](docs/commands.md) before enabling optional migrations or package changes.
+The installer keeps Blade and Bootstrap 4 as the defaults, detects existing package configuration through the current settings, and preserves existing configuration and published views. It offers settings for Bootstrap CSS, theme, view publishing, avatars, notifications, and optional integrations. Use `--no-interaction` for scripted setup. Review the [installation and update guide](docs/commands.md) before enabling optional migrations or package changes.
 
 The original publish command remains available:
 
@@ -96,32 +93,30 @@ The package also provides `php artisan laravelusers:publish`, with `laravel-user
 
 ## Quick Start
 
-The bundled interface uses Blade. Select the CSS framework during setup:
+The default setup preserves Blade and Bootstrap 4:
 
 ```sh
-php artisan laravelusers:install --framework=bootstrap4 --no-interaction
-php artisan laravelusers:install --framework=bootstrap5 --no-interaction
-php artisan laravelusers:install --framework=tailwind --no-interaction
+php artisan laravelusers:install --frontend=blade --css=bootstrap4 --no-interaction
 ```
 
-Sign in with an account authorized by the host application's middleware, then open `/users`. For an application-owned navigation menu, link to the package route:
+To use Bootstrap 5:
+
+```sh
+php artisan laravelusers:install --frontend=blade --css=bootstrap5 --no-interaction
+```
+
+Sign in with an account authorized by the host application's middleware, then open `/users`. Existing installations can use `laravelusers:update` with the same flags. For application-owned navigation, link to the package route:
 
 ```blade
 <a href="{{ route('users') }}">Manage users</a>
 ```
 
-Livewire navigation can use the same Blade link. Vue, React, and Svelte navigation can link directly to the default package URL:
-
-```html
-<a href="/users">Manage users</a>
-```
-
-These links open the package's Blade pages. Native screens and frontend components for those runtimes are still pending. See [standalone navigation components](docs/navigation-components.md) for the Blade components that can be embedded in a host layout.
+See [standalone navigation components](docs/navigation-components.md) for the Blade controls that can be embedded in a host layout. Livewire, Vue, React, Svelte and the remaining CSS frameworks are reserved for later releases.
 
 ## Features
 
 - Create, view, edit, search, sort, filter, and delete users with paginated table or card layouts.
-- Preserve the Bootstrap 4 experience by default, with optional Bootstrap 5 and Tailwind views.
+- Preserve Bootstrap 4 and Blade by default, with Bootstrap 5 available through an explicit choice.
 - Keep soft-deleted users in a separate list, with authorized restore and permanent-delete actions.
 - Restrict management routes and individual actions with host middleware, gates, roles, permissions, and supported role levels.
 - Integrate optionally with Laravel Roles, Spatie Laravel Permission, and compatible custom role models.
@@ -131,7 +126,9 @@ These links open the package's Blade pages. Native screens and frontend componen
 - Set global welcome-email defaults and enable or disable welcome actions from the administrator settings page.
 - Preview email content before sending and retain edits when returning to the composer.
 - Configure password strength rules and confirmation feedback for account creation and editing.
-- Customize light and dark profile-card colors, gradient strength, notification style, and user account settings.
+- Customize independent light/dark card colors, gradient highlight colors and strength, with inherited per-user overrides.
+- Choose inline alerts, installed Laravel Toast notifications, or both, with configurable Toast behavior.
+- Install, configure, and remove supported optional packages through authorized settings controls with worker verification and visible progress.
 - Add a signed-in account page with profile, avatar, appearance, email, password, and account-removal controls.
 - Use the theme toggle and user menu as standalone Blade components.
 - Impersonate another account with role-based authorization, expiring sessions, verified state, and an exit control when explicitly enabled.
@@ -146,6 +143,7 @@ The package configuration is [src/config/laravelusers.php](src/config/laraveluse
 | Setting | Default | Purpose |
 | --- | --- | --- |
 | `frontend` | `bootstrap4` | Preserve the original bundled views and styles. |
+| `runtime` | `blade` | Preserve server-rendered screens unless explicitly changed. |
 | `settings.enabled` | `false` | Keep the global settings page opt-in. |
 | `emails.enabled` | `false` | Keep package email actions off until configured. |
 | `welcome.enabled` | `false` | Require an administrator or environment opt-in for welcome actions. |
@@ -161,26 +159,26 @@ Bootstrap 4 remains the default. Use `laravelusers:update` for interactive setup
 ```sh
 php artisan config:clear
 php artisan laravelusers:update
-php artisan laravelusers:update --framework=bootstrap5 --theme=system --no-interaction
+php artisan laravelusers:update --frontend=blade --css=bootstrap5 --theme=system --no-interaction
 php artisan config:cache
 ```
 
 For a direct change without prompts, use `laravelusers:switch`:
 
 ```sh
-php artisan laravelusers:switch --css=tailwind
+php artisan laravelusers:switch --css=bootstrap4
 php artisan laravelusers:switch --framework=bootstrap4 --theme=light
 ```
 
 | Option | Values | Purpose |
 | --- | --- | --- |
-| `--framework` / `--css` | `bootstrap4`, `bootstrap5`, `tailwind` | Select the bundled Blade view styling. |
-| `--frontend` | `blade` | Select the only bundled screen implementation. Other values are rejected. |
+| `--framework` / `--css` | `bootstrap4`, `bootstrap5` | Select the CSS framework. |
+| `--frontend` | `blade` | Keep the Blade screen runtime for this release. |
 | `--theme` | `light`, `dark`, `system` | Set the initial package theme. |
 | `--views` | `package`, `publish` | Use bundled views or publish missing view files. |
 | `--force` | flag | Back up and replace published package views; only valid with `--views=publish`. |
 
-The package includes its modern CSS assets. Run `npm run build` only when changing the package's Tailwind source or building host application assets. Existing host overrides take precedence. Read [upgrading and rollback](docs/upgrading.md) before replacing published views.
+The commands publish compiled package CSS and runtime assets automatically. Run `npm run build` after switching if your host application imports or modifies its own assets; the bundled screens do not require a host Node build. Existing host overrides take precedence. Read [upgrading and rollback](docs/upgrading.md) before replacing published views.
 
 ## Artisan Commands
 
@@ -188,21 +186,21 @@ The package includes its modern CSS assets. Run `npm run build` only when changi
 | --- | --- | --- |
 | `laravelusers:install` | Configure the package and select optional integrations. | [Setup options](#install-options) and [integration flags](docs/commands.md) |
 | `laravelusers:update` | Refresh view choices and optional integration setup while preserving config. | Same setup flags as install |
-| `laravelusers:switch` | Apply explicit CSS, theme, view, avatar, role, or notification choices. | Same setup flags as install; pass choices explicitly |
+| `laravelusers:switch` | Apply explicit runtime, CSS, theme, view, avatar, role, or notification choices. | Same setup flags as install; pass choices explicitly |
 | `laravelusers:publish` | Publish configuration, views, translations and versioned public assets; `laravel-users:publish` is an alias. | No package-specific flags |
 | `laravelusers:setup-accounts` | Publish optional account, avatar, and appearance migrations. | `--migrate` |
 | `laravelusers:setup-package` | Configure an installed Toast or roles package. | `package` argument, `--framework`, `--migrate` |
 | `laravelusers:prune-deleted` | Permanently remove soft-deleted users when scheduled cleanup is enabled. | No package-specific flags |
 | `laravelusers:prune-account-links` | Remove expired account-link records. | No package-specific flags |
 
-Install, update, and switch share flags for CSS, Blade views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for those commands. These three commands publish versioned assets and register the impersonation-state guard in an existing host web routes file. The full option list, publishing safeguards, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
+Install, update, and switch share flags for runtimes, CSS, views, themes, role package selection, avatars, Toast, and optional setup tasks. Both `laravelusers:*` and `laravel-users:*` spellings are available for those commands. These three commands publish versioned assets and register the impersonation-state guard in an existing host web routes file. The full option list, publishing safeguards, queue setup, and safe removal steps are in [Artisan commands](docs/commands.md).
 
 ### Install Options
 
 | Option | Values | Purpose |
 | --- | --- | --- |
-| `--framework` / `--css` | `bootstrap4`, `bootstrap5`, `tailwind` | Select the bundled view style. |
-| `--frontend` | `blade` | Choose the bundled screen implementation. |
+| `--framework` / `--css` | `bootstrap4`, `bootstrap5` | Select the CSS framework. |
+| `--frontend` | `blade`, `livewire`, `vue`, `react`, `svelte` | Select the bundled screen implementation. |
 | `--theme` | `light`, `dark`, `system` | Set the initial theme. |
 | `--views` | `package`, `publish` | Use bundled views or publish missing templates. |
 | `--force` | flag | Back up and replace published views when `--views=publish` is selected. |
@@ -232,6 +230,7 @@ src/
   Console/                 Compatible command classes and maintenance commands
   Support/                 Package integrations and configuration
   database/                Opt-in package migrations
+  resources/assets/        Compiled CSS, runtime scripts and license notices
   resources/views/         Blade screens, components, and email templates
   routes/                  Package routes
 docs/                      Setup, feature, and upgrade guides
@@ -250,10 +249,11 @@ composer validate --strict
 composer check
 npm ci
 npm run build
+npm run test:runtime
 npm run test:browser
 ```
 
-CI covers PHP and Laravel compatibility, optional roles and presentation integrations, code style, dependency audit, coverage collection, and browser tests. See [testing and CI](docs/testing.md) for the matrix and fixture details. The browser fixture uses an isolated temporary database and sample users.
+CI covers PHP and Laravel compatibility, optional roles and presentation integrations, code style, dependency audit, coverage collection, and browser tests. Browser jobs exercise Bootstrap 4 and 5 in Chromium, Firefox and WebKit. See [testing and CI](docs/testing.md) for the commands, matrix, and fixture details. Browser fixtures use isolated temporary databases and sample users.
 
 PHP coverage uses `phpunit.coverage.xml` with PHPUnit 12 and Xdebug. It includes package logic, routes, configuration and migrations. Blade templates and generated assets are checked by the browser suite. The requested 100% coverage target has not yet been reached.
 
@@ -303,7 +303,7 @@ These screenshots use sample accounts from the isolated preview application. The
   <tr><th>Active users</th><th>Deleted users</th><th>Create user</th></tr>
   <tr>
     <td><img src="art/screenshots/desktop-users.jpg" alt="Active users table"></td>
-    <td><img src="art/screenshots/desktop-deleted-users.jpg" alt="Deleted users table"></td>
+    <td><img src="art/screenshots/desktop-deleted-users.jpg" alt="Deleted users directory in card view"></td>
     <td><img src="art/screenshots/desktop-create-user.jpg" alt="Create user form"></td>
   </tr>
   <tr><th>Edit user</th><th>Edit deleted user</th><th>User profile</th></tr>
@@ -317,6 +317,16 @@ These screenshots use sample accounts from the isolated preview application. The
     <td><img src="art/screenshots/desktop-settings.jpg" alt="Global settings page"></td>
     <td><img src="art/screenshots/desktop-settings-emails.jpg" alt="Global welcome email and template settings"></td>
     <td><img src="art/screenshots/desktop-account.jpg" alt="Signed-in account settings"></td>
+  </tr>
+  <tr><th>Notification settings</th><th>Account access settings</th><th>Cleanup settings</th></tr>
+  <tr>
+    <td><img src="art/screenshots/desktop-settings-notifications.jpg" alt="Inline alert and Toast notification settings"></td>
+    <td><img src="art/screenshots/desktop-settings-accounts.jpg" alt="Global account access and individual override settings"></td>
+    <td><img src="art/screenshots/desktop-settings-cleanup.jpg" alt="Disabled account cleanup with destructive-action warning"></td>
+  </tr>
+  <tr><th colspan="3">Optional package settings</th></tr>
+  <tr>
+    <td colspan="3"><img src="art/screenshots/desktop-settings-packages.jpg" alt="Optional package settings with completed Toast setup displayed as a checked sentence"></td>
   </tr>
   <tr><th>Email preview</th><th colspan="2">Account link confirmation</th></tr>
   <tr>

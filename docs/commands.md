@@ -1,6 +1,6 @@
 # Artisan setup commands
 
-Install and update use Laravel Prompts for interactive screens when it is available in the host Laravel version. The screens include a title, autocomplete choices, a selection table, publication spinners, notes and a completion message. Pressing Enter retains the current CSS selection. Older supported applications retain a Symfony Console prompt fallback. Both paths work with the existing Blade frontend and retain Bootstrap 4 unless another supported CSS framework is selected. They reject cached configuration before changing files.
+Install and update use Laravel Prompts when it is available in the host Laravel version. The screens include a title, runtime selection, searchable CSS choices, a selection table, publication spinners, notes and a completion message. Pressing Enter retains current choices. Older supported applications retain a Symfony Console prompt fallback. Blade and Bootstrap 4 remain the defaults. Both paths reject cached configuration before changing files.
 
 The implementations are `InstallCommand`, `UpdateCommand`, `SwitchCommand`, and `PublishCommand` under `src/App/Console/Commands/`, in the `jeremykenedy\laravelusers\App\Console\Commands` namespace. The former `jeremykenedy\laravelusers\Console` classes remain available for applications that reference them directly. Update and switch share the installer's validation and file operations.
 
@@ -11,7 +11,9 @@ php artisan laravelusers:install
 # Alias: php artisan laravel-users:install
 ```
 
-Choose CSS framework, theme, view publishing, avatar source, optional Toast integration, and an optional role package. Existing choices are defaults, not a reason to reset an installed application. Main configuration is copied only when absent. Existing custom view names, parent layouts, translations, and published views are preserved.
+Choose the runtime first, then CSS framework, theme, view publishing, avatar source, optional Toast integration, and an optional role package. Existing choices are defaults, not a reason to reset an installed application. Main configuration is copied only when absent. Existing custom view names, parent layouts, translations, and published views are preserved.
+
+This release offers Blade with Bootstrap 4 or 5. Other CSS frameworks and Livewire, Vue, React and Svelte are deferred to later releases. Unsupported command choices fail before changing host files. The commands preserve the host's dependency manifests and asset build configuration.
 
 ## Update
 
@@ -28,12 +30,12 @@ Update uses the same selections and publication safeguards. Without interaction 
 
 ```sh
 php artisan laravelusers:switch --css=bootstrap5
-php artisan laravelusers:switch --css=tailwind --theme=system
+php artisan laravelusers:switch --css=bootstrap4 --theme=system
 php artisan laravelusers:switch --roles=none
 # Alias: php artisan laravel-users:switch
 ```
 
-Switch is flag-based and never asks questions. Supply a framework, theme, views, roles, avatar, Toast, or notification option. It uses the same configuration and view-preservation rules as install and update.
+Switch is flag-based and never asks questions. Supply a runtime, CSS framework, theme, views, roles, avatar, Toast, or notification option. It uses the same configuration and view-preservation rules as install and update.
 
 ## Roles
 
@@ -45,9 +47,9 @@ See [roles and permissions](roles.md) for traits, middleware, migrations, guards
 
 | Option | Values or behavior |
 | --- | --- |
-| `--framework=` | `bootstrap4`, `bootstrap5`, `tailwind`. |
+| `--framework=` | `bootstrap4`, `bootstrap5`. |
 | `--css=` | Alias for framework. Conflicting flags fail without writing files. |
-| `--frontend=` | `blade`; native SPA view sets are not bundled. |
+| `--frontend=` | `blade`; other screen runtimes are not available in this release. |
 | `--theme=` | `light`, `dark`, `system`. |
 | `--views=package` | Keep view-loader behavior. Published overrides still take precedence. |
 | `--views=publish` | Add missing package views; keep existing ones. |
@@ -62,11 +64,11 @@ See [roles and permissions](roles.md) for traits, middleware, migrations, guards
 | `--avatar=` | `keep` or a supported [avatar source](avatars.md); Keep preserves the current choice. |
 | `--install-avatars` | Install the official local DiceBear libraries when selecting DiceBear. PHP 8.2 or newer is required. |
 | `--toast=` | `keep`, `install`, `remove`; changing the Composer dependency requires an explicit choice. |
-| `--notifications=` | `alert` or `toast`; Toast must already be installed and configured. |
+| `--notifications=` | `alert`, `toast`, or `both`; use `--toast=install` in the same command when installing Toast. |
 | `--with=` | Print setup instructions for optional UI Kit, Toast, Darkmode Toggle, IP Capture, or Seedster. Repeat as needed. |
 | `--no-interaction` | Keep current choices or use explicit flags, with no prompts. |
 
-Framework and theme selections live in `config/laravelusers-ui.php`. Role selections use `config/laravelusers-roles.php` only when explicitly changed. These files retain environment fallbacks. Avatar choices use `laravelusers-avatar.php`; notification defaults use `laravelusers-notifications.php`. Environment variables take precedence over command selections. Clear and rebuild configuration caches during deployment.
+CSS, runtime and theme selections live in `config/laravelusers-ui.php`, using `LARAVEL_USERS_FRONTEND`, `LARAVEL_USERS_RUNTIME` and `LARAVEL_USERS_THEME`. The original `frontend` config key continues to select CSS; `runtime` selects the screen implementation. Role selections use `config/laravelusers-roles.php` only when explicitly changed. These files retain environment fallbacks. Avatar choices use `laravelusers-avatar.php`; notification defaults use `laravelusers-notifications.php`. Environment variables take precedence over command selections. Clear and rebuild configuration caches during deployment.
 
 ## Publishing
 
@@ -77,7 +79,7 @@ The standalone package publisher is available as `laravelusers:publish` or `lara
 | `php artisan laravelusers:publish` | Main config, all views, translations and versioned public assets. |
 | `php artisan vendor:publish --tag=laravelusers` | Main config, all views, and translations. |
 | `php artisan vendor:publish --tag=laravelusers-settings-migrations` | Optional global settings storage. |
-| `php artisan vendor:publish --tag=laravelusers-appearance-migrations` | Optional individual card colors, gradients and gradient strength. |
+| `php artisan vendor:publish --tag=laravelusers-appearance-migrations` | Optional individual light/dark card colors, gradient switches, strength and highlight colors. |
 | `php artisan vendor:publish --tag=laravelusers-avatar-migrations` | Optional per-user avatar preferences on the user model connection. |
 | `php artisan vendor:publish --tag=laravelusers-email-views` | Welcome, reset, custom-message, and deleted-user email templates. |
 | `php artisan vendor:publish --tag=laravelusers-activity-migrations` | Optional latest-login activity table migration. |
@@ -89,9 +91,9 @@ The standalone package publisher is available as `laravelusers:publish` or `lara
 
 Laravel's `vendor:publish --force` overwrites files without the setup commands' backup step. Use the reviewed update workflow for customized views. Composer updates never run migrations. Database setup requires one of the explicit setup or migration options above; no command seeds roles or grants administrators.
 
-Install, update, switch and publish export the bundled styles and directory script to `public/vendor/laravelusers/`. Each release uses content hashes. Files are staged and verified under an exclusive filesystem lock; `manifest.json` is replaced only after the release is complete. Existing asset URLs remain available for pages loaded before an update. Custom files in that directory are retained.
+Install, update, switch and publish export the bundled styles and shared scripts to `public/vendor/laravelusers/`. Each release uses content hashes. Files are staged and verified under an exclusive filesystem lock; `manifest.json` is replaced only after the release is complete. Existing asset URLs remain available for pages loaded before an update. Custom files in that directory are retained.
 
-Modern views use published assets when their hashes match the installed package. They use the bundled inline fallback when assets are absent, outdated or damaged, so an ordinary Composer update does not leave existing pages without styles or scripts. Bootstrap 4 retains its existing script stack. Bootstrap CDN settings and host assets remain separate from the package assets.
+Modern views use published assets when their hashes match the installed package. They use the bundled fallback when assets are absent, outdated or damaged, so an ordinary Composer update does not leave existing pages without styles or scripts. Blade with Bootstrap 4 retains its existing script stack. Bootstrap CDN settings and host assets remain separate from package assets.
 
 The commands require write access to the package's public directory and `storage/app/laravelusers`. Run them during deployment before making a release read-only. Consuming applications do not need a Node build for these bundled assets. Run `npm run build` in your application after changing its own asset sources or CSS imports. Custom Vite layouts can use `@vite` and disable the package's `enableAppCss` and `enableAppJs` settings.
 
@@ -106,12 +108,10 @@ A forced view update reports a unique backup directory under `storage/app/larave
 ```sh
 php artisan laravelusers:update --avatar=ui-avatars
 php artisan laravelusers:update --avatar=dicebear --install-avatars
-php artisan laravelusers:update --toast=install
-php artisan toast:install --css=bootstrap5 --frontend=blade
-php artisan laravelusers:update --notifications=toast
+php artisan laravelusers:update --css=bootstrap5 --toast=install --notifications=toast
 php artisan laravelusers:update --toast=remove
 ```
 
-Toast needs PHP 8.2 and Laravel 10 or newer. Installation prints the follow-up commands because the newly installed provider is not booted in the running process. Existing Toast configuration is retained. Removal returns the package's notification default to alerts and leaves published files in place. Review other application consumers before removing a shared dependency. Saved [global settings](settings.md) override command notification defaults while the settings page is enabled.
+Toast needs PHP 8.2 and Laravel 10 or newer. Installation refreshes package discovery and runs the Toast installer in a fresh PHP process. You do not need to run `toast:install` separately. Existing Toast configuration is retained. Removal returns the package's notification default to alerts and leaves published files in place. Review other application consumers before removing a shared dependency. Saved [global settings](settings.md) override command notification defaults while the settings page is enabled.
 
-Web-based package controls are a separate opt-in with a dedicated gate, persistent queue, cache locks and typed confirmations. Installation offers missing configuration publication and a separate option to run only the selected package's migrations. It does not run unrelated host migrations or enable the integration automatically. See [package management requirements](settings.md#package-installation-and-removal).
+Web-based package controls are a separate opt-in with a dedicated gate, verified persistent worker, cache locks and typed confirmations. Toast installation always completes its setup; notification choices are preserved until changed. Roles installation offers missing configuration publication and a separate choice to run only the selected package's migrations. It does not run unrelated host migrations or enable a roles integration automatically. See [package management requirements](settings.md#package-installation-and-removal).

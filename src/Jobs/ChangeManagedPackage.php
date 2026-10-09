@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Validation\ValidationException;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\PackageOperations;
 use jeremykenedy\laravelusers\Support\UserSettings;
 use RuntimeException;
 use Throwable;
@@ -29,12 +30,19 @@ class ChangeManagedPackage implements ShouldQueue
 
     public function handle(ManagedPackages $packages, ComposerPackages $composer, UserSettings $settings): void
     {
+        $claim = ManagedPackages::cache()->lock('laravelusers.package.claim.'.$this->id, 600);
+        if (!$claim->get()) {
+            return;
+        }
         $record = ManagedPackages::cache()->get('laravelusers.package.'.$this->id);
-        if (in_array($record['status'] ?? null, ['completed', 'failed'], true)) {
+        if (in_array($record['status'] ?? null, ['running', 'completed', 'failed'], true)) {
+            $claim->release();
+
             return;
         }
         if (!$record) {
             $this->failed(new RuntimeException('Package operation expired.'));
+            $claim->release();
 
             return;
         }
@@ -42,22 +50,35 @@ class ChangeManagedPackage implements ShouldQueue
         $execution = ManagedPackages::cache()->lock('laravelusers.composer', 600);
 
         try {
-            $this->authorize($packages, $settings);
-            $packages->check($record['package'], $record['operation']);
             if (!$execution->get()) {
                 throw ValidationException::withMessages(['package' => 'Another Composer operation is running. Wait for it to finish.']);
             }
-            ManagedPackages::cache()->put('laravelusers.package.'.$this->id, array_replace($record, ['status' => 'running']), now()->addDay());
+            $record = ManagedPackages::cache()->get('laravelusers.package.'.$this->id);
+            if (!is_array($record) || ($record['status'] ?? null) !== 'queued') {
+                return;
+            }
+            if (PackageOperations::overdue($record)) {
+                throw ValidationException::withMessages(['package' => trans('laravelusers::ui.package_worker_missing')]);
+            }
+            $this->authorize($packages, $settings);
+            $packages->check($record['package'], $record['operation']);
+            $message = match ($record['operation']) {
+                'install'   => 'package_installing',
+                'configure' => 'package_configuring',
+                default     => 'package_removing',
+            };
+            PackageOperations::update($this->id, ['status' => 'running', 'stage' => $record['operation'] === 'configure' ? 'setup' : 'composer', 'started_at' => now()->timestamp, 'message' => trans('laravelusers::ui.'.$message)]);
             $this->change($composer, $record);
-            $message = $record['operation'] === 'install'
-                ? 'Composer installation completed. Finish the package setup using the instructions below before enabling the integration. Restart queue workers after changing dependencies.'
-                : 'Composer removal completed. Database tables and published files were retained. Review application references and restart queue workers.';
-            ManagedPackages::cache()->put('laravelusers.package.'.$this->id, array_replace($record, ['status' => 'completed', 'message' => $message]), now()->addDay());
+            $message = $record['operation'] === 'configure' ? 'Package setup completed.' : ($record['operation'] === 'install'
+                ? (!empty($record['setup']) ? 'Package installed and setup completed. Restart remaining application workers after changing dependencies.' : 'Composer installation completed. Finish the package setup using the instructions below before enabling the integration. Restart remaining application workers after changing dependencies.')
+                : 'Composer removal completed. Database tables and published files were retained. Review application references and restart remaining application workers.');
+            PackageOperations::update($this->id, ['status' => 'completed', 'stage' => 'completed', 'message' => $message]);
         } catch (Throwable $exception) {
             $this->failed($exception);
         } finally {
             $execution->release();
             $this->release();
+            $claim->release();
         }
     }
 
@@ -76,11 +97,14 @@ class ChangeManagedPackage implements ShouldQueue
 
     private function change(ComposerPackages $composer, array $record): void
     {
-        if (!$composer->changeFromSettings($record['operation'], ManagedPackages::PACKAGES[$record['package']])) {
+        if ($record['operation'] !== 'configure' && !$composer->changeFromSettings($record['operation'], ManagedPackages::PACKAGES[$record['package']])) {
             throw new RuntimeException('Composer could not complete the operation. Review the application logs and composer.json before retrying.');
         }
-        if ($record['operation'] === 'install' && !empty($record['setup']) && !$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn ($text) => null)) {
-            throw new RuntimeException('Package installed, but setup failed. Review the application logs and rerun laravelusers:setup-package.');
+        if (in_array($record['operation'], ['install', 'configure'], true) && !empty($record['setup'])) {
+            PackageOperations::update($this->id, ['stage' => 'setup', 'message' => trans('laravelusers::ui.package_configuring')]);
+            if (!$composer->setup($record['package'], $record['framework'], !empty($record['migrate']), fn ($text) => null)) {
+                throw new RuntimeException('Package setup failed. Review the application logs before retrying setup from settings.');
+            }
         }
     }
 
@@ -95,8 +119,13 @@ class ChangeManagedPackage implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         $record = ManagedPackages::cache()->get('laravelusers.package.'.$this->id, []);
-        $message = $exception instanceof ValidationException ? collect($exception->errors())->flatten()->first() : 'Package change failed. Review the application logs and Composer files before retrying.';
-        ManagedPackages::cache()->put('laravelusers.package.'.$this->id, array_replace($record, ['status' => 'failed', 'message' => $message]), now()->addDay());
+        if (in_array($record['status'] ?? null, ['completed', 'failed'], true)) {
+            return;
+        }
+        $message = $exception instanceof ValidationException ? collect($exception->errors())->flatten()->first() : (($record['stage'] ?? '') === 'setup' ? 'Package setup failed. Review the application logs, then use Complete setup in settings before enabling the integration.' : 'Package change failed. Review the application logs and Composer files before retrying.');
+        if (isset($record['actor'])) {
+            PackageOperations::update($this->id, ['status' => 'failed', 'message' => $message]);
+        }
         $this->release();
         report($exception);
     }

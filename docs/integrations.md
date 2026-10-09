@@ -1,6 +1,6 @@
 # Optional integrations
 
-Laravel Users provides its own Blade views, theme control, and session alerts. None of the following packages is required. `--with` prints setup instructions only. You decide whether to run them and configure the host application. Their PHP and Laravel requirements may be higher than this package's compatibility floor.
+Laravel Users provides its own views, theme control, and session alerts. None of the following packages is required. `--with` prints setup instructions only. Explicit Toast and roles options can install and configure those integrations. Their PHP and Laravel requirements may be higher than this package's compatibility floor.
 
 | Option | Package | Setup command after Composer installation |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Laravel Users provides its own Blade views, theme control, and session alerts. N
 Install with `composer require` followed by the chosen package name. Consult each package's documentation for its current setup options:
 
 - [UI Kit](https://github.com/jeremykenedy/laravel-ui-kit): use components in your custom or published views. Selecting it does not automatically replace Laravel Users templates.
-- [Toast](https://github.com/jeremykenedy/laravel-toast): connect the existing `success` and `error` session messages to the host toast component. Disable `enablePackageBootstapAlerts` if the host displays the same messages.
+- [Toast](https://github.com/jeremykenedy/laravel-toast): choose `notifications.driver=toast` or `both` to render the package's existing session notices through its built-in adapter. Keep the default `alert` when your host already handles those messages.
 - [Darkmode Toggle](https://github.com/jeremykenedy/laravel-darkmode-toggle): use a host-managed theme component if preferred. Disable `themeToggle` to avoid duplicate controls and synchronize the package root's `data-lu-theme` and `data-bs-theme` attributes from the host theme state. The built-in selector uses the separate `laravelusers.theme` local-storage key.
 - [IP Capture](https://github.com/jeremykenedy/laravel-ip-capture): configure tracking on your user model according to your application's requirements. Laravel Users does not add IP columns or enable tracking.
 - [Seedster](https://github.com/jeremykenedy/laravel-seedster): register application-owned seeders. Laravel Users does not seed accounts or execute seeders.
@@ -22,7 +22,9 @@ The `--with` options do not run migrations, seeds, Composer, or another package'
 
 ## Toast notifications
 
-Laravel Toast is optional. Use `laravelusers:update --toast=install`, complete `toast:install` for your CSS framework, then select `--notifications=toast` or choose Toast in global settings. The UI shows that choice only when the dependency and its views are available. Missing Toast falls back to inline alerts. The package preserves host Toast configuration and maps its existing success/error/message notices into the installed service.
+Laravel Toast is optional. Use `php artisan laravelusers:update --toast=install --notifications=toast`, or install it through the enabled Packages settings tab. Both workflows complete Toast setup automatically and preserve existing host configuration. In the settings UI, choose Toast or Alerts and Toast under Notifications and save. These choices appear only when the dependency and its views are available. Missing Toast falls back to inline alerts. Validation errors remain inline.
+
+When Toast is selected, the Notifications tab exposes position, direction, duration, visible count, opacity, animations, progress, stacking, hover behavior, icons, border, closing and automatic dismissal. Saved choices require notification-edit access and fall back to the host Toast configuration. Normal session notifications do not need the package-management queue; installing or removing dependencies through the UI does.
 
 `--toast=remove` removes the Composer dependency explicitly, preserves published files and selects alerts. Application references must be reviewed separately. [Settings](settings.md) documents the optional web installation/removal workflow, dedicated gate, queue requirements and typed confirmations.
 

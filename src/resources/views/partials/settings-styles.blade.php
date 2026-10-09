@@ -145,6 +145,8 @@
     #laravelusers .lu-goodbye-settings > summary { cursor: pointer; font-size: .875rem; font-weight: 600; }
     #laravelusers .lu-goodbye-settings[open] > summary { margin-bottom: 12px; }
     #laravelusers .lu-settings-form label { display: block; margin-bottom: 6px; font-size: .875rem; }
+    #laravelusers .lu-settings-form .lu-icon-label, #laravelusers .lu-settings-form .lu-title-heading { display: flex; align-items: center; gap: 10px; }
+    #laravelusers .lu-title-heading > span:not(.lu-title-icon), #laravelusers .lu-icon-label > span:not(.lu-title-icon) { min-width: 0; }
     #laravelusers .lu-settings-form input[type="color"] { display: block; width: 72px; height: 38px; padding: 3px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; background: var(--lu-bg, #fff); }
     #laravelusers .lu-settings-form p { margin: 8px 0 16px; font-size: .8rem; }
     #laravelusers .lu-access-rule { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; min-width: 0; margin: 20px 0; padding: 16px; border: 1px solid var(--lu-border, #ced4da); border-radius: 6px; }
@@ -163,7 +165,7 @@
     #laravelusers .lu-range-labels { display: flex; justify-content: space-between; font-size: .7rem; margin-top: 3px; }
     #laravelusers .lu-appearance-reset { display: inline-flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px 7px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; background: var(--lu-bg, #fff); color: var(--lu-text, #212529); font-size: .75rem; cursor: pointer; }
     #laravelusers .lu-appearance-reset .lu-icon { width: 14px; height: 14px; }
-    #laravelusers .lu-settings-preview { display: flex; align-items: center; justify-content: center; height: 76px; margin-top: 16px; border-radius: 5px; }
+    #laravelusers .lu-settings-preview { display: flex; align-items: center; justify-content: center; min-height: 76px; height: auto; padding: 18px; margin-top: 16px; border-radius: 5px; }
     #laravelusers .lu-settings-preview > span { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #e7eef8; color: #344760; }
     #laravelusers .lu-settings-preview .lu-icon { width: 20px; height: 20px; }
     #laravelusers .lu-settings-form .lu-access-rule legend { width: auto; padding: 0 6px; margin: 0; }
@@ -173,10 +175,21 @@
     #laravelusers .lu-package-settings h3 { margin: 0; font-size: .875rem; font-weight: 600; }
     #laravelusers .lu-package-preferred { color: var(--lu-muted, #667085); font-size: .75rem; font-weight: 500; }
     #laravelusers .lu-package-settings p { font-size: .8rem; }
-    #laravelusers [data-lu-package-status]:not([hidden]) { display: flex; align-items: flex-start; gap: 8px; }
+    #laravelusers .lu-package-status:not([hidden]) { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--lu-border, #d5deeb); border-radius: 6px; background: var(--lu-soft, #f3f6fb); }
+    #laravelusers .lu-package-status > span:not([hidden]):not([data-lu-package-status-message]) { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 20px; }
+    #laravelusers .lu-package-status .lu-icon { width: 18px; height: 18px; }
+    #laravelusers .lu-package-status[data-state="failed"] { border-color: #b42332; }
+    #laravelusers [data-lu-package-status-icon="failed"] { color: #b42332; }
+    #laravelusers[data-lu-theme="dark"] [data-lu-package-status-icon="failed"] { color: #ffadba; }
+    #laravelusers .lu-package-spinner .lu-icon { animation: lu-package-spin 1s linear infinite; }
+    @keyframes lu-package-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #laravelusers .lu-package-spinner .lu-icon { animation: none; } }
     #laravelusers [data-lu-package-status-verified] { flex-shrink: 0; color: #087f5b; }
     #laravelusers [data-lu-package-status-message] { min-width: 0; }
     #laravelusers[data-lu-theme="dark"] [data-lu-package-status-verified] { color: #7de1ab; }
+    #laravelusers .lu-package-setup-completed { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+    #laravelusers .lu-package-setup-completed .lu-icon { flex: 0 0 18px; width: 18px; height: 18px; color: #087f5b; }
+    #laravelusers[data-lu-theme="dark"] .lu-package-setup-completed .lu-icon { color: #7de1ab; }
     #laravelusers .lu-package-requirement-actions { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
     #laravelusers .lu-package-requirement-actions button { justify-content: center; margin: 0; }
     #laravelusers .lu-package-settings code { display: block; overflow-wrap: anywhere; font-size: .75rem; }
@@ -197,7 +210,14 @@
     #laravelusers #lu-email-templates-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
     #laravelusers #lu-email-templates-form .lu-email-check { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
     #laravelusers .lu-email-template { margin-top: 16px; border: 1px solid var(--lu-border, #ced4da); padding: 12px; border-radius: 6px; }
-    #laravelusers .lu-email-template summary { cursor: pointer; font-size: .875rem; font-weight: 600; }
+    #laravelusers .lu-email-template summary { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: .875rem; font-weight: 600; list-style: none; }
+    #laravelusers .lu-email-template summary::-webkit-details-marker { display: none; }
+    #laravelusers .lu-email-template summary::before { content: ""; flex: 0 0 7px; width: 7px; height: 7px; margin-right: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); }
+    #laravelusers .lu-email-template[open] summary::before { transform: rotate(45deg); }
+    #laravelusers .lu-email-template summary span { min-width: 0; white-space: nowrap; }
+    #laravelusers #lu-email-templates-title { margin-bottom: 20px; }
+    #laravelusers #lu-email-templates-form label:has([name="goodbye_on_delete"]) { margin-bottom: 24px; }
+    @media (max-width: 480px) { #laravelusers .lu-email-template { padding: 10px; } #laravelusers .lu-email-template summary { gap: 6px; font-size: .75rem; } }
     #laravelusers .lu-email-template[open] summary { margin-bottom: 12px; }
     #laravelusers [data-lu-goodbye-options] .lu-email-check { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
     #laravelusers [data-lu-goodbye-fields] { border: 0; margin: 12px 0 0; padding: 0; min-width: 0; }

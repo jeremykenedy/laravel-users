@@ -10,6 +10,25 @@ use Symfony\Component\Process\Process;
 
 class ComposerPackages
 {
+    public function readiness(): ?string
+    {
+        if (!(new ExecutableFinder())->find('composer') || !function_exists('proc_open')) {
+            return 'laravelusers::ui.package_composer_missing';
+        }
+        $manifest = base_path('composer.json');
+        if (!is_file($manifest) || !is_readable($manifest) || !is_writable($manifest) || !is_object(json_decode((string) file_get_contents($manifest)))) {
+            return 'laravelusers::ui.package_composer_manifest';
+        }
+        if (!is_dir(base_path('vendor')) || !is_writable(base_path('vendor')) || $this->installedPackages() === null) {
+            return 'laravelusers::ui.package_composer_vendor';
+        }
+        if (!is_file(base_path('artisan')) || !is_readable(base_path('artisan')) || !is_dir(base_path('bootstrap/cache')) || !is_writable(base_path('bootstrap/cache')) || (file_exists(base_path('composer.lock')) && (!is_file(base_path('composer.lock')) || !is_writable(base_path('composer.lock'))))) {
+            return 'laravelusers::ui.package_composer_application';
+        }
+
+        return null;
+    }
+
     public function setup(string $package, string $framework, bool $migrate, callable $output): bool
     {
         if (!isset(ManagedPackages::PACKAGES[$package]) || !in_array($framework, Frontend::FRAMEWORKS, true)) {
