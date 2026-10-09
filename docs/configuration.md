@@ -111,6 +111,7 @@ See [roles and permissions](roles.md) for both supported optional packages, mult
 | --- | --- | --- |
 | `laravelUsersBladeExtended` | `LARAVEL_USERS_LARAVEL_USERS_BLADE_EXTENDED` | `laravelusers::layouts.app` |
 | `middleware` | `LARAVEL_USERS_MIDDLEWARE` | `[]`; comma-separated middleware |
+| `authorization.middleware_gates` | `LARAVEL_USERS_AUTHORIZATION_MIDDLEWARE_GATES` | `[]`; JSON object mapping custom middleware to host authorization gates |
 | `impersonation.enabled` | `LARAVEL_USERS_IMPERSONATION_ENABLED` | `false` |
 | `impersonation.timeout` | `LARAVEL_USERS_IMPERSONATION_TIMEOUT` | `60`; minutes, bounded to 1 through 1,440 |
 | `impersonation.middleware` | `LARAVEL_USERS_IMPERSONATION_MIDDLEWARE` | `[]`; comma-separated middleware |

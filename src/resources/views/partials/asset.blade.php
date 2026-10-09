@@ -7,8 +7,8 @@
     @endif
 @else
     @if($assetUrl)
-        <script src="{{ $assetUrl }}"></script>
+        <script @if($module ?? false)type="module"@endif src="{{ $assetUrl }}"></script>
     @else
-        <script>{!! \jeremykenedy\laravelusers\Support\PublicAssets::contents($name) !!}</script>
+        <script @if($module ?? false)type="module"@endif>{!! \jeremykenedy\laravelusers\Support\PublicAssets::contents($name) !!}</script>
     @endif
 @endif

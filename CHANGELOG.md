@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Recheck actor middleware before queued package changes and on every impersonated request, including role levels and additional impersonation restrictions.
+- Invalidate impersonation after the original actor's password or remember token changes.
+- Reject unauthorized goodbye-email overrides while preserving configured automatic notices.
+- Allow explicit actor-aware gate mappings for custom middleware without executing HTTP middleware in workers.
 - Keep the package requirements notice visible after a refresh, with a green checkmark and a Re-Verify action.
 - Pin CI to Ubuntu 24.04 to keep the tested runner image during GitHub's upcoming default-image migration.
 - Omit impersonation styles and legacy search actions from page source when the user cannot access the feature.

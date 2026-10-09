@@ -28,14 +28,15 @@ class ImpersonationSession
         $now = now()->getTimestamp();
         $minutes = max(1, min(1440, (int) config('laravelusers.impersonation.timeout', 60)));
         $state = [
-            'actor_id'   => (string) $actor->getKey(),
-            'actor_name' => (string) $actor->getAttribute('name'),
-            'target_id'  => (string) $target->getKey(),
-            'model'      => config('laravelusers.defaultUserModel'),
-            'guard'      => $guard,
-            'return_to'  => $this->returnPath($request),
-            'started_at' => $now,
-            'expires_at' => $now + $minutes * 60,
+            'actor_id'          => (string) $actor->getKey(),
+            'actor_name'        => (string) $actor->getAttribute('name'),
+            'actor_credentials' => $this->credentials($actor),
+            'target_id'         => (string) $target->getKey(),
+            'model'             => config('laravelusers.defaultUserModel'),
+            'guard'             => $guard,
+            'return_to'         => $this->returnPath($request),
+            'started_at'        => $now,
+            'expires_at'        => $now + $minutes * 60,
         ];
         $state['proof'] = $this->encrypter->encrypt(json_encode($state, JSON_THROW_ON_ERROR), false);
         $request->session()->put(self::KEY, $state);
@@ -68,7 +69,10 @@ class ImpersonationSession
     {
         $model = config('laravelusers.defaultUserModel');
 
-        return ($state['model'] ?? null) === $model ? $model::query()->find($state['actor_id']) : null;
+        $actor = ($state['model'] ?? null) === $model ? $model::query()->find($state['actor_id']) : null;
+
+        return $actor && is_string($state['actor_credentials'] ?? null)
+            && hash_equals($state['actor_credentials'], $this->credentials($actor)) ? $actor : null;
     }
 
     public function target(array $state): ?Model
@@ -105,6 +109,11 @@ class ImpersonationSession
     {
         $request->session()->regenerate();
         $request->session()->regenerateToken();
+    }
+
+    private function credentials(Model $actor): string
+    {
+        return hash_hmac('sha256', json_encode([$actor->getAuthPassword(), $actor->getRememberToken()], JSON_THROW_ON_ERROR), $this->encrypter->getKey());
     }
 
     private function returnPath(Request $request): string

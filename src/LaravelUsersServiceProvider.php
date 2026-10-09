@@ -25,11 +25,9 @@ class LaravelUsersServiceProvider extends ServiceProvider
     /**
      * Bootstrap the application services.
      */
-    public function boot(): void
+    public function boot(Kernel $kernel): void
     {
-        $this->callAfterResolving(Kernel::class, function ($kernel) {
-            $kernel->appendMiddlewareToGroup('web', App\Http\Middleware\VerifyImpersonationState::class);
-        });
+        $kernel->appendMiddlewareToGroup('web', App\Http\Middleware\VerifyImpersonationState::class);
         $this->configurePasswordExpiry();
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $settings = $this->app->make(Support\UserSettings::class);

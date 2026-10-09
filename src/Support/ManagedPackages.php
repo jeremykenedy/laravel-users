@@ -24,6 +24,7 @@ class ManagedPackages
     public function allowed(Model $actor): bool
     {
         return config('laravelusers.settings.enabled', false) && config('laravelusers.settings.packages.enabled', false)
+            && UserAccess::managementMiddlewareAllows($actor)
             && UserAccess::allows('edit_settings', null, $actor)
             && Gate::forUser($actor)->allows(config('laravelusers.settings.packages.gate', 'manage-laravelusers-packages'));
     }

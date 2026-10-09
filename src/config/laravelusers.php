@@ -1,6 +1,7 @@
 <?php
 
 $access = json_decode((string) env('LARAVEL_USERS_ACCESS', '{}'), true);
+$middlewareGates = json_decode((string) env('LARAVEL_USERS_AUTHORIZATION_MIDDLEWARE_GATES', '{}'), true);
 
 return [
 
@@ -94,7 +95,9 @@ return [
             'connection' => env('LARAVEL_USERS_SETTINGS_PACKAGES_CONNECTION', null),
         ],
     ],
-    'access'        => is_array($access) ? $access : [],
+    'access' => is_array($access) ? $access : [],
+    // Map custom middleware to actor-aware gates for impersonation and queued package changes.
+    'authorization' => ['middleware_gates' => is_array($middlewareGates) ? $middlewareGates : []],
     'impersonation' => [
         'enabled'    => env('LARAVEL_USERS_IMPERSONATION_ENABLED', false),
         'timeout'    => env('LARAVEL_USERS_IMPERSONATION_TIMEOUT', 60),

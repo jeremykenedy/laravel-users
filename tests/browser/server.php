@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
@@ -77,7 +78,7 @@ config([
     'laravelusers.showUserCount'                  => true,
     'laravelusers.avatar.source'                  => in_array($_COOKIE['lu-avatar'] ?? '', ['initials', 'gravatar', 'avatar'], true) ? $_COOKIE['lu-avatar'] : 'initials',
     'laravelusers.profileCardColor'               => $_COOKIE['lu-profile-color'] ?? '#2458b7',
-    'laravelusers.frontend'                       => in_array($_COOKIE['lu-framework'] ?? '', ['bootstrap4', 'bootstrap5', 'tailwind'], true) ? $_COOKIE['lu-framework'] : ($preview ? 'bootstrap5' : 'bootstrap4'),
+    'laravelusers.frontend'                       => in_array($_COOKIE['lu-framework'] ?? '', Frontend::FRAMEWORKS, true) ? $_COOKIE['lu-framework'] : ($preview ? 'bootstrap5' : 'bootstrap4'),
     'laravelusers.tableViewToggle'                => ($_COOKIE['lu-view-toggle'] ?? '1') !== '0',
     'laravelusers.responsiveTable'                => ($_COOKIE['lu-responsive-table'] ?? '1') !== '0',
     'laravelusers.tableButtonsIconOnly'           => ($_COOKIE['lu-icons-only'] ?? '0') === '1',
@@ -192,7 +193,7 @@ if (!Schema::hasColumn('users', 'deleted_at')) {
     Schema::table('users', function (Blueprint $table) { $table->softDeletes(); });
 }
 Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
-    abort_unless(in_array($framework, ['bootstrap4', 'bootstrap5', 'tailwind'], true), 404);
+    abort_unless(in_array($framework, Frontend::FRAMEWORKS, true), 404);
     Auth::login(SoftUser::findOrFail(1));
     if ((int) ($_SERVER['SERVER_PORT'] ?? 0) !== 19849) {
         foreach (['laravelusers-settings-write', 'laravelusers-packages-write', 'laravelusers-packages-verify'] as $limiter) {

@@ -35,7 +35,7 @@ class ImpersonationController extends Controller
     public function start(int $id, Request $request, UserSettings $settings): RedirectResponse
     {
         $settings->load();
-        abort_unless(UserAccess::canImpersonate(), 404);
+        abort_unless(UserAccess::impersonationAvailable(), 404);
         abort_if($request->session()->has('laravelusers.impersonation'), 409);
         $model = config('laravelusers.defaultUserModel');
         $target = $model::query()->findOrFail($id);

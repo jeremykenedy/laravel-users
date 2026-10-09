@@ -16,12 +16,20 @@ class UserAccess
     {
         $user = $actor ?? Auth::user();
 
-        return config('laravelusers.impersonation.enabled', false)
-            && $user instanceof Model
-            && RoleAccess::available($user)
-            && self::canManageUsers($user)
+        return $user instanceof Model && self::impersonationAvailable($user)
+            && self::managementMiddlewareAllows($user, $target)
+            && MiddlewareAccess::allows($user, (array) config('laravelusers.impersonation.middleware', []), $target)
             && self::allows('impersonate_users', actor: $user)
             && (!$target || ((string) $target->getKey() !== (string) $user->getKey() && $target::class === config('laravelusers.defaultUserModel')));
+    }
+
+    public static function impersonationAvailable(?Model $actor = null): bool
+    {
+        $actor ??= Auth::user();
+
+        return config('laravelusers.impersonation.enabled', false) && $actor instanceof Model
+            && RoleAccess::available($actor) && self::allows('view_users', actor: $actor)
+            && self::allows('impersonate_users', actor: $actor);
     }
 
     public static function allows(string $action, ?array $rules = null, ?Model $actor = null): bool
@@ -72,6 +80,11 @@ class UserAccess
         }
 
         return $middleware;
+    }
+
+    public static function managementMiddlewareAllows(Model $actor, ?Model $target = null): bool
+    {
+        return MiddlewareAccess::allows($actor, self::middleware(), $target);
     }
 
     private static function middlewareAllows(Model $user, string $entry): bool
