@@ -8,7 +8,7 @@
                     <div class="lu-toast-body">
                         @if($toast['show_icon'])<span class="lu-toast-icon">@include('laravelusers::partials.icon', ['name' => match($toast['type']) { 'success' => 'check', 'error', 'warning' => 'warning', default => 'notifications' }])</span>@endif
                         <div class="lu-toast-message">@if($toast['title'])<strong>{{ $toast['title'] }}</strong>@endif<span>{{ $toast['message'] }}</span></div>
-                        @if($toast['show_close'])<button type="button" data-lu-dismiss-toast aria-label="{{ __('laravelusers::ui.close') }}">@include('laravelusers::partials.icon', ['name' => 'close'])</button>@endif
+                        @if($toast['show_close'])<button type="button" disabled data-lu-dismiss-toast aria-label="{{ __('laravelusers::ui.close') }}">@include('laravelusers::partials.icon', ['name' => 'close'])</button>@endif
                     </div>
                 </div>
             @endforeach

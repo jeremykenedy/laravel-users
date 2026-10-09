@@ -60,6 +60,7 @@
 
         function initialize() {
             root.querySelectorAll('[data-lu-toast]').forEach(prepare);
+            root.querySelectorAll('[data-lu-dismiss-alert], [data-lu-dismiss-toast], [data-lu-preview-notification]').forEach(button => { button.disabled = false; });
             const driver = root.querySelector('#settings-notifications');
             const settings = root.querySelector('[data-lu-toast-settings]');
             if (driver && settings) settings.hidden = !['toast', 'both'].includes(driver.value);
