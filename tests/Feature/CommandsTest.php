@@ -16,6 +16,14 @@ use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class CommandsTest extends TestCase
 {
     private string $directory;

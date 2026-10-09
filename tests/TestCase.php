@@ -8,6 +8,11 @@ use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
+/**
+ * Feature suites share the same Testbench application setup through this base test case.
+ *
+ * @SuppressWarnings("PHPMD.NumberOfChildren")
+ */
 class TestCase extends OrchestraTestCase
 {
     /** {@inheritdoc} */

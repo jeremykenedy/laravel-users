@@ -17,6 +17,13 @@ use jeremykenedy\laravelusers\Support\PackageWorker;
 use jeremykenedy\laravelusers\Test\TestCase;
 use RuntimeException;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class PackageWorkerTest extends TestCase
 {
     private string $cachePath;

@@ -25,6 +25,11 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\PermissionServiceProvider;
 
+/**
+ * Integration fixtures exercise the framework types and optional providers used by this feature.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class RoleIntegrationsTest extends TestCase
 {
     public function test_spatie_access_rules_do_not_cross_team_boundaries(): void

@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\View;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class FrontendTest extends TestCase
 {
     public function test_impersonation_markup_styles_and_search_actions_are_not_rendered_without_a_roles_integration(): void

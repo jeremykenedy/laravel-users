@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Keeps the package allowlist and its installation, removal, and authorization policies together.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class ManagedPackages
 {
     public const PACKAGES = ['toast' => 'jeremykenedy/laravel-toast', 'laravel-roles' => 'jeremykenedy/laravel-roles', 'spatie' => 'spatie/laravel-permission'];
@@ -58,9 +63,10 @@ class ManagedPackages
         }
         if ($action === 'install') {
             $this->checkInstallation($package);
-        } else {
-            $this->checkRemoval($package);
+
+            return;
         }
+        $this->checkRemoval($package);
     }
 
     private function checkInstallation(string $package): void

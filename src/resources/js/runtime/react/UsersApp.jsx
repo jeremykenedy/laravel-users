@@ -252,7 +252,7 @@ function NativeProfile({ state, store }) {
 
 function NativeSettingsActions({ state, store }) {
     const page = state.page;
-    if (!Boolean(page.data.settings_actions?.some(action => !action.name.startsWith('package-')))) return null;
+    if (!page.data.settings_actions?.some(action => !action.name.startsWith('package-'))) return null;
     return <div className="lu-pad lu-actions">{page.data.settings_actions.filter(action => !action.name.startsWith('package-')).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openSettingsAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}</div>;
 }
 

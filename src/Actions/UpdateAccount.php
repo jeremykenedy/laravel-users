@@ -30,12 +30,7 @@ class UpdateAccount
             }
             if ($data['section'] === 'profile') {
                 $locked->setAttribute(config('laravelusers.account.username_column', 'name'), $data['username']);
-                $column = config('laravelusers.account.name_column');
-                if ($column) {
-                    $locked->setAttribute($column, $data['full_name']);
-                } else {
-                    AccountPreferences::saveName($locked, $data['full_name']);
-                }
+                $this->saveName($locked, $data['full_name']);
                 $this->save($locked);
             } elseif ($data['section'] === 'appearance') {
                 AvatarPreferences::save($locked, $data);
@@ -49,6 +44,17 @@ class UpdateAccount
                 $this->emails->request($locked, $data['email']);
             }
         }, 3);
+    }
+
+    private function saveName(Model $user, string $name): void
+    {
+        $column = config('laravelusers.account.name_column');
+        if ($column) {
+            $user->setAttribute($column, $name);
+
+            return;
+        }
+        AccountPreferences::saveName($user, $name);
     }
 
     private function save(Model $user): void

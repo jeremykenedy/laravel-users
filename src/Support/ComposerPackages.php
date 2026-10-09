@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 
+/**
+ * Preserves the Composer process service API; readiness and each process operation are checked separately.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ */
 class ComposerPackages
 {
     public function readiness(): ?string

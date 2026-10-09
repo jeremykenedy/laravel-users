@@ -195,8 +195,12 @@ for (const runtime of runtimes) {
         await expect(form.locator('[name="show_breadcrumbs"]:not([type="hidden"])')).toBeChecked();
         await expect(darkHighlight).toBeDisabled();
         await expect(darkHighlight).toHaveValue('#b14c8a');
+        const requirementsResponse = page.waitForResponse(response => response.url().endsWith('/users/settings/packages/verify') && response.request().method() === 'POST');
         await page.getByRole('button', { name: /^(?:Re-)?Verify package requirements$/ }).click();
-        await expect(page.locator('[data-lu-native-package-requirements]')).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
+        await requirementsResponse;
+        const requirements = page.locator('[data-lu-native-package-requirements]');
+        await expect(requirements).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
+        await expect(requirements).not.toContainText('Waiting for the package worker', { timeout: 15000 });
         const templates = page.locator('form[data-lu-native-form="email-templates"]');
         await expect(templates.locator('details summary')).toHaveCount(5);
         await expect(templates.locator('details summary').first()).toHaveText(/template$/);

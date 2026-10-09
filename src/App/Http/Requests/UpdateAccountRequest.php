@@ -62,20 +62,33 @@ class UpdateAccountRequest extends FormRequest
         }]];
         $allowed = config('laravelusers.account.appearance', true) ? 'sometimes' : 'prohibited';
         foreach (['', '_dark'] as $mode) {
-            $available = $mode === '' ? AppearancePreferences::strengthAvailable($user) : AppearancePreferences::darkAvailable($user);
-            $ready = function ($attribute, $value, $fail) use ($available) {
-                if (!$available) {
-                    $fail(trans('laravelusers::ui.appearance_migration_required'));
-                }
-            };
-            $rules['user_card'.$mode.'_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i', $ready];
-            $rules['user_card'.$mode.'_gradient'] = [$allowed, Rule::in(['inherit', 'on', 'off']), $ready];
-            $rules['user_card'.$mode.'_gradient_strength'] = [$allowed, 'nullable', 'integer', 'min:0', 'max:100', $ready];
-            if ($available && AppearancePreferences::highlightAvailable($user)) {
-                $rules['user_card'.$mode.'_gradient_highlight_color'] = $allowed === 'prohibited'
-                    ? ['sometimes', 'required', 'prohibited']
-                    : ['sometimes', 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'];
+            $rules += $this->appearanceModeRules($user, $mode, $allowed);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
+    private function appearanceModeRules(Model $user, string $mode, string $allowed): array
+    {
+        $rules = [];
+        $available = $mode === '' ? AppearancePreferences::strengthAvailable($user) : AppearancePreferences::darkAvailable($user);
+        $ready = function ($attribute, $value, $fail) use ($available) {
+            if (!$available) {
+                $fail(trans('laravelusers::ui.appearance_migration_required'));
             }
+        };
+        $rules['user_card'.$mode.'_color'] = [$allowed, 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i', $ready];
+        $rules['user_card'.$mode.'_gradient'] = [$allowed, Rule::in(['inherit', 'on', 'off']), $ready];
+        $rules['user_card'.$mode.'_gradient_strength'] = [$allowed, 'nullable', 'integer', 'min:0', 'max:100', $ready];
+        if ($available && AppearancePreferences::highlightAvailable($user)) {
+            $rules['user_card'.$mode.'_gradient_highlight_color'] = $allowed === 'prohibited'
+                ? ['sometimes', 'required', 'prohibited']
+                : ['sometimes', 'nullable', 'string', 'regex:/\A#[a-f0-9]{6}\z/i'];
         }
 
         return $rules;

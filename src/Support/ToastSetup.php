@@ -16,11 +16,7 @@ class ToastSetup
 
     public function configure(Command $command, bool $interactive, string $framework): string|false|null
     {
-        $choice = $command->option('toast');
-        if ($choice === null && $interactive) {
-            $choices = ['keep', 'install', 'remove'];
-            $choice = ConsolePrompts::select($command, 'Laravel Toast integration', array_combine($choices, $choices), 'keep', $interactive);
-        }
+        $choice = $this->choice($command, $interactive);
         $driver = $command->option('notifications');
         if ($choice === 'remove' && in_array($driver, ['toast', 'both'], true)) {
             $command->error('Toast removal requires --notifications=alert or no notification selection.');
@@ -33,6 +29,23 @@ class ToastSetup
         if ($choice === 'install' && !class_exists(ToastServiceProvider::class)) {
             return $this->install($command, $framework, $driver);
         }
+
+        return $this->configureInstalled($command, $choice, $framework, $driver);
+    }
+
+    private function choice(Command $command, bool $interactive): ?string
+    {
+        $choice = $command->option('toast');
+        if ($choice === null && $interactive) {
+            $choices = ['keep', 'install', 'remove'];
+            $choice = ConsolePrompts::select($command, 'Laravel Toast integration', array_combine($choices, $choices), 'keep', $interactive);
+        }
+
+        return $choice;
+    }
+
+    private function configureInstalled(Command $command, ?string $choice, string $framework, ?string $driver): string|false|null
+    {
         if (in_array($driver, ['toast', 'both'], true) && !UserNotifications::toastInstalled()) {
             $command->error('Install and configure Laravel Toast first: php artisan laravelusers:update --toast=install');
 

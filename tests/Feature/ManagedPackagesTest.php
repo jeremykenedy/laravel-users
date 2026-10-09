@@ -14,6 +14,11 @@ use jeremykenedy\laravelusers\Support\ManagedPackages;
 use jeremykenedy\laravelusers\Support\UserSettings;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class ManagedPackagesTest extends TestCase
 {
     private ?string $cachePath = null;

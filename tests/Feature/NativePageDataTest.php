@@ -11,6 +11,11 @@ use InvalidArgumentException;
 use jeremykenedy\laravelusers\Support\NativePageData;
 use jeremykenedy\laravelusers\Test\TestCase;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class NativePageDataTest extends TestCase
 {
     public function test_native_list_uses_explicit_user_fields_and_existing_mutation_routes(): void

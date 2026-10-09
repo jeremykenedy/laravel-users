@@ -14,6 +14,11 @@ use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\TestCase;
 use RuntimeException;
 
+/**
+ * PHPUnit requires public methods for these independent behavior and regression scenarios.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class AccountLinksTest extends TestCase
 {
     protected function setUp(): void

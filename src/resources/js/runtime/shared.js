@@ -49,14 +49,17 @@ export function formData(form, values, csrf) {
     if (form.method !== 'POST') data.set('_method', form.method);
     for (const field of form.fields) {
         if (field.disabled || !fieldVisible(field, values)) continue;
-        const value = getValue(values, field.key);
-        if (field.multiple) {
-            for (const item of Array.isArray(value) ? value : []) data.append(field.name, String(item));
-        } else {
-            data.set(field.name, field.type === 'checkbox' ? (value ? '1' : '0') : String(value ?? ''));
-        }
+        appendField(data, field, getValue(values, field.key));
     }
     return data;
+}
+
+function appendField(data, field, value) {
+    if (field.multiple) {
+        for (const item of Array.isArray(value) ? value : []) data.append(field.name, String(item));
+    } else {
+        data.set(field.name, field.type === 'checkbox' ? (value ? '1' : '0') : String(value ?? ''));
+    }
 }
 
 export async function request(url, runtime, csrf, options = {}) {
@@ -67,13 +70,9 @@ export async function request(url, runtime, csrf, options = {}) {
         headers: { Accept: 'application/json', 'X-LaravelUsers-Runtime': runtime, 'X-CSRF-TOKEN': csrf ?? '', ...options.headers },
     });
     if (!(response.headers.get('Content-Type') ?? '').includes('application/json')) {
-        if (response.redirected || !options.method || options.method === 'GET') {
-            window.location.assign(sameOriginUrl(response.url || url).href);
-            const result = { response, payload: null };
-            return result;
-        }
-        throw new Error('The application returned an unexpected response.');
+        return nonJsonResponse(url, options, response);
     }
+
     const payload = await response.json();
     if (!response.ok && !payload.screen && response.status !== 422) {
         const error = new Error(payload.message || `Request failed (${response.status}).`);
@@ -82,6 +81,15 @@ export async function request(url, runtime, csrf, options = {}) {
     }
     const result = { response, payload };
     return result;
+}
+
+function nonJsonResponse(url, options, response) {
+    if (response.redirected || !options.method || options.method === 'GET') {
+        window.location.assign(sameOriginUrl(response.url || url).href);
+        const result = { response, payload: null };
+        return result;
+    }
+    throw new Error('The application returned an unexpected response.');
 }
 
 export function statusIcon(status) {
@@ -122,12 +130,23 @@ export function dateLabel(value, page) {
 export function passwordFeedback(value, confirmation, config) {
     const rules = config?.settings;
     if (!rules) return null;
-    const length = Array.from(value ?? '').length;
-    const checks = { length: length >= rules.min && (rules.max === null || length <= rules.max), mixed_case: /\p{Ll}/u.test(value) && /\p{Lu}/u.test(value), numbers: /\p{N}/u.test(value), symbols: /[^\p{L}\p{N}\s]/u.test(value) };
-    let score = Number(checks.length) + Number(length >= Math.max(12, rules.min)) + Number(checks.mixed_case) + Number(checks.numbers && checks.symbols);
-    if (!checks.length || ['mixed_case', 'numbers', 'symbols'].some(rule => getOwnValue(rules, rule) && !getOwnValue(checks, rule))) score = Math.min(score, 1);
+    const checks = passwordChecks(value, rules);
+    const score = passwordScore(value, checks, rules);
     const feedback = { score, label: getOwnValue(config.strength_labels, Math.max(0, score - 1)), checks, mismatch: Boolean(value || confirmation) && value !== confirmation };
     return feedback;
+}
+
+function passwordChecks(value, rules) {
+    const length = Array.from(value ?? '').length;
+    const checks = { length: length >= rules.min && (rules.max === null || length <= rules.max), mixed_case: /\p{Ll}/u.test(value) && /\p{Lu}/u.test(value), numbers: /\p{N}/u.test(value), symbols: /[^\p{L}\p{N}\s]/u.test(value) };
+    return checks;
+}
+
+function passwordScore(value, checks, rules) {
+    const length = Array.from(value ?? '').length;
+    let score = Number(checks.length) + Number(length >= Math.max(12, rules.min)) + Number(checks.mixed_case) + Number(checks.numbers && checks.symbols);
+    if (!checks.length || ['mixed_case', 'numbers', 'symbols'].some(rule => getOwnValue(rules, rule) && !getOwnValue(checks, rule))) score = Math.min(score, 1);
+    return score;
 }
 
 export function observeDialogs(root, dismiss) {
@@ -155,16 +174,19 @@ export function observeDialogs(root, dismiss) {
         if (!dialog) return;
         if (event.key === 'Escape') { event.preventDefault(); dismiss(dialog); }
         if (event.key !== 'Tab') return;
-        const nodes = focusable();
-        const target = event.shiftKey ? nodes.at(-1) : nodes[0];
-        if (!nodes.length || !dialog.contains(document.activeElement) || document.activeElement === (event.shiftKey ? nodes[0] : nodes.at(-1))) {
-            event.preventDefault();
-            (target ?? dialog).focus();
-        }
+        trapDialogFocus(dialog, focusable(), event);
     };
     const observer = new MutationObserver(update);
     observer.observe(root, { childList: true, subtree: true });
     document.addEventListener('keydown', keydown);
     update();
     return () => { observer.disconnect(); document.removeEventListener('keydown', keydown); document.body.style.overflow = oldOverflow; };
+}
+
+function trapDialogFocus(dialog, nodes, event) {
+    const target = event.shiftKey ? nodes.at(-1) : nodes[0];
+    if (!nodes.length || !dialog.contains(document.activeElement) || document.activeElement === (event.shiftKey ? nodes[0] : nodes.at(-1))) {
+        event.preventDefault();
+        (target ?? dialog).focus();
+    }
 }
