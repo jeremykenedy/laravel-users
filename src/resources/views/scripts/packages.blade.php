@@ -13,6 +13,8 @@
     let operation = @json($packageOperation ?? null);
     let busy = ['queued', 'running'].includes(operation?.status);
     let statusUrl = operation?.status_url;
+    let pollTimer;
+    let polling = false;
     let verifying = false;
     let verificationAttempts = 0;
     let requiredWord;
@@ -126,11 +128,18 @@
     dialog.querySelectorAll('[data-lu-package-dismiss]').forEach(button => button.addEventListener('click', () => dialog.close()));
     dialog.addEventListener('close', () => { form.reset(); error.hidden = true; ready(); });
     async function poll(url) {
+        clearTimeout(pollTimer);
+        if (polling) return;
+        polling = true;
         try {
             const target = new URL(url, location.href);
             if (target.origin !== location.origin) throw new Error(@json(__('laravelusers::ui.package_status_failed')));
             const response = await fetch(target.href, {headers: {Accept: 'application/json'}, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000)});
-            if (!response.ok) throw new Error(@json(__('laravelusers::ui.package_status_failed')));
+            if (!response.ok) {
+                const exception = new Error(@json(__('laravelusers::ui.package_status_failed')));
+                exception.status = response.status;
+                throw exception;
+            }
             const result = await response.json();
             if (!['queued', 'running', 'completed', 'failed'].includes(result.status)) throw new Error(@json(__('laravelusers::ui.package_status_failed')));
             operation = result;
@@ -149,10 +158,13 @@
                 }
                 return;
             }
-            setTimeout(() => poll(url), 2000);
+            pollTimer = setTimeout(() => poll(url), 2000);
         } catch (exception) {
             setStatus(@json(__('laravelusers::ui.package_status_failed')), false, 'failed');
             if (retryStatus) retryStatus.hidden = false;
+            if (![401, 403, 404].includes(exception.status)) pollTimer = setTimeout(() => poll(url), 2000);
+        } finally {
+            polling = false;
         }
     }
     form.addEventListener('submit', async event => {
