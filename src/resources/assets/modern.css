@@ -160,6 +160,13 @@
 #laravelusers .lu-native-profile p {
     margin: 4px 0 0;
 }
+#laravelusers .lu-breadcrumbs {
+    width: auto;
+    height: auto;
+    background: transparent;
+    box-shadow: none;
+    line-height: 1.4;
+}
 #laravelusers .lu-native-breadcrumbs {
     margin: 0 0 18px;
     color: var(--lu-muted);

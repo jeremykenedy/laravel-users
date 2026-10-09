@@ -55,6 +55,8 @@ async function assertBreadcrumbs(page, labels) {
     const header = await page.locator('nav.navbar, #laravelusers .lu-toolbar').first().boundingBox();
     const path = await breadcrumbs.boundingBox();
     expect(path.y).toBeGreaterThanOrEqual(header.y + header.height);
+    await expect(breadcrumbs).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(breadcrumbs).toHaveCSS('box-shadow', 'none');
 }
 
 async function setTheme(page, theme) {
@@ -134,16 +136,18 @@ for (const framework of frameworks) {
         await expect(darkHighlight).toBeDisabled();
         await expect(darkHighlight).toHaveValue('#f6be43');
         await page.locator('#settings-breadcrumbs').check();
+        await saveSettings(page);
+        await page.goto('/users/settings');
+        await assertBreadcrumbs(page, ['Home', 'Users', 'Settings']);
         for (const width of [390, 768, 1440]) {
             await page.setViewportSize({ width, height: 900 });
             expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         }
         for (const theme of ['light', 'dark']) {
             await setTheme(page, theme);
-            const results = await new AxeBuilder({ page }).include('#lu-settings-appearance').withTags(['wcag2a', 'wcag2aa']).analyze();
+            const results = await new AxeBuilder({ page }).include('#lu-settings-appearance').include('.lu-breadcrumbs').withTags(['wcag2a', 'wcag2aa']).analyze();
             expect(results.violations.map(violation => ({ id: violation.id, nodes: violation.nodes.map(node => node.html) }))).toEqual([]);
         }
-        await saveSettings(page);
         await page.goto('/users');
         await assertBreadcrumbs(page, ['Home', 'Users']);
         await page.goto('/users/1');

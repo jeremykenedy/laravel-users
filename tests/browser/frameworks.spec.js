@@ -3,6 +3,18 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 const frameworks = ['materialize', 'material3', 'bulma', 'foundation'];
 
+async function enableBreadcrumbs(page) {
+    const token = await page.locator('meta[name="csrf-token"]').getAttribute('content');
+    const response = await page.request.post('/users/settings', {form: {
+        _token: token, _method: 'PUT', avatar_source: 'initials', profile_color: '#264e36', edit_color: '#705000', show_breadcrumbs: '1'
+    }});
+    expect(response.ok()).toBeTruthy();
+    await page.reload();
+    await expect(page.locator('.lu-breadcrumbs')).toBeVisible();
+    await expect(page.locator('.lu-breadcrumbs')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(page.locator('.lu-breadcrumbs')).toHaveCSS('box-shadow', 'none');
+}
+
 async function setTheme(page, theme) {
     const toggle = page.locator('#lu-theme');
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -22,6 +34,7 @@ for (const framework of frameworks) {
             }
         });
         await page.goto('/__browser/' + framework + '?published-assets=1&settings=1&appearance=1&accounts=1&soft-deletes=1');
+        await enableBreadcrumbs(page);
         await expect(page.locator('#laravelusers')).toHaveAttribute('data-lu-css', framework);
         await expect(page.locator('link[href$="/' + framework + '.css"]')).toHaveCount(1);
         await expect(page.locator('script[src$="/material3.js"]')).toHaveCount(framework === 'material3' ? 1 : 0);
@@ -64,6 +77,7 @@ for (const framework of frameworks) {
 
     test(framework + ': settings tabs, confirmation dialogs and email previews retain native behavior', async ({ page }) => {
         await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&soft-deletes=1&published-assets=1');
+        await enableBreadcrumbs(page);
         await page.goto('/users/settings');
         await page.getByRole('tab', { name: 'Emails', exact: true }).click();
         await expect(page.locator('#lu-settings-emails')).toBeVisible();
@@ -92,6 +106,7 @@ for (const framework of frameworks) {
 
     test(framework + ': account, deleted-user and public confirmation pages fit both appearances', async ({ page }) => {
         await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&soft-deletes=1&published-assets=1');
+        await enableBreadcrumbs(page);
         for (const route of ['/users/account', '/users/deleted', '/users/account/email/invalid']) {
             await page.goto(route);
             await expect(page.locator('#laravelusers')).toHaveAttribute('data-lu-css', framework);
