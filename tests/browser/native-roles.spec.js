@@ -1,7 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
 async function rejectInvalidPermissionsAndClearSelection(page, edit, user) {
-    const {target, name, email, runtime, administrator, editor, inherited} = user;
     const selectedRoles = edit.locator('select[name="role[]"]');
     const selectedPermissions = edit.locator('select[name="permissions[]"]');
     const confirmation = page.getByRole('dialog');
@@ -10,19 +9,19 @@ async function rejectInvalidPermissionsAndClearSelection(page, edit, user) {
         const response = await fetch(`/users/${target}`, { method: 'POST', headers: { Accept: 'application/json', 'X-LaravelUsers-Runtime': runtime }, body });
         const result = { status: response.status, data: await response.json() };
         return result;
-    }, { target, name, email, runtime, administrator });
+    }, { target: user.target, name: user.name, email: user.email, runtime: user.runtime, administrator: user.administrator });
     expect(invalid.status).toBe(422);
     expect(invalid.data.errors.permissions).toBeDefined();
     await page.reload();
-    await expect(edit.locator('[name="name"]')).toHaveValue(name);
-    await expect(selectedRoles).toHaveValues([administrator, editor]);
-    await expect(selectedPermissions).toHaveValues([inherited]);
+    await expect(edit.locator('[name="name"]')).toHaveValue(user.name);
+    await expect(selectedRoles).toHaveValues([user.administrator, user.editor]);
+    await expect(selectedPermissions).toHaveValues([user.inherited]);
     await edit.getByRole('tab', { name: 'Roles', exact: true }).click();
     await selectedPermissions.selectOption([]);
     await edit.getByRole('button', { name: 'Save changes', exact: true }).click();
     await expect(confirmation).toBeVisible();
     await Promise.all([
-        page.waitForResponse(response => new URL(response.url()).pathname === `/users/${target}` && response.request().method() === 'POST' && response.status() < 400),
+        page.waitForResponse(response => new URL(response.url()).pathname === `/users/${user.target}` && response.request().method() === 'POST' && response.status() < 400),
         confirmation.getByRole('button', { name: 'Save changes', exact: true }).click(),
     ]);
     await expect(confirmation).toHaveCount(0);

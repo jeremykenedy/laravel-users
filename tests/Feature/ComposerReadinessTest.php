@@ -47,7 +47,7 @@ class ComposerReadinessTest extends TestCase
         $this->assertNull((new ComposerPackages())->readiness());
     }
 
-    public function test_external_shared_vendor_directories_cannot_be_changed_from_settings(): void
+    public function test_settings_only_accept_vendor_symlinks_inside_the_application(): void
     {
         $external = $this->directory.'-shared-vendor';
         rename(base_path('vendor'), $external);
@@ -64,10 +64,7 @@ class ComposerReadinessTest extends TestCase
             unlink(base_path('vendor'));
             rename($external, base_path('vendor'));
         }
-    }
 
-    public function test_vendor_symlinks_inside_the_application_remain_ready(): void
-    {
         rename(base_path('vendor'), base_path('vendor-local'));
         symlink(base_path('vendor-local'), base_path('vendor'));
 

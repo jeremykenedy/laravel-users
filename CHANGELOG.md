@@ -10,6 +10,7 @@ Published dates below are GitHub release dates in UTC. Entries marked **tag only
 
 ### Fixed
 
+- Prevent Settings package changes from modifying an externally shared vendor directory, avoiding dependency removal from another application. Application-owned vendor directories and internal symlinks remain supported.
 - Protect runtime form values and dotted updates from prototype-property names while retaining existing fields and nested values.
 - Keep search rendering, validation feedback, package polling, and optional runtime forms behavior consistent after separating their responsibilities.
 - Preserve installer choices, environment-file permissions, atomic writes, configuration, routes, and published view overrides while separating validation and configuration handling.

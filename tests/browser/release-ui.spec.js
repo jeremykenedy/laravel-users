@@ -1,29 +1,28 @@
 const { test, expect } = require('@playwright/test');
 
 async function assertHeaderMeasurement(page, context) {
-    const {header, title, icon, icons, measurements, path, theme, width} = context;
-    const bounds = await header.boundingBox();
-    const titleBox = await title.boundingBox();
-    const textStyle = await title.evaluate(element => {
+    const bounds = await context.header.boundingBox();
+    const titleBox = await context.title.boundingBox();
+    const textStyle = await context.title.evaluate(element => {
         const style = getComputedStyle(element);
         const result = { fontSize: style.fontSize, lineHeight: style.lineHeight };
         return result;
     });
-    const key = `${theme}:${width}`;
-    const measured = { height: bounds.height, textStyle, icon: icons ? await icon.boundingBox() : null };
-    if (measurements.has(key)) {
-        const reference = measurements.get(key);
-        expect(measured.height, `${path}, ${key}, header height`).toBeCloseTo(reference.height, 1);
-        expect(measured.textStyle, `${path}, ${key}, title typography`).toEqual(reference.textStyle);
-        if (icons) {
-            expect(measured.icon.width, `${path}, ${key}, icon width`).toBeCloseTo(reference.icon.width, 1);
-            expect(measured.icon.height, `${path}, ${key}, icon height`).toBeCloseTo(reference.icon.height, 1);
+    const key = `${context.theme}:${context.width}`;
+    const measured = { height: bounds.height, textStyle, icon: context.icons ? await context.icon.boundingBox() : null };
+    if (context.measurements.has(key)) {
+        const reference = context.measurements.get(key);
+        expect(measured.height, `${context.path}, ${key}, header height`).toBeCloseTo(reference.height, 1);
+        expect(measured.textStyle, `${context.path}, ${key}, title typography`).toEqual(reference.textStyle);
+        if (context.icons) {
+            expect(measured.icon.width, `${context.path}, ${key}, icon width`).toBeCloseTo(reference.icon.width, 1);
+            expect(measured.icon.height, `${context.path}, ${key}, icon height`).toBeCloseTo(reference.icon.height, 1);
         }
-    } else measurements.set(key, measured);
-    if (icons) {
-        expect(Math.abs(measured.icon.y + measured.icon.height / 2 - titleBox.y - titleBox.height / 2), `${path}, ${key}, icon alignment`).toBeLessThanOrEqual(1);
+    } else context.measurements.set(key, measured);
+    if (context.icons) {
+        expect(Math.abs(measured.icon.y + measured.icon.height / 2 - titleBox.y - titleBox.height / 2), `${context.path}, ${key}, icon alignment`).toBeLessThanOrEqual(1);
     }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path}, ${key}, overflow`).toBeLessThanOrEqual(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), `${context.path}, ${key}, overflow`).toBeLessThanOrEqual(context.width);
 }
 
 for (const framework of ['bootstrap4', 'bootstrap5']) {

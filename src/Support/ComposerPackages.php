@@ -103,8 +103,8 @@ class ComposerPackages
         if (!in_array($action, ['install', 'remove'], true) || !in_array($package, ManagedPackages::PACKAGES, true)) {
             return false;
         }
-        $composer = (new ExecutableFinder())->find('composer');
-        if (!$composer || !$this->vendorOwned() || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
+        $composer = $this->settingsComposer();
+        if (!$composer) {
             return false;
         }
         $process = new Process([$composer, $action === 'install' ? 'require' : 'remove', $package, '--no-interaction', '--no-scripts', '--no-plugins'], base_path(), null, null, 300);
@@ -118,6 +118,15 @@ class ComposerPackages
         }
 
         return $this->refreshApplication($package);
+    }
+
+    private function settingsComposer(): ?string
+    {
+        if (!$this->vendorOwned() || !is_writable(base_path('composer.json')) || !is_writable(base_path('vendor'))) {
+            return null;
+        }
+
+        return (new ExecutableFinder())->find('composer');
     }
 
     private function verifyChange(string $action, string $package): bool
