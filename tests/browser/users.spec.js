@@ -241,7 +241,7 @@ test('standalone navigation components work without the package shell', async ({
 
 test.describe('Optional package controls', () => {
     let packageWorker;
-    test.beforeAll(async () => { packageWorker = await startPackageWorker(19847); });
+    test.beforeAll(async ({}, testInfo) => { packageWorker = await startPackageWorker(Number(new URL(testInfo.project.use.baseURL).port)); });
     test.afterAll(() => { packageWorker?.kill('SIGTERM'); });
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
@@ -1039,7 +1039,7 @@ test('bootstrap4: create, edit, and delete through existing modals', async ({ pa
 });
 
 test('modern search recovers from server failures and CSRF is enforced', async ({ page }) => {
-    await page.goto('/__browser/tailwind');
+    await page.goto('/__browser/bootstrap5');
     const denied = await page.request.post('/users', { form: { name: 'invalid' } });
     expect(denied.status()).toBe(419);
     await page.route('**/search-users', route => route.fulfill({ status: 500, body: '{}' }));

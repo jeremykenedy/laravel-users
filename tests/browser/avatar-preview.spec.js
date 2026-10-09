@@ -18,9 +18,12 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
         });
         await page.goto('/__browser/' + framework + '?settings=1&appearance=1&published-assets=1');
         const token = await page.locator('meta[name="csrf-token"]').getAttribute('content');
-        expect((await page.request.post('/users/settings', { form: { _token: token, _method: 'PUT', avatar_source: 'initials' } })).ok()).toBeTruthy();
+        const saved = await page.request.post('/users/settings', { form: { _token: token, _method: 'PUT', avatar_source: 'initials', profile_color: '#2458b7', edit_color: '#705000' }, maxRedirects: 0 });
+        expect(saved.status()).toBe(302);
         await page.goto('/users/settings');
+        await expect(page.locator('.lu-notifications')).toContainText('User settings saved.');
         const source = page.locator('#settings-avatar');
+        await expect(source).toHaveValue('initials');
         for (const style of ['identicon', 'monsterid', 'robohash', 'retro', 'wavatar', 'mp']) {
             const updated = page.waitForResponse(response => new URL(response.url()).pathname === '/users/settings/avatar-preview' && response.request().method() === 'POST');
             await source.selectOption(style);
