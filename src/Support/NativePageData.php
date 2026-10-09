@@ -49,10 +49,11 @@ class NativePageData
             'features'     => $this->features($screen),
             'capabilities' => $capabilities,
             'labels'       => $this->labels(),
-            'data'         => ['navigation' => $this->navigation($request, $public), 'form_ids' => []],
+            'data'         => ['navigation' => $this->navigation($request, $public), 'form_ids' => [], 'home' => url('/')],
             'forms'        => [],
-            'flash'        => $this->flash($request),
+            'flash'        => UserNotifications::useAlerts() ? $this->flash($request) : [],
         ];
+        $page['data']['toasts'] = $request->hasSession() ? UserNotifications::toasts($request->session()) : [];
         $page = match ($screen) {
             'users', 'deleted-users'   => $this->listing($page, $data, $request),
             'create-user', 'edit-user' => $this->userForm($page, $data, $request),
@@ -61,11 +62,21 @@ class NativePageData
             'account'                  => $this->account($page, $data, $request),
             default                    => $this->confirmation($page, $data, $request),
         };
+        if (!$public) {
+            $page['data']['appearance_defaults'] = $this->appearanceDefaults();
+        }
+        if ($page['features']['breadcrumbs']) {
+            $page['data']['breadcrumbs'] = $this->breadcrumbs($page);
+        }
         if (collect($page['forms'])->contains(fn ($form) => in_array('password', array_column($form['fields'], 'key'), true))) {
             $page['data']['password'] = ['settings' => PasswordRules::settings($screen === 'create-user'), 'strength_labels' => array_map(fn ($strength) => __('laravelusers::ui.password_'.$strength), ['weak', 'fair', 'good', 'strong']), 'feedback_delay' => max(0, (int) config('laravelusers.password.confirmation_debounce', 2000))];
         }
         if (!$public && $request->user() instanceof Model) {
-            $page['data']['current_user'] = $this->identity($request->user());
+            $avatar = $this->avatars->forUser($request->user());
+            if ($avatar) {
+                $avatar['size'] = 28;
+            }
+            $page['data']['current_user'] = $this->identity($request->user()) + ['avatar' => $avatar, 'activity' => config('laravelusers.activity.login', false) ? ($this->activity->listing([$request->user()], true)[$request->user()->getKey()] ?? []) : null];
             $state = $request->hasSession() ? $this->impersonation->read($request) : null;
             if ($state) {
                 $page['data']['banner'] = ['message' => $state['actor_name'].': '.$request->user()->name, 'action' => route('users.impersonation.stop'), 'label' => __('laravelusers::ui.impersonation_stop')];
@@ -135,7 +146,9 @@ class NativePageData
             }
         }
         if ($request->user() instanceof Model) {
-            $names['logout'] = 'logout';
+            if (config('laravelusers.showLogout', true)) {
+                $names['logout'] = 'logout';
+            }
             if (AccountPreferences::enabled($request->user())) {
                 $names['account'] = 'users.account';
             }
@@ -156,41 +169,68 @@ class NativePageData
     private function features(string $screen): array
     {
         return [
-            'search'            => $screen === 'users' && (bool) config('laravelusers.enableSearchUsers', true),
-            'search_debounce'   => config('laravelusers.searchDebounceEnabled', false) ? max(0, (int) config('laravelusers.searchDebounce', 500)) : null,
-            'sorting'           => (bool) config('laravelusers.tableSorting', false),
-            'filtering'         => (bool) config('laravelusers.tableFiltering', false),
-            'columns'           => (bool) config('laravelusers.columnVisibility', false),
-            'view_toggle'       => (bool) config('laravelusers.tableViewToggle', false),
-            'bulk'              => (bool) config('laravelusers.bulkActions', false) && UserAccess::selectable($screen === 'deleted-users'),
-            'show_count'        => (bool) config('laravelusers.showUserCount', false),
-            'avatar'            => (bool) config('laravelusers.avatar.enabled', false),
-            'theme_toggle'      => (bool) config('laravelusers.themeToggle', true),
-            'show_header'       => (bool) config('laravelusers.showHeader', true),
-            'full_width'        => (bool) config('laravelusers.fullWidth', false),
-            'responsive_table'  => (bool) config('laravelusers.responsiveTable', false),
-            'password_meter'    => (bool) config('laravelusers.password.meter', false),
-            'password_feedback' => (bool) config('laravelusers.password.confirmation_feedback', false),
-            'email_links'       => (bool) config('laravelusers.emailLinks', false),
-            'locale'            => config('app.locale', 'en'),
-            'localize_dates'    => (bool) config('laravelusers.localizeDates', false),
-            'date_style'        => config('laravelusers.dateStyle', 'short'),
-            'time_style'        => config('laravelusers.timeStyle', 'short'),
-            'bulk_actions'      => [],
+            'search'                   => $screen === 'users' && (bool) config('laravelusers.enableSearchUsers', true),
+            'search_debounce'          => config('laravelusers.searchDebounceEnabled', false) ? max(0, (int) config('laravelusers.searchDebounce', 500)) : null,
+            'sorting'                  => (bool) config('laravelusers.tableSorting', false),
+            'filtering'                => (bool) config('laravelusers.tableFiltering', false),
+            'columns'                  => (bool) config('laravelusers.columnVisibility', false),
+            'view_toggle'              => (bool) config('laravelusers.tableViewToggle', false),
+            'bulk'                     => (bool) config('laravelusers.bulkActions', false) && UserAccess::selectable($screen === 'deleted-users'),
+            'show_count'               => (bool) config('laravelusers.showUserCount', false),
+            'avatar'                   => (bool) config('laravelusers.avatar.enabled', false),
+            'theme_toggle'             => (bool) config('laravelusers.themeToggle', true),
+            'notifications'            => (bool) config('laravelusers.enablePackageBootstapAlerts', true),
+            'notification_driver'      => UserNotifications::useToast() ? config('laravelusers.notifications.driver', 'toast') : 'alert',
+            'notification_dismissible' => (bool) config('laravelusers.notifications.dismissible', true),
+            'show_header'              => (bool) config('laravelusers.showHeader', true),
+            'custom_header'            => (bool) config('laravelusers.headerView'),
+            'breadcrumbs'              => (bool) config('laravelusers.showBreadcrumbs', false),
+            'full_width'               => (bool) config('laravelusers.fullWidth', false),
+            'responsive_table'         => (bool) config('laravelusers.responsiveTable', false),
+            'password_meter'           => (bool) config('laravelusers.password.meter', false),
+            'password_feedback'        => (bool) config('laravelusers.password.confirmation_feedback', false),
+            'email_links'              => (bool) config('laravelusers.emailLinks', false),
+            'locale'                   => config('app.locale', 'en'),
+            'localize_dates'           => (bool) config('laravelusers.localizeDates', false),
+            'date_style'               => config('laravelusers.dateStyle', 'short'),
+            'time_style'               => config('laravelusers.timeStyle', 'short'),
+            'bulk_actions'             => [],
         ];
     }
 
     private function labels(): array
     {
         $labels = [];
-        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions', 'select_user', 'total_users', 'pagination', 'page', 'account_email_pending_to', 'role_level', 'theme_light', 'theme_dark', 'appearance_inherit', 'password_strength', 'password_mismatch'] as $key) {
+        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions', 'select_user', 'total_users', 'pagination', 'page', 'account_email_pending_to', 'role_level', 'theme_light', 'theme_dark', 'appearance_inherit', 'appearance_inherit_highlight_color', 'appearance_avatar_preview', 'settings_profile_color', 'settings_edit_color', 'settings_profile_dark_color', 'settings_edit_dark_color', 'email_template_welcome', 'email_template_reset', 'email_template_restore', 'email_template_force_delete', 'email_template_goodbye', 'password_strength', 'password_mismatch', 'package_refresh', 'package_queued', 'breadcrumbs', 'home'] as $key) {
             $labels[$key] = __('laravelusers::ui.'.$key);
         }
 
         $labels['theme_light'] = __('laravelusers::ui.themes.light');
         $labels['theme_dark'] = __('laravelusers::ui.themes.dark');
+        foreach (['logout', 'manage_users', 'account_menu_label', 'login_details'] as $key) {
+            $labels[$key] = __('laravelusers::ui.'.$key);
+        }
 
         return $labels + ['filter' => __('laravelusers::ui.filters'), 'view' => __('laravelusers::ui.list_view'), 'table' => __('laravelusers::ui.table_view'), 'cards' => __('laravelusers::ui.card_view'), 'select_all' => __('laravelusers::ui.select_all'), 'selected' => __('laravelusers::ui.selected', ['count' => ':count']), 'empty' => __('laravelusers::laravelusers.search.no-results'), 'actions' => __('laravelusers::laravelusers.users-table.actions'), 'cancel' => __('laravelusers::forms.cancel')];
+    }
+
+    private function breadcrumbs(array $page): array
+    {
+        $crumbs = [['label' => __('laravelusers::ui.home'), 'url' => url('/'), 'native' => false]];
+        if (in_array($page['screen'], ['account', 'account-link', 'confirm-email'], true)) {
+            return array_merge($crumbs, [['label' => $page['title']]]);
+        }
+        if ($page['screen'] !== 'users' && isset($page['urls']['users'])) {
+            $crumbs[] = ['label' => __('laravelusers::ui.breadcrumb_users'), 'url' => $page['urls']['users']];
+        }
+        if (($page['data']['deleted_user'] ?? false) && $page['screen'] === 'edit-user' && isset($page['urls']['deleted'])) {
+            $crumbs[] = ['label' => __('laravelusers::ui.breadcrumb_deleted_users'), 'url' => $page['urls']['deleted']];
+        } elseif ($page['screen'] === 'edit-user' && isset($page['data']['user'], $page['urls']['users'])) {
+            $crumbs[] = ['label' => $page['data']['user']['name'], 'url' => route('users.show', $page['data']['user']['id'])];
+        }
+        $crumbs[] = ['label' => $page['screen'] === 'show-user' ? $page['data']['user']['name'] : $page['title']];
+
+        return $crumbs;
     }
 
     private function navigation(Request $request, bool $public): array
@@ -198,7 +238,7 @@ class NativePageData
         if ($public) {
             return [];
         }
-        $links = [['label' => __('laravelusers::app.nav.users'), 'url' => route('users')]];
+        $links = UserAccess::allows('view_users') ? [['label' => __('laravelusers::app.nav.users'), 'url' => route('users')]] : [];
         if (UserAccess::allows('create_users')) {
             $links[] = ['label' => __('laravelusers::laravelusers.create-new-user'), 'url' => route('users.create')];
         }
@@ -221,10 +261,14 @@ class NativePageData
             return [];
         }
         $messages = [];
-        foreach (['success', 'error', 'warning', 'status'] as $key) {
+        foreach (['message', 'success', 'error', 'warning', 'status'] as $key) {
             if (is_string($request->session()->get($key))) {
                 $messages[] = ['type' => $key, 'message' => $request->session()->get($key)];
             }
+        }
+        $errors = $request->session()->get('errors');
+        if ($errors instanceof ViewErrorBag && $errors->any()) {
+            $messages[] = ['type' => 'error', 'message' => implode(' ', $errors->all())];
         }
 
         return $messages;
@@ -242,6 +286,7 @@ class NativePageData
         $page['data']['columns'] = $this->columns($deleted);
         $page['data']['pagination'] = $users instanceof LengthAwarePaginator ? ['enabled' => true, 'current' => $users->currentPage(), 'last' => $users->lastPage(), 'total' => $users->total(), 'from' => $users->firstItem(), 'to' => $users->lastItem(), 'previous' => $users->previousPageUrl(), 'next' => $users->nextPageUrl()] : ['enabled' => false, 'total' => count($models), 'from' => count($models) ? 1 : 0, 'to' => count($models), 'previous' => null, 'next' => null];
         $page['data']['deleted_user'] = $deleted;
+        $page['data']['search'] = (string) $request->query('user_search_box', '');
         foreach ($deleted ? ['restore' => 'restore_users', 'force-delete' => 'force_delete'] : ['delete' => 'delete_users'] as $action => $ability) {
             if ($page['features']['bulk'] && UserAccess::allows($ability)) {
                 $id = 'bulk-'.$action;
@@ -369,7 +414,7 @@ class NativePageData
         $page['data']['form_ids'] = ['user'];
         $page['data']['deleted_user'] = $deleted;
         if ($editing) {
-            $page['data']['user'] = $this->identity($user);
+            $page['data']['user'] = $this->identity($user) + ['avatar' => $this->avatars->forUser($user), 'appearance' => AppearancePreferences::colors([$user])[$user->getKey()] ?? null];
         }
 
         return $page;
@@ -396,6 +441,10 @@ class NativePageData
             if ($mode !== '' || ($data['appearanceStrengthAvailable'] ?? false)) {
                 $fields[] = $this->field('user_card'.$mode.'_gradient_strength', __('laravelusers::ui.gradient_strength'), 'range', $preference[$key.'strength'] ?? null, ['nullable' => true, 'fallback' => Frontend::profileColors(dark: $mode !== '')['strength'], 'min' => 0, 'max' => 100, 'disabled' => !$available, 'section' => 'appearance']);
             }
+            if ($data['appearanceHighlightAvailable'] ?? false) {
+                $prefix = $mode === '' ? 'profileCard' : 'profileCardDark';
+                $fields[] = $this->field('user_card'.$mode.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', $preference[$key.'highlight_color'] ?? null, ['nullable' => true, 'fallback' => config('laravelusers.'.$prefix.'GradientHighlightColor') ?? config('laravelusers.profileCardGradientHighlightColor', '#ffffff'), 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'disabled' => !$available, 'section' => 'appearance']);
+            }
         }
 
         return $fields;
@@ -409,11 +458,27 @@ class NativePageData
         return $attributes + ['key' => $key, 'name' => $name.(!empty($attributes['multiple']) ? '[]' : ''), 'label' => $label, 'type' => $type, 'value' => $value, 'section' => 'profile', 'required' => false, 'disabled' => false];
     }
 
+    private function appearanceDefaults(): array
+    {
+        $colors = [];
+        foreach (['profile', 'edit', 'profile_dark', 'edit_dark'] as $kind) {
+            $editing = str_starts_with($kind, 'edit');
+            $dark = str_ends_with($kind, '_dark');
+            $prefix = $editing ? 'editCard' : 'profileCard';
+            $colors[$kind] = Frontend::profileColors($prefix.'Color', $editing ? '#705000' : '#2458b7', $dark) + ['gradient' => (bool) (($dark ? config('laravelusers.'.$prefix.'DarkGradient') : null) ?? config('laravelusers.'.$prefix.'Gradient', true)), 'highlight_color' => ($dark ? config('laravelusers.'.$prefix.'DarkGradientHighlightColor') : null) ?? config('laravelusers.'.$prefix.'GradientHighlightColor', '#ffffff')];
+        }
+
+        return $colors;
+    }
+
     private function form(string $id, string $title, ?string $action, string $method, array $fields, Request $request): array
     {
         $values = [];
         foreach ($fields as $field) {
             $value = $field['type'] === 'password' ? '' : ($request->hasSession() ? $request->session()->getOldInput($field['key'], $field['value']) : $field['value']);
+            if ($field['type'] === 'checkbox') {
+                $value = in_array($value, [true, 1, '1', 'true', 'on'], true);
+            }
             Arr::set($values, $field['key'], $value);
         }
         $errors = $request->hasSession() ? $request->session()->get('errors') : null;
@@ -526,17 +591,40 @@ class NativePageData
         $ready = (bool) ($data['settingsAvailable'] ?? false);
         $fields = [];
         if (UserAccess::allows('edit_appearance')) {
+            $fields[] = $this->field('show_breadcrumbs', __('laravelusers::ui.settings_breadcrumbs'), 'checkbox', config('laravelusers.showBreadcrumbs', false), ['help' => __('laravelusers::ui.settings_breadcrumbs_hint'), 'section' => 'appearance']);
             $fields[] = $this->field('avatar_source', __('laravelusers::ui.avatar_source'), 'select', config('laravelusers.avatar.source', 'initials'), ['options' => $this->options(Avatar::SOURCES, 'avatar_source_'), 'section' => 'appearance']);
             foreach (['profile' => 'profileCard', 'edit' => 'editCard', 'profile_dark' => 'profileCardDark', 'edit_dark' => 'editCardDark'] as $kind => $prefix) {
                 $fallback = str_replace('Dark', '', $prefix);
                 $fields[] = $this->field($kind.'_color', __('laravelusers::ui.settings_'.$kind.'_color'), 'color', Frontend::colors(config('laravelusers.'.$prefix.'Color') ?? config('laravelusers.'.$fallback.'Color'))['base'], ['section' => 'appearance']);
                 $fields[] = $this->field($kind.'_gradient', __('laravelusers::ui.appearance_gradient'), 'checkbox', config('laravelusers.'.$prefix.'Gradient') ?? config('laravelusers.'.$fallback.'Gradient', true), ['section' => 'appearance']);
                 $fields[] = $this->field($kind.'_gradient_strength', __('laravelusers::ui.gradient_strength'), 'range', config('laravelusers.'.$prefix.'GradientStrength') ?? config('laravelusers.'.$fallback.'GradientStrength', 50), ['min' => 0, 'max' => 100, 'section' => 'appearance']);
+                $dark = str_ends_with($kind, '_dark');
+                $fields[] = $this->field($kind.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', config('laravelusers.'.$prefix.'GradientHighlightColor', $dark ? null : '#ffffff'), ['nullable' => $dark, 'fallback' => config('laravelusers.'.$fallback.'GradientHighlightColor', '#ffffff'), 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'section' => 'appearance']);
+            }
+            if (Route::has('users.settings.avatar-preview')) {
+                $avatars = [];
+                foreach (['profile', 'edit', 'profile_dark', 'edit_dark'] as $kind) {
+                    $sample = $data['appearancePreviewAvatars'][$kind] ?? null;
+                    if (is_array($sample)) {
+                        $avatars[$kind] = ['name' => $sample['name'] ?? '', 'avatar' => is_array($sample['avatar'] ?? null) ? Arr::only($sample['avatar'], ['src', 'initials', 'fallback', 'size']) : null];
+                    }
+                }
+                $page['data']['appearance_preview'] = ['url' => route('users.settings.avatar-preview'), 'avatars' => $avatars];
             }
         }
         if (UserAccess::allows('edit_notifications')) {
-            $fields[] = $this->field('notifications_driver', __('laravelusers::ui.settings_notification_style'), 'select', config('laravelusers.notifications.driver', 'alert'), ['options' => $this->options(UserNotifications::toastInstalled() ? ['alert', 'toast'] : ['alert'], 'settings_notification_'), 'section' => 'notifications']);
+            $fields[] = $this->field('notifications_driver', __('laravelusers::ui.settings_notification_style'), 'select', config('laravelusers.notifications.driver', 'alert'), ['options' => $this->options(UserNotifications::toastInstalled() ? ['alert', 'toast', 'both'] : ['alert'], 'settings_notification_'), 'section' => 'notifications']);
             $fields[] = $this->field('notifications_dismissible', __('laravelusers::ui.settings_dismissible'), 'checkbox', config('laravelusers.notifications.dismissible', true), ['section' => 'notifications']);
+            if (UserNotifications::toastInstalled()) {
+                $values = ToastSettings::values();
+                foreach (ToastSettings::fields() as $key => $field) {
+                    $attributes = Arr::only($field, ['min', 'max', 'step']) + ['section' => 'notifications', 'when' => ['key' => 'notifications_driver', 'in' => ['toast', 'both']]];
+                    if (isset($field['options'])) {
+                        $attributes['options'] = array_map(fn ($value) => ['value' => $value, 'label' => ucwords(str_replace(['-', '_'], ' ', $value))], $field['options']);
+                    }
+                    $fields[] = $this->field('toast.'.$key, __('laravelusers::ui.settings_toast_'.$key), $field['type'], $values[$key], $attributes);
+                }
+            }
         }
         if ($data['accessAvailable'] ?? false) {
             foreach (UserAccess::ACTIONS as $action) {
@@ -595,7 +683,7 @@ class NativePageData
             $fields[] = $this->field('templates.'.$kind.'.subject', __('laravelusers::ui.email_subject'), 'text', $contents['subject'], ['section' => 'email-'.$kind, 'required' => true, 'maxlength' => 150]);
             $fields[] = $this->field('templates.'.$kind.'.message', __('laravelusers::ui.email_body'), 'textarea', $contents['message'], ['section' => 'email-'.$kind, 'required' => true, 'maxlength' => max(1, (int) config('laravelusers.emails.max_length', 10000))]);
         }
-        $page['forms']['email-templates'] = $this->form('email-templates', __('laravelusers::ui.email_templates_title'), route('users.settings.emails'), 'PUT', $fields, $request) + ['disabled' => !$ready, 'tabs' => true];
+        $page['forms']['email-templates'] = $this->form('email-templates', __('laravelusers::ui.email_templates_title'), route('users.settings.emails'), 'PUT', $fields, $request) + ['disabled' => !$ready, 'accordion' => true];
         $page['data']['form_ids'][] = 'email-templates';
 
         return $page;
@@ -628,6 +716,7 @@ class NativePageData
             return $page;
         }
         $page['data']['packages'] = ['installed' => $data['managedPackages'] ?? [], 'ready' => (bool) ($data['packageQueueReady'] ?? false), 'verify' => route('users.settings.packages.verify'), 'status_url' => route('users.settings.packages.status', ['id' => '__JOB_ID__'])];
+        $page['data']['package_operation'] = is_array($data['packageOperation'] ?? null) ? Arr::only($data['packageOperation'], ['id', 'status_url', 'status', 'stage', 'package', 'operation', 'message', 'queued_at', 'started_at', 'updated_at']) : null;
         foreach (['requirements' => 'Package requirements', 'toast' => 'Laravel Toast', 'laravel-roles' => 'Laravel Roles', 'spatie' => 'Spatie Permissions'] as $package => $label) {
             $installed = (bool) ($data['managedPackages'][$package] ?? false);
             $operation = $package === 'requirements' ? 'setup' : ($installed ? 'remove' : 'install');
@@ -649,7 +738,7 @@ class NativePageData
     private function account(array $page, array $data, Request $request): array
     {
         $user = $data['user'];
-        $page['data']['user'] = $this->identity($user) + ['avatar' => $this->avatars->forUser($user), 'full_name' => $data['fullName'] ?? null, 'pending_email' => ($data['pendingEmail'] ?? null)?->new_email, 'editable' => (bool) ($data['accountEditable'] ?? false)];
+        $page['data']['user'] = $this->identity($user) + ['avatar' => $this->avatars->forUser($user), 'appearance' => AppearancePreferences::colors([$user])[$user->getKey()] ?? null, 'full_name' => $data['fullName'] ?? null, 'pending_email' => ($data['pendingEmail'] ?? null)?->new_email, 'editable' => (bool) ($data['accountEditable'] ?? false)];
         if (!$page['data']['user']['editable']) {
             $page['data']['notice'] = __('laravelusers::ui.account_readonly');
 

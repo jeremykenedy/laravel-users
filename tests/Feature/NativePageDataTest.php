@@ -133,6 +133,56 @@ class NativePageDataTest extends TestCase
         $this->page('custom', []);
     }
 
+    public function test_breadcrumb_toggle_is_off_by_default_and_enabled_path_keeps_the_active_item_unlinked(): void
+    {
+        $user = $this->user(['name' => 'Breadcrumb User']);
+        $this->actingAs($user);
+        config(['laravelusers.settings.enabled' => true]);
+        $settings = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true]);
+        $this->assertFalse($settings['features']['breadcrumbs']);
+        $this->assertFalse($settings['forms']['settings']['values']['show_breadcrumbs']);
+        $this->assertArrayNotHasKey('breadcrumbs', $settings['data']);
+
+        config(['laravelusers.showBreadcrumbs' => true]);
+        $page = $this->page('laravelusers::modern.edit-user', ['user' => $user, 'rolesEnabled' => false]);
+        $crumbs = $page['data']['breadcrumbs'];
+        $this->assertSame(url('/'), $crumbs[0]['url']);
+        $this->assertFalse($crumbs[0]['native']);
+        $this->assertSame(route('users'), $crumbs[1]['url']);
+        $this->assertSame(route('users.show', $user->id), $crumbs[2]['url']);
+        $this->assertArrayNotHasKey('url', $crumbs[3]);
+    }
+
+    public function test_native_highlight_controls_preserve_light_defaults_dark_inheritance_and_column_availability(): void
+    {
+        $user = $this->user();
+        $this->actingAs($user);
+        $settings = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true]);
+        $this->assertSame('#ffffff', $settings['forms']['settings']['values']['profile_gradient_highlight_color']);
+        $this->assertNull($settings['forms']['settings']['values']['profile_dark_gradient_highlight_color']);
+        $this->assertTrue(collect($settings['forms']['settings']['fields'])->firstWhere('key', 'profile_dark_gradient_highlight_color')['nullable']);
+
+        $data = ['user' => $user, 'rolesEnabled' => false, 'appearanceEnabled' => true, 'appearanceAvailable' => true, 'appearanceDarkAvailable' => true, 'appearanceHighlightAvailable' => false];
+        $page = $this->page('laravelusers::modern.edit-user', $data);
+        $this->assertNotContains('user_card_gradient_highlight_color', array_column($page['forms']['user']['fields'], 'key'));
+        $data['appearanceHighlightAvailable'] = true;
+        $page = $this->page('laravelusers::modern.edit-user', $data);
+        $this->assertNull($page['forms']['user']['values']['user_card_gradient_highlight_color']);
+        $this->assertNull($page['forms']['user']['values']['user_card_dark_gradient_highlight_color']);
+    }
+
+    public function test_package_status_projection_omits_host_details_and_is_only_offered_to_authorized_settings_views(): void
+    {
+        $this->actingAs($this->user());
+        $operation = ['id' => 'operation-id', 'status_url' => url('/users/settings/packages/operation-id'), 'status' => 'queued', 'stage' => 'queue', 'package' => 'toast', 'operation' => 'install', 'message' => 'Waiting for the worker.', 'queued_at' => '2026-10-08T21:00:00Z', 'command' => '/private/host/composer install'];
+        $page = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true, 'packageManagementAllowed' => true, 'packageOperation' => $operation]);
+        $this->assertSame('queued', $page['data']['package_operation']['status']);
+        $this->assertArrayNotHasKey('command', $page['data']['package_operation']);
+        $page = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true, 'packageManagementAllowed' => false, 'packageOperation' => $operation]);
+        $this->assertArrayNotHasKey('package_operation', $page['data']);
+        $this->assertStringNotContainsString('operation-id', json_encode($page));
+    }
+
     private function page(string $view, array $data): array
     {
         return $this->app->make(NativePageData::class)->forView($view, $data, $this->request());
