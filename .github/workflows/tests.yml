@@ -16,7 +16,7 @@ concurrency:
 jobs:
   tests:
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} / ${{ matrix.dependencies }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -61,7 +61,7 @@ jobs:
 
   role-integrations:
     name: Optional roles / Laravel ${{ matrix.laravel }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -90,7 +90,7 @@ jobs:
 
   presentation-integrations:
     name: Optional avatars and toast / Laravel ${{ matrix.laravel }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -112,7 +112,7 @@ jobs:
       - run: vendor/bin/phpunit --filter 'AvatarProvidersTest|ToastIntegrationsTest|PackageSetupIntegrationsTest'
 
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -150,7 +150,7 @@ jobs:
           retention-days: 7
 
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Pin CI to Ubuntu 24.04 to keep the tested runner image during GitHub's upcoming default-image migration.
 - Omit impersonation styles and legacy search actions from page source when the user cannot access the feature.
 - Keep standalone theme controls synchronized when they render after the first control, without delaying theme changes while assets load.
 - Read only the four supported login-detail fields and verify escaping in live search results.

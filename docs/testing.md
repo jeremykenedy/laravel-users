@@ -19,6 +19,8 @@ Laravel 13 also has a lowest-dependency job. Historical Laravel jobs explicitly 
 
 GitHub Actions runs the compatibility matrix, optional integration tests, Pint, dependency audits, PHP coverage, documentation linting, and the Playwright suite. StyleCI, CodeFactor, and Codacy provide separate code-quality checks.
 
+The workflow uses Ubuntu 24.04 explicitly so changes to GitHub's `ubuntu-latest` label do not replace the tested operating system. Review the PHP and browser jobs before adopting a newer runner image.
+
 The quality job exports coverage for inspection. It does not yet enforce the requested 100% coverage target. Coverage counts supplement behavioral assertions; they do not establish compatibility with untested host customizations. Local results also do not confirm GitHub Actions or external quality ratings for an unpublished commit.
 
 `phpunit.coverage.xml` is the PHPUnit 12 coverage configuration used by that job. It includes all package PHP logic, configuration, routes and migrations, including uncovered files. It excludes `src/resources`, which contains template sources, generated assets and translation data. Blade executes through compiled templates, so counting its source as unexecuted PHP gives a misleading report. Browser behavior is checked separately by Playwright. The ordinary `phpunit.xml` remains compatible with the older PHPUnit versions in the Laravel matrix.
