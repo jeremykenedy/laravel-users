@@ -19,6 +19,7 @@
             @case('table')<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>@break
             @case('cards')<rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/>@break
             @case('clock')<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>@break
+            @case('spinner')<path d="M21 12a9 9 0 1 1-9-9"/>@break
             @case('device')<rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8m-4-5v5"/>@break
             @case('chrome')<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 8h8m-11 7-4-7m7 8-4 5"/>@break
             @case('safari')<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5Z"/>@break
