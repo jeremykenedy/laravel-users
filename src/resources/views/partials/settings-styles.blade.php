@@ -148,7 +148,7 @@
     #laravelusers .lu-access-choices { max-height: 150px; overflow-y: auto; padding-top: 6px; }
     #laravelusers .lu-access-choices label { display: flex; align-items: center; gap: 8px; }
     #laravelusers .lu-access-choices input[type="checkbox"] { margin-right: 0; }
-    #laravelusers .lu-settings-notifications { min-width: 0; margin: 24px 0 0; border: 0; border-top: 1px solid var(--lu-border, #ced4da); padding: 20px 0 0; }
+    #laravelusers .lu-settings-notifications { min-width: 0; margin: 0; border: 0; padding: 0; }
     #laravelusers .lu-settings-form .lu-settings-check { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 400; }
     #laravelusers .lu-settings-check input[type="checkbox"] { margin: 0; }
     #laravelusers .lu-settings-footer { display: flex; justify-content: flex-end; padding-top: 12px; }
