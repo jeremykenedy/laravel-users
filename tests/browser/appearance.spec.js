@@ -22,7 +22,8 @@ async function seedAppearance(page, framework, values = {}) {
     const edit = await page.request.get('/users/1/edit');
     const identity = await page.evaluate(html => {
         const form = new DOMParser().parseFromString(html, 'text/html').querySelector('form[action$="/users/1"]');
-        return {name: form.querySelector('[name="name"]').value, email: form.querySelector('[name="email"]').value};
+        const result = {name: form.querySelector('[name="name"]').value, email: form.querySelector('[name="email"]').value};
+        return result;
     }, await edit.text());
     const inheritance = {
         user_card_color: '', user_card_dark_color: '', user_card_gradient: 'inherit', user_card_dark_gradient: 'inherit',

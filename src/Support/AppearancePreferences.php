@@ -17,6 +17,11 @@ class AppearancePreferences
             && $user->getConnection()->getSchemaBuilder()->hasTable((new AppearancePreference())->getTable());
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public static function rules(Model $user): array
     {
         if (!config('laravelusers.appearance.per_user', false) && !self::available($user)) {

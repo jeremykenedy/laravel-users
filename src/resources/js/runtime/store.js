@@ -79,6 +79,37 @@ export function createNativeStore(page, runtime) {
         state.notice = null;
         emit();
     };
+    const trackOperation = (form, payload) => {
+        if (form.async && payload.status_url) {
+            packageTracker.update(payload);
+            store.closeDialog();
+            return true;
+        }
+        return false;
+    };
+    const updateRequirements = (form, payload) => {
+        if (form.async && typeof payload.queue_ready === 'boolean') {
+            requirementsTracker.update(payload);
+            store.closeDialog();
+            return true;
+        }
+        return false;
+    };
+    const finishSubmission = async (form, payload) => {
+        if (payload.redirect) { await store.navigate(payload.redirect); return; }
+        if (form.async && payload.status === 'completed') { store.reloadPage(); return; }
+        store.closeDialog();
+        state.notice = { type: 'success', message: payload.message ?? '' };
+    };
+    const handleSubmission = async (id, form, payload, response) => {
+        if (!payload) return;
+        if (response.status === 422) { setOwnValue(state.errors, id, payload.errors ?? {}); report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
+        if (payload.screen) { load(payload); return; }
+        if (trackOperation(form, payload)) return;
+        if (payload.status === 'failed') throw new Error(payload.message);
+        if (updateRequirements(form, payload)) return;
+        await finishSubmission(form, payload);
+    };
     const store = {
         subscribe(listener) { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
         getSnapshot() { return state; },
@@ -213,24 +244,7 @@ export function createNativeStore(page, runtime) {
             emit();
             try {
                 let { payload, response } = await request(form.action, runtime, state.page.csrf, { method: 'POST', body: formData(form, getOwnValue(state.values, id), state.page.csrf) });
-                if (!payload) return;
-                if (response.status === 422) { setOwnValue(state.errors, id, payload.errors ?? {}); report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
-                if (payload.screen) { load(payload); return; }
-                if (form.async && payload.status_url) {
-                    packageTracker.update(payload);
-                    store.closeDialog();
-                    return;
-                }
-                if (payload.status === 'failed') throw new Error(payload.message);
-                if (form.async && typeof payload.queue_ready === 'boolean') {
-                    requirementsTracker.update(payload);
-                    store.closeDialog();
-                    return;
-                }
-                if (payload.redirect) { await store.navigate(payload.redirect); return; }
-                if (form.async && payload.status === 'completed') { store.reloadPage(); return; }
-                store.closeDialog();
-                state.notice = { type: 'success', message: payload.message ?? '' };
+                await handleSubmission(id, form, payload, response);
             } catch (error) { report(error); }
             finally { state.busy = false; emit(); }
         },

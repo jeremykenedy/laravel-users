@@ -1,7 +1,20 @@
 {
   "MD013": false,
   "MD033": {
-    "allowed_elements": ["a", "img", "p", "picture", "source", "table", "td", "th", "tr"]
+    "allowed_elements": [
+      "a",
+      "img",
+      "p",
+      "picture",
+      "source",
+      "table",
+      "td",
+      "th",
+      "tr"
+    ]
   },
-  "MD041": false
+  "MD041": false,
+  "MD024": {
+    "siblings_only": true
+  }
 }

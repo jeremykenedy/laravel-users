@@ -92,6 +92,8 @@ function AppearancePreview({ state }) {
 function NativeForm({ form, state, store, dialog = false }) {
     const sections = formSections(form);
     const feedback = passwordFeedback(getOwnValue(state.values, form.id)?.password ?? '', getOwnValue(state.values, form.id)?.password_confirmation ?? '', state.page.data.password);
+    // React escapes field values and labels in this JSX form.
+    // eslint-disable-next-line xss/no-mixed-html
     return <form method="POST" action={form.action ?? undefined} className="lu-form lu-pad" data-lu-native-form={form.id} onSubmit={event => { event.preventDefault(); store.submit(form.id, dialog); }}>
         <input type="hidden" name="_token" value={state.page.csrf ?? ''}/>{form.method !== 'POST' && <input type="hidden" name="_method" value={form.method}/>}
         {!dialog && <h2>{form.title}</h2>}{form.help && <p className="lu-muted">{form.help}</p>}{form.confirm && <p>{form.confirm}</p>}

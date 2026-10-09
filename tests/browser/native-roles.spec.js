@@ -67,7 +67,8 @@ for (const integration of ['laravel-roles', 'spatie']) {
             const invalid = await page.evaluate(async ({ target, name, email, runtime, administrator }) => {
                 const body = new URLSearchParams({ _token: document.querySelector('meta[name="csrf-token"]').content, _method: 'PUT', name: name + 'Invalid', email, role: administrator, permissions_present: '1', 'permissions[]': '99999999' });
                 const response = await fetch(`/users/${target}`, { method: 'POST', headers: { Accept: 'application/json', 'X-LaravelUsers-Runtime': runtime }, body });
-                return { status: response.status, data: await response.json() };
+                const result = { status: response.status, data: await response.json() };
+                return result;
             }, { target, name, email, runtime, administrator });
             expect(invalid.status).toBe(422);
             expect(invalid.data.errors.permissions).toBeDefined();

@@ -37,7 +37,8 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                         const titleBox = await title.boundingBox();
                         const textStyle = await title.evaluate(element => {
                             const style = getComputedStyle(element);
-                            return { fontSize: style.fontSize, lineHeight: style.lineHeight };
+                            const result = { fontSize: style.fontSize, lineHeight: style.lineHeight };
+                            return result;
                         });
                         const key = `${theme}:${width}`;
                         const measured = { height: bounds.height, textStyle, icon: icons ? await icon.boundingBox() : null };

@@ -17,6 +17,11 @@ class DeleteAccountRequest extends FormRequest
         return $this->user() instanceof Model && AccountPreferences::editable($this->user()) && config('laravelusers.account.delete', true);
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function rules(): array
     {
         return [

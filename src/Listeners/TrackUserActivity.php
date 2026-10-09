@@ -42,6 +42,11 @@ class TrackUserActivity
             && $this->matchesUserModel($user);
     }
 
+    /**
+     * Laravel wildcard event listeners receive the event name before the payload.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function matchesUserModel(Model $user): bool
     {
         $model = config('laravelusers.defaultUserModel');
@@ -54,6 +59,11 @@ class TrackUserActivity
             && ($user->getConnectionName() ?? config('database.default')) === ($expected->getConnectionName() ?? config('database.default'));
     }
 
+    /**
+     * Laravel wildcard event listeners receive the event name before the payload.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function deleted(string $event, array $data): void
     {
         $model = config('laravelusers.defaultUserModel');

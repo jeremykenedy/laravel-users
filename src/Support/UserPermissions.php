@@ -27,6 +27,11 @@ class UserPermissions
         return $spatie ? $query->where('guard_name', Guard::getDefaultName($user)) : $query;
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public static function rules(Model $user): array
     {
         return self::enabled($user) ? [

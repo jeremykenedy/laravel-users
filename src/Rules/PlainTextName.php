@@ -8,6 +8,11 @@ use Illuminate\Validation\ClosureValidationRule;
 
 class PlainTextName extends ClosureValidationRule
 {
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function __construct()
     {
         parent::__construct(static function ($attribute, $value, $fail) {

@@ -89,25 +89,31 @@ function formValues(form) {
 
 function enhanceForms() {
     if (!page || !root) return;
-    for (const form of root.querySelectorAll('form[data-lu-native-form]')) {
-        const values = formValues(form);
-        for (const field of page.forms[form.dataset.luNativeForm]?.fields ?? []) {
-            if (!field.nullable || values[field.key] !== null) continue;
-            const control = [...form.elements].find(control => control.name === field.name && control.type !== 'hidden');
-            if (control) control.value = displayValue(field, values);
-        }
-    }
+    for (const form of root.querySelectorAll('form[data-lu-native-form]')) restoreInheritedFields(form);
     const form = root.querySelector('form[data-lu-native-form="settings"]');
     if (form) for (const card of form.querySelectorAll('[data-lu-native-preview-card]')) {
         for (const [key, value] of Object.entries(previewStyle(page, formValues(form), card.dataset.luNativePreviewCard))) card.style.setProperty(key, value);
     }
+    updateProfileAppearance();
+    for (const form of root.querySelectorAll('form[data-lu-native-form]')) updatePassword(form, false);
+}
+
+function restoreInheritedFields(form) {
+    const values = formValues(form);
+    for (const field of page.forms[form.dataset.luNativeForm]?.fields ?? []) {
+        if (!field.nullable || values[field.key] !== null) continue;
+        const control = [...form.elements].find(control => control.name === field.name && control.type !== 'hidden');
+        if (control) control.value = displayValue(field, values);
+    }
+}
+
+function updateProfileAppearance() {
     const profile = root.querySelector('[data-lu-native-user-profile]');
     if (profile && page.data.user) {
         const editing = page.screen === 'edit-user';
         const editor = root.querySelector(`form[data-lu-native-form="${editing ? 'user' : 'account-appearance'}"]`);
         for (const [key, value] of Object.entries(profileStyle(page, page.data.user, editing, editor ? formValues(editor) : null))) profile.style.setProperty(key, value);
     }
-    for (const form of root.querySelectorAll('form[data-lu-native-form]')) updatePassword(form, false);
 }
 
 function updatePassword(form, delayed = true) {
@@ -230,6 +236,8 @@ document.addEventListener('click', async event => {
         const { payload } = await request(form.dataset.luPreviewUrl, 'livewire', form.querySelector('[name="_token"]')?.value, { method: 'POST', body: new FormData(form) });
         if (!payload) return;
         if (payload.errors) throw new Error(Object.values(payload.errors).flat().join(' '));
+        // The server renders escaped mail content into a sandboxed, script-free iframe.
+        // eslint-disable-next-line xss/no-mixed-html
         form.querySelector('[data-lu-preview-frame]').srcdoc = payload.html ?? '';
         form.querySelector('[data-lu-preview-recipient]').textContent = payload.recipient ?? '';
         editor.hidden = true;

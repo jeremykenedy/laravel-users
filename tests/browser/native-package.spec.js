@@ -37,7 +37,8 @@ for (const runtime of ['livewire', 'vue', 'react', 'svelte']) {
             await page.setViewportSize({ width, height: 950 });
             const buttons = await requirements.locator('button').evaluateAll(nodes => nodes.map(node => {
                 const box = node.getBoundingClientRect();
-                return { x: box.x, y: box.y, width: box.width, height: box.height, fontSize: parseFloat(getComputedStyle(node).fontSize), text: node.textContent.trim(), labelVisible: node.querySelector('span').getBoundingClientRect().width > 0 };
+                const result = { x: box.x, y: box.y, width: box.width, height: box.height, fontSize: parseFloat(getComputedStyle(node).fontSize), text: node.textContent.trim(), labelVisible: node.querySelector('span').getBoundingClientRect().width > 0 };
+                return result;
             }));
             if (width === 390) {
                 expect(buttons[0].x).toBe(buttons[1].x);

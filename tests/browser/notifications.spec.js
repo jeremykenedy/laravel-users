@@ -52,7 +52,8 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                         const left = parseFloat(style.paddingLeft);
                         const right = parseFloat(style.paddingRight);
 
-                        return { x: box.x + left, width: box.width - left - right };
+                        const result = { x: box.x + left, width: box.width - left - right };
+                        return result;
                     });
                     const bounds = {
                         alert: await alert.boundingBox(),
@@ -68,13 +69,24 @@ for (const framework of ['bootstrap4', 'bootstrap5']) {
                     expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path}, ${width}px`).toBeLessThanOrEqual(width);
                     if (path === '/users/settings') {
                         const toggler = page.locator('.navbar-toggler');
-                        if (await toggler.isVisible()) await toggler.click();
+                        const navigation = page.locator('#navbarSupportedContent');
+                        if (await toggler.isVisible()) {
+                            await toggler.click();
+                            await expect(navigation).toHaveClass(/\bshow\b/);
+                            await expect(navigation).not.toHaveClass(/\bcollapsing\b/);
+                        }
                         await page.locator('.lu-user-menu > summary').click();
+                        await expect(page.locator('.lu-user-menu-items')).toBeVisible();
                         const menu = await page.locator('.lu-user-menu-items').boundingBox();
                         expect(menu.x, `${width}px, opened menu left`).toBeGreaterThanOrEqual(content.x);
                         expect(menu.x + menu.width, `${width}px, opened menu right`).toBeLessThanOrEqual(content.x + content.width);
                         await page.locator('.lu-user-menu > summary').click();
-                        if (await toggler.isVisible()) await toggler.click();
+                        await expect(page.locator('.lu-user-menu-items')).toBeHidden();
+                        if (await toggler.isVisible()) {
+                            await toggler.click();
+                            await expect(navigation).not.toHaveClass(/\bshow\b/);
+                            await expect(navigation).not.toHaveClass(/\bcollapsing\b/);
+                        }
                     }
                 }
 

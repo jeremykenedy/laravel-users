@@ -29,6 +29,11 @@ class ComposerPackages
         return null;
     }
 
+    /**
+     * Symfony Process supplies an output type before each output chunk.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function setup(string $package, string $framework, bool $migrate, callable $output): bool
     {
         if (!isset(ManagedPackages::PACKAGES[$package]) || !in_array($framework, Frontend::FRAMEWORKS, true)) {
@@ -140,6 +145,11 @@ class ComposerPackages
         return $restart->run() === 0;
     }
 
+    /**
+     * Symfony Process supplies an output type before each output chunk.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function run(string $action, array $packages, callable $output): bool
     {
         $composer = (new ExecutableFinder())->find('composer');

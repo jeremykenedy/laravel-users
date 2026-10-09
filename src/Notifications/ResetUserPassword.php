@@ -19,11 +19,21 @@ class ResetUserPassword extends Notification implements ShouldQueue
         $this->afterCommit();
     }
 
+    /**
+     * Laravel passes the notifiable to every notification channel callback.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function via($notifiable): array
     {
         return ['mail'];
     }
 
+    /**
+     * Laravel passes the notifiable to every notification channel callback.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function toMail($notifiable): MailMessage
     {
         $defaults = EmailContent::defaults('reset');

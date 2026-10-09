@@ -26,6 +26,11 @@ class EmailUsersRequest extends FormRequest
         return $this->recipientRules($deleted, $actions) + $this->accountLinkRules($deleted) + $this->resetRules() + $this->contentRules();
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function recipientRules(bool $deleted, array $actions): array
     {
         return [
@@ -40,6 +45,11 @@ class EmailUsersRequest extends FormRequest
         ];
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function actionRules(bool $deleted, array $actions): array
     {
         return ['required', Rule::in($deleted ? ['message'] : $actions), function ($attribute, $value, $fail) use ($deleted, $actions) {
@@ -49,6 +59,11 @@ class EmailUsersRequest extends FormRequest
         }];
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function selectionRules(): array
     {
         return ['required', 'array', 'min:1', 'max:'.max(1, min(1000, (int) config('laravelusers.bulkLimit', 100))), function ($attribute, $value, $fail) {
@@ -58,6 +73,11 @@ class EmailUsersRequest extends FormRequest
         }];
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function accountLinkRules(bool $deleted): array
     {
         $links = $this->boolean('include_restore') || $this->boolean('include_force_delete');
@@ -96,6 +116,11 @@ class EmailUsersRequest extends FormRequest
         return is_numeric($value) && (int) $value * $factor > max(1, min(525600, (int) config('laravelusers.account_links.max_expire', 43200)));
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function resetRules(): array
     {
         return [

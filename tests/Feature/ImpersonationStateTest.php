@@ -70,7 +70,7 @@ class ImpersonationStateTest extends TestCase
 
     public function test_expired_or_revoked_access_restores_the_actor_before_the_host_request_runs(): void
     {
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->withSession([ImpersonationSession::KEY => $state])->get('/host-dashboard')->assertRedirect('/users?page=2')->assertSessionHas('warning');
         $this->assertAuthenticatedAs($actor);
         $this->assertFalse(session()->has(ImpersonationSession::KEY));

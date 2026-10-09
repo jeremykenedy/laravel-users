@@ -18,11 +18,21 @@ class ConfirmEmailChange extends Notification implements ShouldQueue
         $this->afterCommit();
     }
 
+    /**
+     * Laravel passes the notifiable to every notification channel callback.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function via($notifiable): array
     {
         return ['mail'];
     }
 
+    /**
+     * Laravel passes the notifiable to every notification channel callback.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage())->subject(trans('laravelusers::ui.account_email_subject'))

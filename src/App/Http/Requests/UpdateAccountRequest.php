@@ -48,6 +48,11 @@ class UpdateAccountRequest extends FormRequest
         ];
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function appearanceRules(Model $user): array
     {
         $rules = ['avatar_source' => [config('laravelusers.account.avatar', true) ? 'sometimes' : 'prohibited', Rule::in(array_merge(['inherit'], Avatar::SOURCES)), function ($attribute, $value, $fail) use ($user) {
@@ -76,6 +81,11 @@ class UpdateAccountRequest extends FormRequest
         return $rules;
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     private function currentPasswordRules(Model $user): array
     {
         return ['bail', 'required', 'string', function ($attribute, $value, $fail) use ($user) {

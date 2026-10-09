@@ -255,6 +255,11 @@ class InstallCommand extends Command
         $this->replaceEnvironment($files, $path, $contents);
     }
 
+    /**
+     * Filesystem failures are checked and reported together while preserving atomic replacement.
+     *
+     * @SuppressWarnings("PHPMD.ErrorControlOperator")
+     */
     private function replaceEnvironment(Filesystem $files, string $path, string $contents): void
     {
         clearstatcache(true, $path);

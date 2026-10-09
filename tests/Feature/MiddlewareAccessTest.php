@@ -228,6 +228,11 @@ class MiddlewareAccessTest extends TestCase
         $this->assertFalse(MiddlewareAccess::allows($actor, ['security-permission:manage-users,api']));
     }
 
+    /**
+     * Gate callbacks receive the user before the requested ability.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function test_spatie_permission_checks_honor_host_gate_revocation(): void
     {
         $revoked = false;

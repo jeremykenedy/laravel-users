@@ -69,7 +69,8 @@ export async function request(url, runtime, csrf, options = {}) {
     if (!(response.headers.get('Content-Type') ?? '').includes('application/json')) {
         if (response.redirected || !options.method || options.method === 'GET') {
             window.location.assign(sameOriginUrl(response.url || url).href);
-            return { response, payload: null };
+            const result = { response, payload: null };
+            return result;
         }
         throw new Error('The application returned an unexpected response.');
     }
@@ -79,7 +80,8 @@ export async function request(url, runtime, csrf, options = {}) {
         error.status = response.status;
         throw error;
     }
-    return { response, payload };
+    const result = { response, payload };
+    return result;
 }
 
 export function statusIcon(status) {

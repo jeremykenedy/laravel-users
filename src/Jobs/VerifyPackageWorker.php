@@ -35,6 +35,11 @@ class VerifyPackageWorker implements ShouldQueue
         PackageWorker::acknowledge($this->nonce, $this->context, $composer->readiness());
     }
 
+    /**
+     * Laravel supplies the failed job exception to this callback.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function failed(Throwable $exception): void
     {
         PackageWorker::acknowledge($this->nonce, $this->context, 'laravelusers::ui.package_requirements_not_verified');

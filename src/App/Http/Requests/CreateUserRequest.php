@@ -25,6 +25,11 @@ class CreateUserRequest extends FormRequest
             && (!$this->boolean('force_password_reset') || UserAccess::email('reset'));
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to each validation closure.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function rules(): array
     {
         $userModel = config('laravelusers.defaultUserModel');

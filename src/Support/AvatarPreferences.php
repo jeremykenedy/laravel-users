@@ -22,6 +22,11 @@ class AvatarPreferences
             && $user->getConnection()->getSchemaBuilder()->hasTable((new AvatarPreference())->getTable());
     }
 
+    /**
+     * Laravel passes the attribute, value, and failure callback to validation closures.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public static function rules(Model $user): array
     {
         return (self::enabled() || self::available($user)) ? ['avatar_source' => array_merge(UserAccess::allows('edit_user_appearance') ? ['sometimes', 'required'] : ['prohibited'], [Rule::in(array_merge(['inherit'], Avatar::SOURCES)), function ($attribute, $value, $fail) use ($user) {

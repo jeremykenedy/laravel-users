@@ -11,6 +11,11 @@ use jeremykenedy\laravelusers\Support\AvatarPreferences;
 
 class ForgetAvatarPreference
 {
+    /**
+     * Laravel wildcard event listeners receive the event name before the payload.
+     *
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
+     */
     public function handle(string $event, array $data): void
     {
         $model = config('laravelusers.defaultUserModel');
