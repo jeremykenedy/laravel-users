@@ -12,7 +12,7 @@
             @endforeach
             @if(config('laravelusers.rolesEnabled'))
                 <div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ __('laravelusers::laravelusers.show-user.labelRole') }}</dt><dd>@foreach($user->roles as $role)<span class="{{ $badgeClass }}">{{ $role->name }}</span> @endforeach</dd></div>
-                @if(config('laravelusers.showRoleLevels', true) && isset($roleLevel))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ trans_choice('laravelusers::laravelusers.show-user.labelAccessLevel', 1) }}</dt><dd>@foreach(range(5, 1) as $level)@if($roleLevel >= $level)<span class="{{ $badgeClass }}">{{ $level }}</span> @endif @endforeach</dd></div>@endif
+                @if(config('laravelusers.showRoleLevels', true) && isset($roleLevel))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ strip_tags(trans_choice('laravelusers::laravelusers.show-user.labelAccessLevel', 1)) }}</dt><dd>@foreach(range(5, 1) as $level)@if($roleLevel >= $level)<span class="{{ $badgeClass }}">{{ $level }}</span> @endif @endforeach</dd></div>@endif
             @endif
             @if(isset($directPermissions))<div class="lu-detail"><dt>@include('laravelusers::partials.icon', ['name' => 'role']) {{ __('laravelusers::ui.direct_permissions') }}</dt><dd>@foreach($directPermissions as $permission)<span class="{{ $badgeClass }}">{{ $permission->name }}</span> @endforeach</dd></div>@endif
             @if(config('laravelusers.activity.login', false) || config('laravelusers.activity.online', false))@include('laravelusers::partials.user-activity')@endif

@@ -24,7 +24,9 @@ class ProfileBadgesTest extends TestCase
                 $document->loadHTML($html);
                 libxml_clear_errors();
                 libxml_use_internal_errors($previous);
-                $badges = (new DOMXPath($document))->query('//dl[@class="lu-profile-details"]//span[contains(concat(" ", @class, " "), " lu-badge ")]');
+                $xpath = new DOMXPath($document);
+                $badges = $xpath->query('//dl[@class="lu-profile-details"]//span[contains(concat(" ", @class, " "), " lu-badge ")]');
+                $this->assertSame('User Access Level', trim($xpath->query('//dl[@class="lu-profile-details"]//dt')->item(6)->textContent));
                 $this->assertSame(5, $badges->length, $framework.' '.$theme);
                 $this->assertSame(['Manager', '3', '2', '1', 'users.manage'], array_map(fn ($badge) => $badge->textContent, iterator_to_array($badges)));
                 foreach ($badges as $badge) {
