@@ -4,6 +4,8 @@
         var pendingRequest;
         var delay = @json(max(0, (int) config('laravelusers.searchDebounce', 2000)));
         var cardTitle = $('#card_title');
+        var cardTitleText = cardTitle.find('.lu-title-text');
+        if (!cardTitleText.length) cardTitleText = cardTitle;
         var usersTable = $('#users_table');
         var resultsContainer = $('#search_results');
         var usersCount = $('#user_count');
@@ -117,7 +119,7 @@
                         resultsContainer.append(noResulsHtml);
                     };
                     usersCount.html(jsonData.length + " {!! trans('laravelusers::laravelusers.search.found-footer') !!}");
-                    cardTitle.html("{!! trans('laravelusers::laravelusers.search.title') !!}");
+                    cardTitleText.html("{!! trans('laravelusers::laravelusers.search.title') !!}");
                     document.getElementById('laravelusers').dispatchEvent(new Event('lu:rows'));
                     document.getElementById('laravelusers').dispatchEvent(new CustomEvent('lu:appearance', {detail: payload.appearance || {}}));
                     @if(config('laravelusers.tooltipsEnabled', true))
@@ -128,7 +130,7 @@
                     if (response.status === 422) {
                         resultsContainer.append(noResulsHtml);
                         usersCount.html(0 + " {!! trans('laravelusers::laravelusers.search.found-footer') !!}");
-                        cardTitle.html("{!! trans('laravelusers::laravelusers.search.title') !!}");
+                        cardTitleText.html("{!! trans('laravelusers::laravelusers.search.title') !!}");
                     };
                 },
             });
@@ -144,7 +146,7 @@
                 clearSearchTrigger.hide();
                 resultsContainer.html('');
                 usersTable.show();
-                cardTitle.html("{!! trans('laravelusers::laravelusers.showing-all-users') !!}");
+                cardTitleText.html("{!! trans('laravelusers::laravelusers.showing-all-users') !!}");
                 usersCount.html("{!! trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) !!}");
             };
         });
@@ -156,7 +158,7 @@
             usersTable.show();
             resultsContainer.html('');
             searchformInput.val('');
-            cardTitle.html("{!! trans('laravelusers::laravelusers.showing-all-users') !!}");
+            cardTitleText.html("{!! trans('laravelusers::laravelusers.showing-all-users') !!}");
             usersCount.html("{!! trans_choice('laravelusers::laravelusers.users-table.caption', 1, ['userscount' => $users->count()]) !!}");
         });
     });
