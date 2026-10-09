@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { submitUserForm, searchUsers } = require('./native-navigation.cjs');
 const { startPackageWorker } = require('./package-worker.cjs');
 
 const frameworks = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
@@ -80,6 +81,7 @@ async function verifyRequirementsAndTemplates(page, runtime) {
     const requirementsResponse = page.waitForResponse(response => response.url().endsWith('/users/settings/packages/verify') && response.request().method() === 'POST');
     await page.getByRole('button', { name: /^(?:Re-)?Verify package requirements$/ }).click();
     await requirementsResponse;
+    await expect(page.getByRole('button', { name: /^(?:Re-)?Verify package requirements$/ })).toBeEnabled();
     const requirements = page.locator('[data-lu-native-package-requirements]');
     await expect(requirements).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
     await expect(requirements).not.toContainText('Waiting for the package worker', { timeout: 15000 });
@@ -125,17 +127,16 @@ for (const runtime of runtimes) {
             await form.locator('[name="email"]').fill('user0@example.com');
             await form.locator('[name="password"]').fill('NativePass123!');
             await form.locator('[name="password_confirmation"]').fill('NativePass123!');
-            await form.getByRole('button', { name: 'Save changes', exact: true }).click();
+            await submitUserForm(page, form, runtime);
             await expect(page.locator('.lu-field-error').first()).toContainText(/email.*taken/i);
             await form.locator('[name="email"]').fill(`${name.toLowerCase()}@example.com`);
             if (runtime === 'livewire') {
                 await form.locator('[name="password"]').fill('NativePass123!');
                 await form.locator('[name="password_confirmation"]').fill('NativePass123!');
             }
-            await form.getByRole('button', { name: 'Save changes', exact: true }).click();
+            await submitUserForm(page, form, runtime);
             await expect(page.locator('[data-lu-native-screen="users"]')).toBeVisible();
-            await page.locator('#lu-native-search').fill(name);
-            await page.locator('.lu-search').getByRole('button', { name: 'Search', exact: true }).click();
+            await searchUsers(page, name);
             await expect(page.getByRole('link', { name, exact: true })).toBeVisible();
             await page.getByRole('link', { name, exact: true }).click();
             await expect(page.locator('[data-lu-native-screen="show-user"]')).toBeVisible();
@@ -163,11 +164,10 @@ for (const runtime of runtimes) {
             await form.locator('[name="email"]').fill(`${prefix.toLowerCase()}${suffix.toLowerCase()}@example.com`);
             await form.locator('[name="password"]').fill('NativePass123!');
             await form.locator('[name="password_confirmation"]').fill('NativePass123!');
-            await form.getByRole('button', { name: 'Save changes', exact: true }).click();
+            await submitUserForm(page, form, runtime);
             await expect(page.locator('[data-lu-native-screen="users"]')).toBeVisible();
         }
-        await page.locator('#lu-native-search').fill(prefix);
-        await page.locator('.lu-search').getByRole('button', { name: 'Search', exact: true }).click();
+        await searchUsers(page, prefix);
         await page.getByRole('link', { name: prefix + 'First', exact: true }).click();
         await expect(page.locator('[data-lu-native-screen="show-user"]')).toBeVisible();
         await page.getByRole('link', { name: 'Edit', exact: true }).click();

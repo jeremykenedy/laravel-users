@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { submitUserForm, searchUsers } = require('./native-navigation.cjs');
 
 async function rejectInvalidPermissionsAndClearSelection(page, edit, user) {
     const selectedRoles = edit.locator('select[name="role[]"]');
@@ -49,10 +50,9 @@ async function createRoleUser(page, runtime, integration) {
     await expect(form).not.toContainText('API permission');
     await roles.selectOption(administrator);
     await permissions.selectOption([direct]);
-    await form.getByRole('button', { name: 'Save changes', exact: true }).click();
+    await submitUserForm(page, form, runtime);
     await expect(page.locator('[data-lu-native-screen="users"]')).toBeVisible();
-    await page.locator('#lu-native-search').fill(name);
-    await page.locator('.lu-search').getByRole('button', { name: 'Search', exact: true }).click();
+    await searchUsers(page, name);
     const row = page.locator('[data-lu-native-table] tbody tr').filter({ hasText: name });
     await expect(row).toContainText('Administrator');
     await page.getByRole('link', { name, exact: true }).click();
