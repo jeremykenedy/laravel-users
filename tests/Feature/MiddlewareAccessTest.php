@@ -19,6 +19,7 @@ use jeremykenedy\LaravelRoles\RolesServiceProvider;
 use jeremykenedy\laravelusers\Support\MiddlewareAccess;
 use jeremykenedy\laravelusers\Test\Fixtures\PackageRoleUser;
 use jeremykenedy\laravelusers\Test\Fixtures\SpatieRoleUser;
+use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -59,6 +60,19 @@ class MiddlewareAccessTest extends TestCase
 
         $this->assertFalse(MiddlewareAccess::allows($actor, ['security-authorize:security-manage']));
         $this->assertFalse(MiddlewareAccess::allows($actor, [Authorize::class.':security-manage']));
+    }
+
+    public function test_gate_arguments_preserve_literals_and_class_names_and_reject_unresolved_bindings(): void
+    {
+        $this->app->make(Kernel::class);
+        $actor = $this->user();
+        Gate::define('security-context', fn ($user, $context = null) => $user->is($actor) && in_array($context, [User::class, 'billing'], true));
+
+        $this->assertTrue(MiddlewareAccess::allows($actor, ['can:security-context,'.User::class]));
+        $this->assertTrue(MiddlewareAccess::allows($actor, ['can:security-context,"billing"']));
+        $this->assertFalse(MiddlewareAccess::allows($actor, ['can:security-context,"other"']));
+        Gate::define('security-context', fn () => true);
+        $this->assertFalse(MiddlewareAccess::allows($actor, ['can:security-context,user']));
     }
 
     public function test_nested_groups_require_every_restriction_and_reject_cycles(): void
