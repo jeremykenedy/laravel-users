@@ -21,15 +21,28 @@ function NativeAvatar({ avatar }) {
 function NativeCell({ user, column, state, store }) {
     const text = cellText(user, column);
     if (column.type === 'avatar') return <NativeAvatar avatar={user.avatar}/>;
-    if (column.type === 'activity') return <dl className="lu-details">
+    if (column.type === 'activity') return <NativeActivity user={user} state={state}/>;
+    if (column.type === 'date' && text) return <time dateTime={text}>{dateLabel(text, state.page)}</time>;
+    if (column.type === 'presence') return <NativePresence user={user} state={state}/>;
+    return <NativeLinkedCell user={user} column={column} store={store} text={text}/>;
+}
+
+function NativePresence({ user, state }) {
+    const online = user.activity?.online;
+    return <span className={'lu-badge ' + (online ? 'lu-online' : '')}>{online ? state.page.labels.online : state.page.labels.offline}</span>;
+}
+
+function NativeLinkedCell({ user, column, store, text }) {
+    if (column.key === 'name' && user.urls?.show) return <a href={user.urls.show} onClick={event => { event.preventDefault(); store.navigate(user.urls.show); }}>{user.name}</a>;
+    if (column.key === 'email' && column.linked) return <a href={'mailto:' + user.email}>{user.email}</a>;
+    return <>{text}</>;
+}
+
+function NativeActivity({ user, state }) {
+    return <dl className="lu-details">
         <div><dt>{state.page.labels.last_login_at}</dt><dd>{user.activity?.last_login_at ? <time dateTime={user.activity.last_login_at}>{dateLabel(user.activity.last_login_at, state.page)}</time> : state.page.labels.no_logins}</dd></div>
         {['device', 'os', 'browser', 'ip_address'].map(key => getOwnValue(user.activity, key) && <div key={key}><dt>{getOwnValue(state.page.labels, key)}</dt><dd>{getOwnValue(user.activity, key)}</dd></div>)}
     </dl>;
-    if (column.type === 'date' && text) return <time dateTime={text}>{dateLabel(text, state.page)}</time>;
-    if (column.key === 'name' && user.urls?.show) return <a href={user.urls.show} onClick={event => { event.preventDefault(); store.navigate(user.urls.show); }}>{user.name}</a>;
-    if (column.key === 'email' && column.linked) return <a href={'mailto:' + user.email}>{user.email}</a>;
-    if (column.type === 'presence') return <span className={'lu-badge ' + (user.activity?.online ? 'lu-online' : '')}>{user.activity?.online ? state.page.labels.online : state.page.labels.offline}</span>;
-    return <>{text}</>;
 }
 
 function NativeActions({ user, state, store }) {
@@ -65,23 +78,39 @@ function NativeTable({ state, store }) {
 }
 
 function NativeField({ field, form, state, store, dialog }) {
-    const value = getValue(getOwnValue(state.values, form.id), field.key);
-    const id = `lu-field-${form.id}-${field.key.replaceAll('.', '-')}${dialog ? '-dialog' : ''}`;
-    const error = (getOwnValue(getOwnValue(state.errors, form.id), field.key) ?? []).join(' ');
-    const disabled = field.disabled || state.busy || (field.nullable && value === null);
-    const description = [field.help ? `${id}-help` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
-    const control = { id, name: field.name, required: field.required, disabled, 'aria-invalid': error ? 'true' : undefined, 'aria-describedby': description };
+    const { value, id, error, control } = fieldAttributes(field, form, state, dialog);
     const set = value => store.setValue(form.id, field.key, value);
     return <div className={'lu-field ' + state.page.classes.field}>
         <label htmlFor={id} className={(field.type === 'checkbox' ? 'lu-check ' : '') + state.page.classes['field-label']}>{field.type === 'checkbox' && <input {...control} className="lu-checkbox" type="checkbox" checked={Boolean(value)} onChange={event => set(event.target.checked)}/>}<span>{field.label}</span></label>
         <div className={'lu-control ' + state.page.classes['field-control']}>
             {field.nullable && <button type="button" className="lu-button lu-secondary" aria-pressed={value === null} disabled={field.disabled || state.busy} onClick={() => store.toggleInheritance(form.id, field.key)}>{(field.inherit_label ?? state.page.labels.appearance_inherit)}</button>}
             {field.type !== 'checkbox' && <div className={'lu-input-group ' + state.page.classes.control}>
-                {field.type === 'select' ? <select {...control} className={'lu-input ' + state.page.classes.select} multiple={field.multiple} value={field.multiple ? (value ?? []).map(String) : String(value ?? '')} onChange={event => set(field.multiple ? Array.from(event.target.selectedOptions, option => option.value) : event.target.value)}>{field.options.map(option => <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>)}</select> : field.type === 'textarea' ? <textarea {...control} className={'lu-input ' + state.page.classes.input} value={value ?? ''} maxLength={field.maxlength} onChange={event => set(event.target.value)}/> : <input {...control} className={'lu-input ' + state.page.classes.input} type={field.type} value={displayValue(field, getOwnValue(state.values, form.id))} min={field.min} max={field.max} step={field.step} maxLength={field.maxlength} autoComplete={field.type === 'password' ? 'new-password' : undefined} onChange={event => set(event.target.value)}/>}
+                <NativeControl field={field} control={control} value={value} set={set} state={state} form={form}/>
             </div>}
             {field.help && <p id={id + '-help'} className="lu-muted">{field.help}</p>}{error && <p id={id + '-error'} className="lu-field-error" role="alert">{error}</p>}
         </div>
     </div>;
+}
+
+function fieldAttributes(field, form, state, dialog) {
+    const value = getValue(getOwnValue(state.values, form.id), field.key);
+    const id = `lu-field-${form.id}-${field.key.replaceAll('.', '-')}${dialog ? '-dialog' : ''}`;
+    const error = (getOwnValue(getOwnValue(state.errors, form.id), field.key) ?? []).join(' ');
+    const disabled = field.disabled || state.busy || (field.nullable && value === null);
+    const description = [field.help ? `${id}-help` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
+    const control = { id, name: field.name, required: field.required, disabled, 'aria-invalid': error ? 'true' : undefined, 'aria-describedby': description };
+    const attributes = { value, id, error, control };
+    return attributes;
+}
+
+function NativeSelect({ field, control, value, set, state }) {
+    return <select {...control} className={'lu-input ' + state.page.classes.select} multiple={field.multiple} value={field.multiple ? (value ?? []).map(String) : String(value ?? '')} onChange={event => set(field.multiple ? Array.from(event.target.selectedOptions, option => option.value) : event.target.value)}>{field.options.map(option => <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>)}</select>;
+}
+
+function NativeControl({ field, control, value, set, state, form }) {
+    if (field.type === 'select') return <NativeSelect field={field} control={control} value={value} set={set} state={state}/>;
+    if (field.type === 'textarea') return <textarea {...control} className={'lu-input ' + state.page.classes.input} value={value ?? ''} maxLength={field.maxlength} onChange={event => set(event.target.value)}/>;
+    return <input {...control} className={'lu-input ' + state.page.classes.input} type={field.type} value={displayValue(field, getOwnValue(state.values, form.id))} min={field.min} max={field.max} step={field.step} maxLength={field.maxlength} autoComplete={field.type === 'password' ? 'new-password' : undefined} onChange={event => set(event.target.value)}/>;
 }
 
 function AppearancePreview({ state }) {
@@ -99,7 +128,7 @@ function NativeForm({ form, state, store, dialog = false }) {
         {!dialog && <h2>{form.title}</h2>}{form.help && <p className="lu-muted">{form.help}</p>}{form.confirm && <p>{form.confirm}</p>}
         {form.tabs && sections.length > 1 && <div className="lu-settings-tabs" role="tablist" aria-label={form.title}>{sections.map(section => <button key={section} type="button" id={`lu-tab-${form.id}-${section}${dialog ? '-dialog' : ''}`} role="tab" aria-controls={`lu-panel-${form.id}-${section}${dialog ? '-dialog' : ''}`} aria-selected={getOwnValue(state.tabs, form.id) === section} onClick={() => store.setTab(form.id, section)}>{labelSection(section)}</button>)}</div>}
         <fieldset disabled={form.disabled || state.busy} hidden={state.preview?.form === form.id}><legend className="lu-sr-only">{form.title}</legend>
-            {sections.map(section => { const accordion = form.accordion && section.startsWith('email-'); const Tag = accordion ? 'details' : 'section'; return <Tag className={accordion ? 'lu-email-template' : undefined} key={section} id={`lu-panel-${form.id}-${section}${dialog ? '-dialog' : ''}`} hidden={form.tabs && sections.length > 1 && getOwnValue(state.tabs, form.id) !== section} role={form.tabs && sections.length > 1 ? 'tabpanel' : undefined} aria-labelledby={form.tabs && sections.length > 1 ? `lu-tab-${form.id}-${section}${dialog ? '-dialog' : ''}` : undefined}>{accordion && <summary><span>{getOwnValue(state.page.labels, 'email_template_' + section.slice(6))}</span></summary>}{form.fields.filter(field => field.type !== 'hidden' && field.section === section && fieldVisible(field, getOwnValue(state.values, form.id))).map(field => <NativeField key={field.key} field={field} form={form} state={state} store={store} dialog={dialog}/>)}{form.id === 'settings' && section === 'appearance' && <AppearancePreview state={state}/>}</Tag>; })}
+            {sections.map(section => <NativeFormSection key={section} section={section} sections={sections} form={form} state={state} store={store} dialog={dialog}/>)}
             {state.page.features.password_meter && feedback && getOwnValue(state.values, form.id)?.password && <div className="lu-password-meter"><p>{state.page.labels.password_strength}: <strong>{feedback.label}</strong></p><meter min="0" max="4" value={feedback.score} aria-label={state.page.labels.password_strength}/></div>}
             {state.page.features.password_feedback && getOwnValue(state.passwordMismatch, form.id) && <p className="lu-password-confirmation-error" role="status">{state.page.labels.password_mismatch}</p>}
         </fieldset>
@@ -107,6 +136,12 @@ function NativeForm({ form, state, store, dialog = false }) {
         {form.preview && state.preview?.form !== form.id && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={() => store.preview(form.id)}><NativeIcon action="preview" enabled={state.page.features.icons}/><span>{state.page.labels.email_preview}</span></button>}
         <div className="lu-actions lu-form-actions"><button type="submit" className={'lu-button ' + (form.danger ? 'lu-danger' : 'lu-success')} disabled={state.busy || !store.ready(form.id)}><NativeIcon action={submitAction(form)} enabled={state.page.features.icons}/><span>{form.submit}</span></button>{dialog && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.closeDialog}><NativeIcon action="cancel" enabled={state.page.features.icons}/><span>{state.page.labels.cancel}</span></button>}</div>
     </form>;
+}
+
+function NativeFormSection({ section, sections, form, state, store, dialog }) {
+    const accordion = form.accordion && section.startsWith('email-');
+    const Tag = accordion ? 'details' : 'section';
+    return <Tag className={accordion ? 'lu-email-template' : undefined} key={section} id={`lu-panel-${form.id}-${section}${dialog ? '-dialog' : ''}`} hidden={form.tabs && sections.length > 1 && getOwnValue(state.tabs, form.id) !== section} role={form.tabs && sections.length > 1 ? 'tabpanel' : undefined} aria-labelledby={form.tabs && sections.length > 1 ? `lu-tab-${form.id}-${section}${dialog ? '-dialog' : ''}` : undefined}>{accordion && <summary><span>{getOwnValue(state.page.labels, 'email_template_' + section.slice(6))}</span></summary>}{form.fields.filter(field => field.type !== 'hidden' && field.section === section && fieldVisible(field, getOwnValue(state.values, form.id))).map(field => <NativeField key={field.key} field={field} form={form} state={state} store={store} dialog={dialog}/>)}{form.id === 'settings' && section === 'appearance' && <AppearancePreview state={state}/>}</Tag>;
 }
 
 function NativeDialog({ state, store }) {
@@ -136,10 +171,23 @@ function PackageSettings({ state, store }) {
         <h2 id="lu-native-packages-title">{state.page.labels.settings_packages}</h2><p className="lu-muted">{state.page.labels.packages_hint}</p>
         {!packages.ready && <p>{state.page.labels.packages_queue_required}</p>}
         <div className="lu-actions lu-native-package-actions" data-lu-native-requirement-actions><button type="button" className="lu-button lu-secondary" disabled={state.busy || packages.ready} onClick={() => store.openSettingsAction('package-requirements')}><NativeIcon action={packages.ready ? 'check' : 'settings'} enabled={state.page.features.icons}/><span>{packages.ready ? state.page.labels.package_requirements_completed : state.page.labels.package_requirements_setup}</span></button><button type="button" className="lu-button lu-secondary" disabled={state.busy || requirements?.busy} onClick={store.verifyRequirements}><NativeIcon action="verify" enabled={state.page.features.icons}/><span>{packages.ready ? state.page.labels.package_requirements_reverify : state.page.labels.package_requirements_verify}</span></button></div>
-        {requirements && <div className="lu-native-package-status" role="status" data-lu-native-package-requirements><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={requirements.status === 'checking' ? 'lu-package-spinner' : ''}><path d={statusIcon(requirements.status === 'checking' ? 'running' : requirements.queue_ready ? 'completed' : 'failed')}/></svg><div><p>{requirements.message}</p>{requirements.transport_error && <p role="alert">{requirements.transport_error}</p>}</div></div>}
+        <PackageRequirements requirements={requirements}/>
         <p className="lu-muted">{state.page.labels.package_requirements_hint}</p><div className="lu-actions">{packages.help.map(link => <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a>)}</div>
-        <div className="lu-settings-grid">{packages.choices.map(choice => <section className="lu-settings-choice" key={choice.name}><h3>{choice.label}</h3><p>{choice.installed ? state.page.labels.package_installed : state.page.labels.package_not_installed}</p>{choice.hint && <p className="lu-muted">{choice.hint}</p>}{choice.reason && <p className="lu-muted">{choice.reason}</p>}<div className="lu-actions lu-native-package-actions"><button type="button" className="lu-button lu-secondary" disabled={choice.blocked || !packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.name)}><NativeIcon action={choice.installed ? 'remove' : 'install'} enabled={state.page.features.icons}/><span>{choice.installed ? state.page.labels.package_remove : state.page.labels.package_install}</span></button>{choice.configure_name && !choice.setup_completed && <button type="button" className="lu-button lu-secondary" disabled={!packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.configure_name)}><NativeIcon action="configure" enabled={state.page.features.icons}/><span>{state.page.labels.package_configure}</span></button>}</div>{choice.setup_completed && <p className="lu-setup-completed"><NativeIcon action="check" enabled={state.page.features.icons}/><span>{state.page.labels.package_setup_completed}</span></p>}{choice.setup_hint && <p className="lu-muted">{choice.setup_hint}</p>}</section>)}</div>
+        <div className="lu-settings-grid">{packages.choices.map(choice => <PackageChoice key={choice.name} choice={choice} packages={packages} state={state} store={store}/>)}</div>
     </section>;
+}
+
+function PackageRequirements({ requirements }) {
+    if (!requirements) return null;
+    return <div className="lu-native-package-status" role="status" data-lu-native-package-requirements><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={requirements.status === 'checking' ? 'lu-package-spinner' : ''}><path d={statusIcon(requirements.status === 'checking' ? 'running' : requirements.queue_ready ? 'completed' : 'failed')}/></svg><div><p>{requirements.message}</p>{requirements.transport_error && <p role="alert">{requirements.transport_error}</p>}</div></div>;
+}
+
+function PackageChoice({ choice, packages, state, store }) {
+    return <section className="lu-settings-choice" key={choice.name}><h3>{choice.label}</h3><p>{choice.installed ? state.page.labels.package_installed : state.page.labels.package_not_installed}</p>{choice.hint && <p className="lu-muted">{choice.hint}</p>}{choice.reason && <p className="lu-muted">{choice.reason}</p>}<PackageChoiceActions choice={choice} packages={packages} state={state} store={store}/>{choice.setup_completed && <p className="lu-setup-completed"><NativeIcon action="check" enabled={state.page.features.icons}/><span>{state.page.labels.package_setup_completed}</span></p>}{choice.setup_hint && <p className="lu-muted">{choice.setup_hint}</p>}</section>;
+}
+
+function PackageChoiceActions({ choice, packages, state, store }) {
+    return <div className="lu-actions lu-native-package-actions"><button type="button" className="lu-button lu-secondary" disabled={choice.blocked || !packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.name)}><NativeIcon action={choice.installed ? 'remove' : 'install'} enabled={state.page.features.icons}/><span>{choice.installed ? state.page.labels.package_remove : state.page.labels.package_install}</span></button>{choice.configure_name && !choice.setup_completed && <button type="button" className="lu-button lu-secondary" disabled={!packages.ready || state.busy} onClick={() => store.openSettingsAction(choice.configure_name)}><NativeIcon action="configure" enabled={state.page.features.icons}/><span>{state.page.labels.package_configure}</span></button>}</div>;
 }
 
 function NativeToasts({ state }) {
@@ -150,14 +198,62 @@ function NativeToasts({ state }) {
 }
 
 function NativeNavigation({ state, store }) {
+    return <><NativeHeader state={state} store={store}/><NativeBreadcrumbs state={state} store={store}/></>;
+}
+
+function NativeHeader({ state, store }) {
     const { page } = state;
-    return <>
-        {page.features.show_header && !page.features.custom_header && <nav className="lu-toolbar" aria-label={page.labels.navigation}><a className="lu-brand" href={page.data.home}>{page.labels.package_name}</a><div className="lu-actions">
-            {page.data.current_user && <details className="lu-user-menu"><summary className="lu-user-menu-toggle"><NativeAvatar avatar={page.data.current_user.avatar}/><span>{page.data.current_user.name}</span><span className="lu-user-menu-caret" aria-hidden="true"/></summary><div className="lu-user-menu-items">{page.data.current_user.activity && <div className="lu-user-menu-login" aria-label={page.labels.login_details}><NativeCell user={page.data.current_user} column={{ key: 'activity', type: 'activity' }} state={state} store={store}/></div>}{page.urls.users && <a href={page.urls.users} onClick={event => { event.preventDefault(); store.navigate(page.urls.users); }}>{page.labels.manage_users}</a>}{page.urls.account && <a href={page.urls.account} onClick={event => { event.preventDefault(); store.navigate(page.urls.account); }}>{page.labels.account_menu_label}</a>}{page.urls.logout && <form method="POST" action={page.urls.logout}><input type="hidden" name="_token" value={page.csrf}/><button type="submit">{page.labels.logout}</button></form>}</div></details>}
+    if (!page.features.show_header || page.features.custom_header) return null;
+    return <nav className="lu-toolbar" aria-label={page.labels.navigation}><a className="lu-brand" href={page.data.home}>{page.labels.package_name}</a><div className="lu-actions">
+            <NativeUserMenu state={state} store={store}/>
             {page.features.theme_toggle && <button type="button" className="lu-button lu-secondary" onClick={store.toggleTheme}>{page.theme === 'dark' ? page.labels.theme_light : page.labels.theme_dark}</button>}
-        </div></nav>}
-        {page.features.breadcrumbs && <nav className="lu-breadcrumbs lu-native-breadcrumbs" aria-label={page.labels.breadcrumbs}><ol>{page.data.breadcrumbs.map((crumb, index) => <li key={index} aria-current={index === page.data.breadcrumbs.length - 1 ? 'page' : undefined}>{Boolean(index) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>}{index < page.data.breadcrumbs.length - 1 && crumb.url ? <a href={crumb.url} onClick={event => { if (crumb.native !== false) { event.preventDefault(); store.navigate(crumb.url); } }}>{crumb.label}</a> : <span>{crumb.label}</span>}</li>)}</ol></nav>}
-    </>;
+        </div></nav>;
+}
+
+function NativeUserMenu({ state, store }) {
+    const { page } = state;
+    if (!page.data.current_user) return null;
+    return <details className="lu-user-menu"><summary className="lu-user-menu-toggle"><NativeAvatar avatar={page.data.current_user.avatar}/><span>{page.data.current_user.name}</span><span className="lu-user-menu-caret" aria-hidden="true"/></summary><div className="lu-user-menu-items">{page.data.current_user.activity && <div className="lu-user-menu-login" aria-label={page.labels.login_details}><NativeCell user={page.data.current_user} column={{ key: 'activity', type: 'activity' }} state={state} store={store}/></div>}{page.urls.users && <a href={page.urls.users} onClick={event => { event.preventDefault(); store.navigate(page.urls.users); }}>{page.labels.manage_users}</a>}{page.urls.account && <a href={page.urls.account} onClick={event => { event.preventDefault(); store.navigate(page.urls.account); }}>{page.labels.account_menu_label}</a>}{page.urls.logout && <form method="POST" action={page.urls.logout}><input type="hidden" name="_token" value={page.csrf}/><button type="submit">{page.labels.logout}</button></form>}</div></details>;
+}
+
+function NativeBreadcrumbItem({ crumb, index, page, store }) {
+    const current = index === page.data.breadcrumbs.length - 1;
+    const navigate = event => {
+        if (crumb.native !== false) {
+            event.preventDefault();
+            store.navigate(crumb.url);
+        }
+    };
+    return <li key={index} aria-current={current ? 'page' : undefined}>{Boolean(index) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>}{!current && crumb.url ? <a href={crumb.url} onClick={navigate}>{crumb.label}</a> : <span>{crumb.label}</span>}</li>;
+}
+
+function NativeBreadcrumbs({ state, store }) {
+    const { page } = state;
+    if (!page.features.breadcrumbs) return null;
+    return <nav className="lu-breadcrumbs lu-native-breadcrumbs" aria-label={page.labels.breadcrumbs}><ol>{page.data.breadcrumbs.map((crumb, index) => <NativeBreadcrumbItem key={index} crumb={crumb} index={index} page={page} store={store}/>)}</ol></nav>;
+}
+
+function NativeDirectory({ state, store }) {
+    const page = state.page;
+    if (!['users', 'deleted-users'].includes(page.screen)) return null;
+    return <>
+                {page.features.search && <form className="lu-search" onSubmit={event => { event.preventDefault(); store.search(); }}><label className="lu-sr-only" htmlFor="lu-native-search">{page.labels.search}</label><input id="lu-native-search" className="lu-input" type="search" maxLength="255" value={state.search} onChange={event => store.setSearch(event.target.value)}/><button type="submit" className="lu-button" disabled={state.busy}>{page.labels.search}</button>{state.search && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.clearSearch}>{page.labels.clear}</button>}</form>}
+                <NativeTable state={state} store={store}/>
+                <div className="lu-pagination">{page.features.show_count && <span>{page.labels.total_users.replace(':count', page.data.pagination.total)}</span>}{page.data.pagination.enabled && <nav className="lu-actions" aria-label={page.labels.pagination}>{page.data.pagination.previous && <a href={page.data.pagination.previous} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(page.data.pagination.previous); }}>{page.labels.previous}</a>}<span>{page.labels.page.replace(':page', page.data.pagination.current).replace(':total', page.data.pagination.last)}</span>{page.data.pagination.next && <a href={page.data.pagination.next} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(page.data.pagination.next); }}>{page.labels.next}</a>}</nav>}</div>
+            </>;
+}
+
+function NativeProfile({ state, store }) {
+    const page = state.page;
+    const user = page.data.user;
+    if (!['show-user', 'account', 'edit-user'].includes(page.screen)) return null;
+    return <div className="lu-profile-body"><header className="lu-profile-identity lu-native-profile" style={profileStyle(page, user, page.screen === 'edit-user', page.screen === 'edit-user' ? state.values.user : state.values['account-appearance'])}><NativeAvatar avatar={user.avatar}/><div><h2>{user.full_name ?? user.name}</h2><p>{user.email}</p></div></header>{user.pending_email && <p role="status">{page.labels.account_email_pending_to.replace(':email', user.pending_email)}</p>}{page.screen === 'show-user' && <><dl className="lu-profile-details">{page.data.columns.filter(column => column.type !== 'avatar').map(column => <div key={column.key} className="lu-detail"><dt>{column.label}</dt><dd><NativeCell user={user} column={column} state={state} store={store}/></dd></div>)}</dl>{Boolean(user.permissions?.length) && <p>{page.labels.direct_permissions}: {user.permissions.map(item => item.label).join(', ')}</p>}{Boolean(user.role_level) && <p>{page.labels.role_level.replace(':level', user.role_level)}</p>}<NativeActions user={user} state={state} store={store}/></>}</div>;
+}
+
+function NativeSettingsActions({ state, store }) {
+    const page = state.page;
+    if (!Boolean(page.data.settings_actions?.some(action => !action.name.startsWith('package-')))) return null;
+    return <div className="lu-pad lu-actions">{page.data.settings_actions.filter(action => !action.name.startsWith('package-')).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openSettingsAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}</div>;
 }
 
 export default function UsersApp({ store }) {
@@ -166,7 +262,6 @@ export default function UsersApp({ store }) {
     useEffect(() => observeToastDismissals(document.getElementById('lu-native-app'), store), [store]);
     useEffect(() => observeDialogs(document.getElementById('lu-native-app'), () => { if (!store.getSnapshot().busy) store.closeDialog(); }), [store]);
     const { page } = state;
-    const user = page.data.user;
     return <div data-lu-native-screen={page.screen} aria-busy={state.busy}>
         <NativeNavigation state={state} store={store}/>
         <NativeNotifications state={state} store={store}/>
@@ -176,15 +271,11 @@ export default function UsersApp({ store }) {
         <section className={'lu-panel ' + page.classes.panel}>
             <header className="lu-heading lu-card-heading"><h1 tabIndex="-1" data-lu-native-heading>{page.title}</h1><div className="lu-actions">{page.data.navigation.map(link => <a key={link.url} href={link.url} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(link.url); }}>{link.label}</a>)}</div></header>
             {page.data.notice && <p className="lu-pad" role="status">{page.data.notice}</p>}
-            {['users', 'deleted-users'].includes(page.screen) && <>
-                {page.features.search && <form className="lu-search" onSubmit={event => { event.preventDefault(); store.search(); }}><label className="lu-sr-only" htmlFor="lu-native-search">{page.labels.search}</label><input id="lu-native-search" className="lu-input" type="search" maxLength="255" value={state.search} onChange={event => store.setSearch(event.target.value)}/><button type="submit" className="lu-button" disabled={state.busy}>{page.labels.search}</button>{state.search && <button type="button" className="lu-button lu-secondary" disabled={state.busy} onClick={store.clearSearch}>{page.labels.clear}</button>}</form>}
-                <NativeTable state={state} store={store}/>
-                <div className="lu-pagination">{page.features.show_count && <span>{page.labels.total_users.replace(':count', page.data.pagination.total)}</span>}{page.data.pagination.enabled && <nav className="lu-actions" aria-label={page.labels.pagination}>{page.data.pagination.previous && <a href={page.data.pagination.previous} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(page.data.pagination.previous); }}>{page.labels.previous}</a>}<span>{page.labels.page.replace(':page', page.data.pagination.current).replace(':total', page.data.pagination.last)}</span>{page.data.pagination.next && <a href={page.data.pagination.next} className="lu-button lu-secondary" onClick={event => { event.preventDefault(); store.navigate(page.data.pagination.next); }}>{page.labels.next}</a>}</nav>}</div>
-            </>}
-            {['show-user', 'account', 'edit-user'].includes(page.screen) && <div className="lu-profile-body"><header className="lu-profile-identity lu-native-profile" style={profileStyle(page, user, page.screen === 'edit-user', page.screen === 'edit-user' ? state.values.user : state.values['account-appearance'])}><NativeAvatar avatar={user.avatar}/><div><h2>{user.full_name ?? user.name}</h2><p>{user.email}</p></div></header>{user.pending_email && <p role="status">{page.labels.account_email_pending_to.replace(':email', user.pending_email)}</p>}{page.screen === 'show-user' && <><dl className="lu-profile-details">{page.data.columns.filter(column => column.type !== 'avatar').map(column => <div key={column.key} className="lu-detail"><dt>{column.label}</dt><dd><NativeCell user={user} column={column} state={state} store={store}/></dd></div>)}</dl>{Boolean(user.permissions?.length) && <p>{page.labels.direct_permissions}: {user.permissions.map(item => item.label).join(', ')}</p>}{Boolean(user.role_level) && <p>{page.labels.role_level.replace(':level', user.role_level)}</p>}<NativeActions user={user} state={state} store={store}/></>}</div>}
+            <NativeDirectory state={state} store={store}/>
+            <NativeProfile state={state} store={store}/>
             {page.data.form_ids.map(id => <NativeForm key={id} form={getOwnValue(page.forms, id)} state={state} store={store}/>)}
             <PackageSettings state={state} store={store}/>
-            {Boolean(page.data.settings_actions?.some(action => !action.name.startsWith('package-'))) && <div className="lu-pad lu-actions">{page.data.settings_actions.filter(action => !action.name.startsWith('package-')).map(action => <button key={action.name} type="button" className={'lu-button ' + (action.class ?? 'lu-secondary')} disabled={action.disabled || state.busy} onClick={() => store.openSettingsAction(action.name)}><NativeIcon action={action.name} enabled={state.page.features.icons}/><span>{action.label}</span></button>)}</div>}
+            <NativeSettingsActions state={state} store={store}/>
         </section>
         <NativeDialog state={state} store={store}/>
     </div>;

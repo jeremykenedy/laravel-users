@@ -6,6 +6,11 @@ namespace jeremykenedy\laravelusers\Support;
 
 class PasswordRules
 {
+    /**
+     * The existing creation mode selects the documented create and update password limits.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function settings(bool $creating = false): array
     {
         $min = max(1, (int) config('laravelusers.password.min', 6));
@@ -19,6 +24,11 @@ class PasswordRules
         ];
     }
 
+    /**
+     * The existing boolean options preserve the public validation helper contract.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function validation(bool $creating = false, bool $required = true): array
     {
         $settings = self::settings($creating);

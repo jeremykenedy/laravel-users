@@ -121,11 +121,21 @@ class UserAccess
         return $method !== null && self::hasOneOf($user, $method, $permissions);
     }
 
+    /**
+     * The existing deleted-user option selects the separate email authorization policy.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function email(string $action, bool $deleted = false): bool
     {
         return in_array($action, ['message', 'reset', 'welcome'], true) && self::allows($deleted ? 'email_deleted' : 'email_'.$action);
     }
 
+    /**
+     * The existing deleted-user option selects restore and permanent deletion policies.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function selectable(bool $deleted = false): bool
     {
         $actions = $deleted ? ['restore_users', 'force_delete'] : ['delete_users'];

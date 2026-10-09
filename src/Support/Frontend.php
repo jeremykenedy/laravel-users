@@ -105,6 +105,11 @@ class Frontend
         return route('users');
     }
 
+    /**
+     * The existing theme option preserves the public color helper contract.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function profileColors(string $setting = 'profileCardColor', string $default = '#2458b7', bool $dark = false): array
     {
         $prefix = $setting === 'editCardColor' ? 'editCard' : 'profileCard';

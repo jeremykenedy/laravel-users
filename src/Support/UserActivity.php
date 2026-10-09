@@ -63,6 +63,11 @@ class UserActivity
         }
     }
 
+    /**
+     * The existing option controls whether private login details are included in the result.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public function listing(iterable $users, bool $includeDetails = false): array
     {
         $records = [];
@@ -92,6 +97,11 @@ class UserActivity
         return $includeDetails ? $login->only(['ip_address', 'device', 'os', 'browser']) : [];
     }
 
+    /**
+     * The existing logout option preserves the public presence tracking contract.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public function touch(Model $user, Request $request, bool $logout = false): void
     {
         if (!config('laravelusers.activity.online', false) || !$request->hasSession()) {
@@ -133,9 +143,10 @@ class UserActivity
         }
         if ($sessions) {
             $store->put($key, $sessions, $ttl);
-        } else {
-            $store->forget($key);
+
+            return;
         }
+        $store->forget($key);
     }
 
     public function isOnline(Model $user): ?bool
@@ -162,6 +173,11 @@ class UserActivity
         return hash('sha256', implode('|', [get_class($user), $user->getConnectionName() ?? config('database.default'), $user->getTable(), $user->getKey()]));
     }
 
+    /**
+     * The existing option preserves the public choice to retain login history.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public function forget(Model $user, bool $forgetLogin = true): void
     {
         if ($forgetLogin && config('laravelusers.activity.login', false)) {

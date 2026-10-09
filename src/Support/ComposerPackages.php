@@ -15,18 +15,39 @@ class ComposerPackages
         if (!(new ExecutableFinder())->find('composer') || !function_exists('proc_open')) {
             return 'laravelusers::ui.package_composer_missing';
         }
-        $manifest = base_path('composer.json');
-        if (!is_file($manifest) || !is_readable($manifest) || !is_writable($manifest) || !is_object(json_decode((string) file_get_contents($manifest)))) {
+        if (!$this->manifestReady()) {
             return 'laravelusers::ui.package_composer_manifest';
         }
-        if (!is_dir(base_path('vendor')) || !is_writable(base_path('vendor')) || $this->installedPackages() === null) {
+        if (!$this->vendorReady()) {
             return 'laravelusers::ui.package_composer_vendor';
         }
-        if (!is_file(base_path('artisan')) || !is_readable(base_path('artisan')) || !is_dir(base_path('bootstrap/cache')) || !is_writable(base_path('bootstrap/cache')) || (file_exists(base_path('composer.lock')) && (!is_file(base_path('composer.lock')) || !is_writable(base_path('composer.lock'))))) {
+        if (!$this->applicationReady()) {
             return 'laravelusers::ui.package_composer_application';
         }
 
         return null;
+    }
+
+    private function manifestReady(): bool
+    {
+        $manifest = base_path('composer.json');
+
+        return is_file($manifest) && is_readable($manifest) && is_writable($manifest)
+            && is_object(json_decode((string) file_get_contents($manifest)));
+    }
+
+    private function vendorReady(): bool
+    {
+        return is_dir(base_path('vendor')) && is_writable(base_path('vendor')) && $this->installedPackages() !== null;
+    }
+
+    private function applicationReady(): bool
+    {
+        $lock = base_path('composer.lock');
+
+        return is_file(base_path('artisan')) && is_readable(base_path('artisan'))
+            && is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache'))
+            && (!file_exists($lock) || (is_file($lock) && is_writable($lock)));
     }
 
     /**

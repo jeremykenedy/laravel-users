@@ -79,7 +79,7 @@ class ImpersonationStateTest extends TestCase
     public function test_expiry_can_be_configured_and_stop_remains_available_after_expiration(): void
     {
         config(['laravelusers.impersonation.timeout' => 5]);
-        [$actor, $target, $state] = $this->begin();
+        [$actor, , $state] = $this->begin();
         $this->assertSame(300, $state['expires_at'] - $state['started_at']);
         $this->travel(6)->minutes();
         $this->withSession([ImpersonationSession::KEY => $state])->post('/users/impersonation/stop')->assertRedirect('/users?page=2');

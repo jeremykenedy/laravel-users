@@ -12,6 +12,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Registers the package services, commands, middleware, and events at the Laravel composition root.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class LaravelUsersServiceProvider extends ServiceProvider
 {
     private string $_packageTag;

@@ -44,9 +44,10 @@ class AvatarPreferences
         $key = self::key($user);
         if ($data['avatar_source'] === 'inherit') {
             self::query($user)->whereKey($key)->delete();
-        } else {
-            self::query($user)->updateOrCreate(['user_key' => $key], ['source' => $data['avatar_source']]);
+
+            return;
         }
+        self::query($user)->updateOrCreate(['user_key' => $key], ['source' => $data['avatar_source']]);
     }
 
     public static function listing(iterable $users): array

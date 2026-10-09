@@ -23,6 +23,39 @@ function initialState(page) {
     };
 }
 
+function resetActionFields(form, values) {
+    for (const field of form.fields) {
+        if (field.required_text) setValue(values, field.key, '');
+        if (field.type === 'checkbox' && field.required) setValue(values, field.key, false);
+    }
+}
+
+function copyActionValues(form, source, values, sourceValues) {
+    if (!source) return;
+    for (const field of form.fields) {
+        if (source.fields.some(item => item.key === field.key)) setValue(values, field.key, structuredClone(getValue(sourceValues, field.key)));
+    }
+}
+
+function updateQueueForms(page, ready) {
+    for (const form of Object.values(page.forms)) {
+        if (form.requires_queue) form.disabled = form.blocked || !ready;
+    }
+    for (const action of page.data.settings_actions ?? []) {
+        if (action.name.startsWith('package-')) action.disabled = action.name === 'package-requirements' ? ready : getOwnValue(page.forms, action.form)?.disabled;
+    }
+}
+
+function updateHistory(url, mode) {
+    if (mode === 'replace') window.history.replaceState({}, '', url.href);
+    else if (mode !== 'none') window.history.pushState({}, '', url.href);
+}
+
+function previewAvatarData(payload) {
+    if (payload.errors) throw new Error(Object.values(payload.errors).flat().join(' '));
+    return Object.fromEntries(['profile', 'edit', 'profile_dark', 'edit_dark'].filter(kind => getOwnValue(payload.avatars, kind)).map(kind => [kind, getOwnValue(payload.avatars, kind)]));
+}
+
 export function createNativeStore(page, runtime) {
     let state = initialState(page);
     let searchTimer;
@@ -44,8 +77,7 @@ export function createNativeStore(page, runtime) {
         requirementsTracker = createPackageRequirementsTracker(runtime, () => state.page.csrf, payload.forms['package-verify'], payload.data.packages?.requirements, value => {
             state.packageRequirements = value;
             if (state.page.data.packages) state.page.data.packages.ready = value.queue_ready;
-            for (const form of Object.values(state.page.forms)) if (form.requires_queue) form.disabled = form.blocked || !value.queue_ready;
-            for (const action of state.page.data.settings_actions ?? []) if (action.name.startsWith('package-')) action.disabled = action.name === 'package-requirements' ? value.queue_ready : getOwnValue(state.page.forms, action.form)?.disabled;
+            updateQueueForms(state.page, value.queue_ready);
             emit();
         });
     };
@@ -63,18 +95,19 @@ export function createNativeStore(page, runtime) {
         if (root) { root.dataset.luTheme = payload.theme; root.dataset.luCss = payload.framework; }
         document.title = payload.title;
     };
+    const populateAction = (action, form) => {
+        const values = getOwnValue(state.values, action.form);
+        resetActionFields(form, values);
+        const source = getOwnValue(state.page.forms, action.values_from);
+        copyActionValues(form, source, values, getOwnValue(state.values, source?.id));
+        for (const [key, value] of Object.entries(action.values ?? {})) setValue(getOwnValue(state.values, action.form), key, structuredClone(value));
+    };
     const activate = action => {
         const form = getOwnValue(state.page.forms, action.form);
         if (!form || form.disabled || action.disabled) return;
         state.activeForm = action.form;
         state.activeAction = action.url ?? null;
-        for (const field of form.fields) {
-            if (field.required_text) setValue(getOwnValue(state.values, action.form), field.key, '');
-            if (field.type === 'checkbox' && field.required) setValue(getOwnValue(state.values, action.form), field.key, false);
-        }
-        const source = getOwnValue(state.page.forms, action.values_from);
-        if (source) for (const field of form.fields) if (source.fields.some(item => item.key === field.key)) setValue(getOwnValue(state.values, action.form), field.key, structuredClone(getValue(getOwnValue(state.values, source.id), field.key)));
-        for (const [key, value] of Object.entries(action.values ?? {})) setValue(getOwnValue(state.values, action.form), key, structuredClone(value));
+        populateAction(action, form);
         state.preview = null;
         state.notice = null;
         emit();
@@ -101,9 +134,14 @@ export function createNativeStore(page, runtime) {
         store.closeDialog();
         state.notice = { type: 'success', message: payload.message ?? '' };
     };
+    const reportValidation = (id, payload) => {
+        const errors = payload.errors ?? {};
+        setOwnValue(state.errors, id, errors);
+        report(new Error([payload.message, ...Object.values(errors).flat()].filter(Boolean).join(' ')));
+    };
     const handleSubmission = async (id, form, payload, response) => {
         if (!payload) return;
-        if (response.status === 422) { setOwnValue(state.errors, id, payload.errors ?? {}); report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
+        if (response.status === 422) { reportValidation(id, payload); return; }
         if (payload.screen) { load(payload); return; }
         if (trackOperation(form, payload)) return;
         if (payload.status === 'failed') throw new Error(payload.message);
@@ -227,8 +265,7 @@ export function createNativeStore(page, runtime) {
                 if (id !== requestId || !payload) return;
                 if (!payload.screen) throw new Error(payload.message ?? 'The selected page is unavailable.');
                 load(payload);
-                if (historyMode === 'replace') window.history.replaceState({}, '', url.href);
-                else if (historyMode !== 'none') window.history.pushState({}, '', url.href);
+                updateHistory(url, historyMode);
                 window.scrollTo({ top: 0, behavior: 'instant' });
                 queueMicrotask(() => document.querySelector('[data-lu-native-heading]')?.focus());
             } catch (error) { if (id === requestId) report(error); }
@@ -257,7 +294,7 @@ export function createNativeStore(page, runtime) {
             try {
                 const { payload, response } = await request(form.preview, runtime, state.page.csrf, { method: 'POST', body: formData(form, getOwnValue(state.values, id), state.page.csrf) });
                 if (!payload) return;
-                if (response.status === 422) { setOwnValue(state.errors, id, payload.errors ?? {}); report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
+                if (response.status === 422) { reportValidation(id, payload); return; }
                 state.preview = { form: id, html: payload.html ?? '', recipient: payload.recipient ?? '' };
             } catch (error) { report(error); }
             finally { state.busy = false; emit(); }
@@ -275,8 +312,7 @@ export function createNativeStore(page, runtime) {
             try {
                 const { payload } = await request(preview.url, runtime, state.page.csrf, { method: 'POST', body });
                 if (id !== previewRequestId || !payload) return;
-                if (payload.errors) throw new Error(Object.values(payload.errors).flat().join(' '));
-                state.appearancePreviewAvatars = Object.fromEntries(['profile', 'edit', 'profile_dark', 'edit_dark'].filter(kind => getOwnValue(payload.avatars, kind)).map(kind => [kind, getOwnValue(payload.avatars, kind)]));
+                state.appearancePreviewAvatars = previewAvatarData(payload);
             } catch (error) { if (id === previewRequestId) report(error); }
             finally { if (id === previewRequestId) { state.appearancePreviewLoading = false; emit(); } }
         },

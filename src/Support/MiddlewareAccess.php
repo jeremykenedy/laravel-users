@@ -78,16 +78,26 @@ class MiddlewareAccess
             return is_string($gate) && $gate !== '' && Gate::forUser($actor)->allows($gate, [$target, $values]);
         }
 
+        return self::knownMiddlewareAllows($actor, $type, $arguments, $values);
+    }
+
+    private static function knownMiddlewareAllows(Model $actor, string $type, string $arguments, array $values): bool
+    {
         return match ($type) {
-            'auth'     => $values === [] || in_array(config('auth.defaults.guard', 'web'), $values, true),
-            'verified' => !$actor instanceof MustVerifyEmail || $actor->hasVerifiedEmail(),
-            'can'      => self::gateAllows($actor, $values),
-            'level'    => count($values) === 1 && filter_var($values[0], FILTER_VALIDATE_INT) !== false
-                && method_exists($actor, 'level') && $actor->level() >= (int) $values[0],
+            'auth'               => $values === [] || in_array(config('auth.defaults.guard', 'web'), $values, true),
+            'verified'           => !$actor instanceof MustVerifyEmail || $actor->hasVerifiedEmail(),
+            'can'                => self::gateAllows($actor, $values),
+            'level'              => self::levelAllows($actor, $values),
             'laravel_role'       => $values !== [] && method_exists($actor, 'hasRole') && $actor->hasRole($arguments),
             'laravel_permission' => $values !== [] && method_exists($actor, 'hasPermission') && $actor->hasPermission($arguments),
             default              => self::spatieAllows($actor, $type, $values),
         };
+    }
+
+    private static function levelAllows(Model $actor, array $values): bool
+    {
+        return count($values) === 1 && filter_var($values[0], FILTER_VALIDATE_INT) !== false
+            && method_exists($actor, 'level') && $actor->level() >= (int) $values[0];
     }
 
     private static function gateAllows(Model $actor, array $values): bool
@@ -100,11 +110,16 @@ class MiddlewareAccess
         foreach ($values as $value) {
             if (str_contains($value, '\\')) {
                 $arguments[] = trim($value);
-            } elseif (preg_match('/^[\'\"](.*)[\'\"]$/', trim($value), $matches)) {
-                $arguments[] = $matches[1];
-            } else {
-                return false;
+
+                continue;
             }
+            if (preg_match('/^[\'\"](.*)[\'\"]$/', trim($value), $matches)) {
+                $arguments[] = $matches[1];
+
+                continue;
+            }
+
+            return false;
         }
 
         return Gate::forUser($actor)->allows($ability, $arguments);
@@ -112,7 +127,7 @@ class MiddlewareAccess
 
     private static function spatieAllows(Model $actor, string $type, array $values): bool
     {
-        if ($values === [] || count($values) > 2 || (isset($values[1]) && $values[1] !== config('auth.defaults.guard', 'web'))) {
+        if (!self::spatieArgumentsValid($values)) {
             return false;
         }
         $names = explode('|', $values[0]);
@@ -122,5 +137,11 @@ class MiddlewareAccess
             && method_exists($actor, 'hasAnyPermission') && Gate::forUser($actor)->any($names);
 
         return $role || $permission;
+    }
+
+    private static function spatieArgumentsValid(array $values): bool
+    {
+        return $values !== [] && count($values) <= 2
+            && (!isset($values[1]) || $values[1] === config('auth.defaults.guard', 'web'));
     }
 }

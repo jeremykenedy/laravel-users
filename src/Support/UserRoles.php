@@ -36,6 +36,11 @@ class UserRoles
         return $query;
     }
 
+    /**
+     * The existing replacement option preserves append and synchronization behavior for both role providers.
+     *
+     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+     */
     public static function assign(Model $user, mixed $selection, bool $replace = false): void
     {
         $ids = array_values(array_unique(array_map('strval', (array) $selection)));
@@ -45,11 +50,12 @@ class UserRoles
         }
         if (method_exists($user, 'assignRole') && method_exists($user, 'syncRoles')) {
             $replace ? $user->syncRoles($roles->all()) : $user->assignRole($roles->all());
-        } else {
-            if ($replace) {
-                $user->detachAllRoles();
-            }
-            $user->attachRole($roles->modelKeys());
+
+            return;
         }
+        if ($replace) {
+            $user->detachAllRoles();
+        }
+        $user->attachRole($roles->modelKeys());
     }
 }

@@ -7,22 +7,24 @@ namespace jeremykenedy\laravelusers\App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use jeremykenedy\laravelusers\Console\ConsolePrompts;
-use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Support\AvatarSetup;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
-use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\HostRouting;
+use jeremykenedy\laravelusers\Support\InstallationChoices;
+use jeremykenedy\laravelusers\Support\InstallationConfiguration;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
-use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Support\ToastSetup;
-use jeremykenedy\laravelusers\Support\UserNotifications;
-use RuntimeException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
+/**
+ * Coordinates setup services while preserving the existing command entry points.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ */
 class InstallCommand extends Command
 {
     protected $signature = 'laravelusers:install
@@ -76,7 +78,7 @@ class InstallCommand extends Command
     protected function install(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer, PublicAssets $assets, HostRouting $routing): int
     {
         $this->banner();
-        $choices = $this->installationChoices();
+        $choices = (new InstallationChoices($this, $this->input->isInteractive(), self::INTEGRATIONS))->choose();
         if ($choices === false) {
             return self::FAILURE;
         }
@@ -138,27 +140,13 @@ class InstallCommand extends Command
         $published = ConsolePrompts::spin($this, fn () => $assets->publish(), 'Publishing Laravel Users assets...', $this->input->isInteractive());
         ConsolePrompts::table($this, ['Public asset', 'Destination'], array_map(fn ($name) => [$name, 'public/vendor/laravelusers/'], $published), $this->input->isInteractive());
         ConsolePrompts::spin($this, fn () => $routing->write($routePlan), 'Configuring web route middleware...', $this->input->isInteractive());
-        ConsolePrompts::spin($this, function () use ($files, $framework, $theme, $runtime, $roleSettings, $avatarSettings, $notificationDriver): void {
-            $this->saveConfiguration($files, $framework, $theme, $runtime);
-            $this->saveRoles($files, $roleSettings);
-            $this->saveAvatars($files, $avatarSettings);
-            $this->saveNotifications($files, $notificationDriver);
+        $configuration = new InstallationConfiguration($this, $this->input->isInteractive());
+        ConsolePrompts::spin($this, function () use ($configuration, $files, $framework, $theme, $runtime, $roleSettings, $avatarSettings, $notificationDriver): void {
+            $configuration->saveConfiguration($files, $framework, $theme, $runtime);
+            $configuration->saveRoles($files, $roleSettings);
+            $configuration->saveAvatars($files, $avatarSettings);
+            $configuration->saveNotifications($files, $notificationDriver);
         }, 'Updating Laravel Users configuration...', $this->input->isInteractive());
-    }
-
-    private function installationChoices(): array|false
-    {
-        if ($this->laravel->configurationIsCached()) {
-            $this->error('Run php artisan config:clear before changing the frontend, then rebuild your configuration cache.');
-
-            return false;
-        }
-        if (!$this->frontendOptionsValid()) {
-            return false;
-        }
-        $choices = $this->frontendChoices();
-
-        return $this->optionsValid(...$choices) ? $choices : false;
     }
 
     private function configurePackageRequirements(PackageRequirements $requirements): void
@@ -187,16 +175,6 @@ class InstallCommand extends Command
         return true;
     }
 
-    private function saveNotifications(Filesystem $files, ?string $driver): void
-    {
-        if ($driver === null) {
-            return;
-        }
-        $settings = array_replace(config('laravelusers-notifications', []), ['driver' => $driver]);
-        $code = $this->exportSettings($settings, ['driver' => 'LARAVEL_USERS_NOTIFICATIONS_DRIVER', 'dismissible' => 'LARAVEL_USERS_NOTIFICATIONS_DISMISSIBLE']);
-        $files->replace(config_path('laravelusers-notifications.php'), "<?php\n\nreturn ".$code.";\n");
-    }
-
     protected function banner(): void
     {
         $style = new SymfonyStyle($this->input, $this->output);
@@ -209,209 +187,6 @@ class InstallCommand extends Command
             $style->text('Set up user management and select the integrations already supported by this package.');
             $style->newLine();
         }
-    }
-
-    private function saveRoles(Filesystem $files, array $settings): void
-    {
-        if ($settings === []) {
-            return;
-        }
-        $environment = ['rolesEnabled' => 'LARAVEL_USERS_ROLES_ENABLED', 'roleModel' => 'LARAVEL_USERS_ROLE_MODEL', 'rolesMiddlwareEnabled' => 'LARAVEL_USERS_ROLES_MIDDLWARE_ENABLED', 'rolesMiddlware' => 'LARAVEL_USERS_ROLES_MIDDLWARE'];
-        $this->saveRoleEnvironment($files, $settings, $environment);
-        $settings = array_merge(config('laravelusers-roles', []), $settings);
-        $lines = [];
-        foreach ($settings as $key => $value) {
-            $export = var_export($value, true);
-            if (isset($environment[$key])) {
-                $export = "env('".$environment[$key]."', ".$export.')';
-            }
-            $lines[] = '    '.var_export($key, true).' => '.$export.',';
-        }
-        $files->replace(config_path('laravelusers-roles.php'), "<?php\n\nreturn [\n".implode("\n", $lines)."\n];\n");
-    }
-
-    private function saveRoleEnvironment(Filesystem $files, array $settings, array $environment): void
-    {
-        $path = $this->laravel->environmentFilePath();
-        if (!$files->isFile($path)) {
-            return;
-        }
-        $contents = $files->get($path);
-        foreach ($settings as $key => $value) {
-            if (!isset($environment[$key])) {
-                continue;
-            }
-            $name = $environment[$key];
-            $pattern = '/^\h*(?:export\h+)?'.preg_quote($name, '/').'\h*=[^\r\n]*(?:\r?\n|$)/m';
-            if (is_array($value)) {
-                $contents = preg_replace($pattern, '', $contents);
-
-                continue;
-            }
-            $literal = is_bool($value) ? ($value ? 'true' : 'false') : '"'.strtr((string) $value, ['\\' => '\\\\', '"' => '\\"', '$' => '\\$', "\r" => '\\r', "\n" => '\\n']).'"';
-            $entry = $name.'='.$literal.PHP_EOL;
-            $contents = preg_match($pattern, $contents) ? preg_replace_callback($pattern, fn () => $entry, $contents) : rtrim($contents, "\r\n").PHP_EOL.$entry;
-        }
-        $this->replaceEnvironment($files, $path, $contents);
-    }
-
-    /**
-     * Filesystem failures are checked and reported together while preserving atomic replacement.
-     *
-     * @SuppressWarnings("PHPMD.ErrorControlOperator")
-     */
-    private function replaceEnvironment(Filesystem $files, string $path, string $contents): void
-    {
-        clearstatcache(true, $path);
-        $path = realpath($path) ?: $path;
-        $temporary = null;
-        $message = 'Unable to update the environment file. Check its file and directory permissions, then retry.';
-
-        try {
-            $mode = @fileperms($path);
-            $temporary = @tempnam(dirname($path), '.laravelusers-env-');
-            if ($mode === false || $temporary === false || dirname($temporary) !== dirname($path)
-                || !@chmod($temporary, $mode & 0777)
-                || @$files->put($temporary, $contents) !== strlen($contents)
-                || !@$files->move($temporary, $path)) {
-                throw new RuntimeException($message);
-            }
-        } catch (Throwable $exception) {
-            $this->error($message);
-
-            throw new RuntimeException($message, 0, $exception);
-        } finally {
-            if (is_string($temporary) && is_file($temporary)) {
-                @unlink($temporary);
-            }
-        }
-    }
-
-    private function frontendOptionsValid(): bool
-    {
-        if ($this->option('framework') !== null && $this->option('css') !== null && $this->option('framework') !== $this->option('css')) {
-            $this->error('Use one CSS framework. --css is an alias for --framework.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function frontendChoices(): array
-    {
-        $runtime = $this->option('frontend');
-        $framework = $this->option('framework') ?? $this->option('css');
-        $theme = $this->option('theme');
-        $views = $this->option('views');
-
-        if ($this->input->isInteractive()) {
-            $runtime = $runtime ?? ConsolePrompts::select($this, 'Frontend runtime', array_combine(NativeRuntime::RELEASE_STACKS, NativeRuntime::RELEASE_STACKS), NativeRuntime::name(), true);
-            $framework = $framework ?? ConsolePrompts::search($this, 'CSS framework', Frontend::RELEASE_FRAMEWORKS, Frontend::framework(), true);
-            $themes = ['light', 'dark', 'system'];
-            $theme = $theme ?? ConsolePrompts::select($this, 'Color theme', array_combine($themes, $themes), Frontend::theme(), true);
-            $viewChoices = ['package', 'publish'];
-            $views = $views ?? ConsolePrompts::select($this, 'Views (existing overrides always take precedence)', array_combine($viewChoices, $viewChoices), 'package', true);
-        }
-
-        $runtime = $runtime ?? NativeRuntime::name();
-        $framework = $framework ?? Frontend::framework();
-        $theme = $theme ?? Frontend::theme();
-        $views = $views ?? 'package';
-
-        return [(string) $framework, (string) $theme, (string) $views, (string) $runtime];
-    }
-
-    private function optionsValid(string $framework, string $theme, string $views, string $runtime): bool
-    {
-        if (!$this->runtimeValid($runtime)) {
-            return false;
-        }
-        if (!$this->notificationsValid() || !$this->avatarValid() || !$this->rolesValid()) {
-            return false;
-        }
-        if (!$this->frontendChoicesValid($framework, $theme, $views)
-            || array_diff($this->option('with'), array_keys(self::INTEGRATIONS))) {
-            $this->error('Invalid option. Use --help for supported frameworks, themes and views. Integrations: '.implode(', ', array_keys(self::INTEGRATIONS)).'.');
-
-            return false;
-        }
-        if ($this->option('force') && $views !== 'publish') {
-            $this->error('--force requires --views=publish.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function runtimeValid(string $runtime): bool
-    {
-        if (!in_array($runtime, NativeRuntime::RELEASE_STACKS, true)) {
-            $this->error('This release supports --frontend=blade. Other runtimes will be added in later releases.');
-
-            return false;
-        }
-        if (!NativeRuntime::available($runtime)) {
-            $this->error($runtime === 'livewire'
-                ? 'Install Livewire 3 or 4 and register its service provider before selecting --frontend=livewire.'
-                : 'The bundled '.$runtime.' runtime is missing. Reinstall Laravel Users before changing the frontend.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function notificationsValid(): bool
-    {
-        if (($this->option('toast') !== null && !in_array($this->option('toast'), ['keep', 'install', 'remove'], true))
-            || ($this->option('notifications') !== null && !in_array($this->option('notifications'), ['alert', 'toast', 'both'], true))
-            || ($this->option('toast') === 'remove' && in_array($this->option('notifications'), ['toast', 'both'], true))) {
-            $this->error('Use --toast=keep, install or remove and --notifications=alert, toast or both.');
-
-            return false;
-        }
-        if (in_array($this->option('notifications'), ['toast', 'both'], true) && $this->option('toast') !== 'install' && !UserNotifications::toastInstalled()) {
-            $this->error('Install and configure Laravel Toast before selecting --notifications=toast or both.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function avatarValid(): bool
-    {
-        $avatar = $this->option('avatar');
-        if (($avatar !== null && !in_array($avatar, array_merge(['keep'], Avatar::SOURCES), true)) || ($this->option('install-avatars') && $avatar !== 'dicebear')) {
-            $this->error('Choose a supported --avatar source. --install-avatars requires --avatar=dicebear.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function rolesValid(): bool
-    {
-        $role = $this->option('roles');
-        if (($role !== null && !in_array($role, RolesSetup::CHOICES, true))
-            || (($this->option('install-roles') || $this->option('role-middleware') !== null) && !in_array($role, ['laravel-roles', 'spatie'], true))
-            || ($this->option('role-middleware') !== null && trim($this->option('role-middleware')) === '')) {
-            $this->error('Select --roles=laravel-roles or --roles=spatie for role installation and middleware options. Other choices: keep, none.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function frontendChoicesValid(string $framework, string $theme, string $views): bool
-    {
-        return in_array($framework, Frontend::RELEASE_FRAMEWORKS, true)
-            && in_array($theme, ['light', 'dark', 'system'], true)
-            && in_array($views, ['package', 'publish'], true);
     }
 
     private function publishViews(Filesystem $files): bool
@@ -463,28 +238,6 @@ class InstallCommand extends Command
         return true;
     }
 
-    private function saveConfiguration(Filesystem $files, string $framework, string $theme, string $runtime): void
-    {
-        $files->ensureDirectoryExists(config_path());
-        $config = config_path('laravelusers.php');
-        if (!$files->exists($config)) {
-            $files->copy(dirname(__DIR__, 3).'/config/laravelusers.php', $config);
-        }
-
-        $settings = array_merge(config('laravelusers-ui', []), ['framework' => $framework, 'theme' => $theme]);
-        if ($this->option('frontend') !== null || $this->input->isInteractive() || array_key_exists('runtime', $settings)) {
-            $settings['runtime'] = $runtime;
-        }
-        $environment = ['framework' => 'LARAVEL_USERS_FRONTEND', 'theme' => 'LARAVEL_USERS_THEME', 'runtime' => 'LARAVEL_USERS_RUNTIME'];
-        $lines = [];
-        foreach ($settings as $key => $value) {
-            $default = var_export($value, true);
-            $export = isset($environment[$key]) ? "env('".$environment[$key]."', ".$default.')' : $default;
-            $lines[] = '    '.var_export($key, true).' => '.$export.',';
-        }
-        $files->replace(config_path('laravelusers-ui.php'), "<?php\n\nreturn [\n".implode("\n", $lines)."\n];\n");
-    }
-
     private function printIntegrationInstructions(): void
     {
         foreach ($this->option('with') as $integration) {
@@ -494,30 +247,5 @@ class InstallCommand extends Command
             }
             $this->line('Follow https://github.com/jeremykenedy/laravel-'.$integration.' for host application configuration.');
         }
-    }
-
-    private function saveAvatars(Filesystem $files, array $settings): void
-    {
-        if ($settings === []) {
-            return;
-        }
-        $settings = array_replace_recursive(config('laravelusers-avatar', []), $settings);
-        $environment = ['source' => 'LARAVEL_USERS_AVATAR_SOURCE', 'enabled' => 'LARAVEL_USERS_AVATAR_ENABLED', 'per_user' => 'LARAVEL_USERS_AVATAR_PER_USER', 'attribute' => 'LARAVEL_USERS_AVATAR_ATTRIBUTE', 'fallback' => 'LARAVEL_USERS_AVATAR_FALLBACK', 'size' => 'LARAVEL_USERS_AVATAR_SIZE', 'image_size' => 'LARAVEL_USERS_AVATAR_IMAGE_SIZE', 'remote_enabled' => 'LARAVEL_USERS_AVATAR_REMOTE_ENABLED', 'dicebear.driver' => 'LARAVEL_USERS_AVATAR_DICEBEAR_DRIVER', 'dicebear.style' => 'LARAVEL_USERS_AVATAR_DICEBEAR_STYLE', 'dicebear.url' => 'LARAVEL_USERS_AVATAR_DICEBEAR_URL', 'ui_avatars.driver' => 'LARAVEL_USERS_AVATAR_UI_DRIVER', 'ui_avatars.url' => 'LARAVEL_USERS_AVATAR_UI_URL', 'ui_avatars.background' => 'LARAVEL_USERS_AVATAR_UI_BACKGROUND', 'ui_avatars.color' => 'LARAVEL_USERS_AVATAR_UI_COLOR'];
-        $files->replace(config_path('laravelusers-avatar.php'), "<?php\n\nreturn ".$this->exportSettings($settings, $environment).";\n");
-    }
-
-    private function exportSettings(array $settings, array $environment, string $prefix = ''): string
-    {
-        $lines = [];
-        foreach ($settings as $key => $value) {
-            $path = $prefix.$key;
-            $export = is_array($value) ? $this->exportSettings($value, $environment, $path.'.') : var_export($value, true);
-            if (isset($environment[$path])) {
-                $export = "env('".$environment[$path]."', ".$export.')';
-            }
-            $lines[] = str_repeat(' ', 4 * (substr_count($prefix, '.') + 1)).var_export($key, true).' => '.$export.',';
-        }
-
-        return "[\n".implode("\n", $lines)."\n".str_repeat(' ', 4 * substr_count($prefix, '.')).']';
     }
 }
