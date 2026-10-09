@@ -49,7 +49,7 @@
             @case('breadcrumbs')<path d="M2 8h4v8H2Zm7-3 7 7-7 7m8-14 7 7-7 7"/>@break
             @case('logout')<path d="M9 3H4v18h5m6-14 5 5-5 5m5-5H9"/>@break
             @case('role')<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m9 12 2 2 4-4"/>@break
-            @case('secret-agent')<circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17"/><path d="M8 9a4 4 0 0 1 8 0m-8 6a4 4 0 0 0 8 0"/><path d="m12 10 1 2-1 2-1-2Z"/>@break
+            @case('secret-agent')<path d="M3 10h18M6 10l2-6 4 1 4-1 2 6M7 8h10"/><rect x="6" y="12" width="5" height="3" rx="1" fill="currentColor"/><rect x="13" y="12" width="5" height="3" rx="1" fill="currentColor"/><path d="M11 13h2M6.5 15.5a6 4 0 0 0 11 0M3 22c0-2 3-3 6-3l3 3 3-3c3 0 6 1 6 3"/>@break
             @case('toggle-on')<rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="16" cy="12" r="4"/>@break
             @case('toggle-off')<rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="4"/>@break
             @case('close')<path d="m6 6 12 12M6 18 18 6"/>@break

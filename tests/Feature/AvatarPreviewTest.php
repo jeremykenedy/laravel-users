@@ -37,7 +37,7 @@ class AvatarPreviewTest extends TestCase
         UserSetting::create(['key' => 'global', 'value' => ['avatar.source' => 'initials', 'profileCardColor' => '#264e36']]);
         $saved = UserSetting::findOrFail('global')->value;
         $this->actingAs($actor);
-        Http::preventStrayRequests();
+        Http::fake();
         foreach (['initials', 'ui-avatars', 'avatar'] as $source) {
             $response = $this->postJson('/users/settings/avatar-preview', ['avatar_source' => $source, 'name' => $actor->name, 'ids' => [$actor->id]])->assertOk()->assertHeader('Cache-Control', 'no-store, private');
             $avatars = $response->json('avatars');
@@ -63,7 +63,7 @@ class AvatarPreviewTest extends TestCase
         $this->enable();
         $this->actingAs($this->user());
         config(['laravelusers.avatar.remote_enabled' => false, 'laravelusers.avatar.dicebear.driver' => 'remote', 'laravelusers.avatar.ui_avatars.driver' => 'remote']);
-        Http::preventStrayRequests();
+        Http::fake();
         foreach (array_merge(['gravatar', 'dicebear', 'ui-avatars'], Avatar::GRAVATAR_STYLES) as $source) {
             $response = $this->postJson('/users/settings/avatar-preview', ['avatar_source' => $source])->assertOk();
             foreach ($response->json('avatars') as $sample) {

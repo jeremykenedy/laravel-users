@@ -3,6 +3,10 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 const frameworks = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
 
+test.beforeEach(async ({page}) => {
+    await page.route(/^https:\/\/(?:www\.gravatar\.com|api\.dicebear\.com|ui-avatars\.com)\//, route => route.fulfill({status: 404, body: ''}));
+});
+
 async function seedAppearance(page, framework, values = {}) {
     await page.goto('/__browser/' + framework + '?settings=1&appearance=1&accounts=1&published-assets=1');
     const token = await page.locator('meta[name="csrf-token"]').getAttribute('content');
@@ -60,7 +64,7 @@ async function setTheme(page, theme) {
 }
 
 for (const framework of frameworks) {
-    test(framework + ': avatar previews, global highlights and breadcrumbs update without changing defaults', async ({ page }) => {
+    test(framework + ': avatar previews follow unsaved sources and preserve saved defaults', async ({ page }) => {
         await seedAppearance(page, framework);
         await page.goto('/users/settings');
         const source = page.locator('#settings-avatar');
@@ -82,13 +86,35 @@ for (const framework of frameworks) {
         await source.selectOption('initials');
         await expect(previews.locator('img')).toHaveCount(0);
         for (const initials of await previews.locator('[data-lu-initials]').all()) await expect(initials).toBeVisible();
+        const providerResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/users/settings/avatar-preview' && response.request().method() === 'POST' && response.request().postDataJSON()?.avatar_source === 'gravatar');
+        await source.selectOption('gravatar');
+        const providerSamples = (await (await providerResponse).json()).avatars;
+        const providerSources = Object.values(providerSamples).map(sample => sample.avatar.src);
+        if (providerSources[0]) {
+            expect(new Set(providerSources).size).toBe(4);
+            for (const url of providerSources) {
+                const provider = new URL(url);
+                expect(provider.hostname).toBe('www.gravatar.com');
+                expect(provider.searchParams.get('d')).toBe('404');
+                expect(provider.searchParams.get('r')).toBe('g');
+            }
+        } else expect(providerSources).toEqual([null, null, null, null]);
+        await expect(previews.locator('img')).toHaveCount(0);
+        for (const [kind, sample] of Object.entries(providerSamples)) {
+            const fallback = sample.avatar.fallback === 'initials' ? '[data-lu-initials]' : '[data-lu-avatar-icon]';
+            await expect(page.locator('[data-lu-avatar-preview="' + kind + '"]').locator(fallback)).toBeVisible();
+        }
         await source.selectOption('ui-avatars');
         await expect(previews.locator('img')).toHaveCount(4);
         await page.goto('/users');
         await page.goto('/users/settings');
         await expect(source).toHaveValue('initials');
         await expect(previews.locator('img')).toHaveCount(0);
+    });
 
+    test(framework + ': global highlights and breadcrumbs retain appearance defaults', async ({ page }) => {
+        await seedAppearance(page, framework);
+        await page.goto('/users/settings');
         await page.locator('#settings-profile-gradient').check();
         await page.locator('#settings-profile-dark-gradient').check();
         await page.locator('#settings-profile-gradient-highlight-color').fill('#f6be43');
