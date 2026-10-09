@@ -215,8 +215,9 @@ class InstallCommand extends Command
         if ($settings === []) {
             return;
         }
-        $settings = array_merge(config('laravelusers-roles', []), $settings);
         $environment = ['rolesEnabled' => 'LARAVEL_USERS_ROLES_ENABLED', 'roleModel' => 'LARAVEL_USERS_ROLE_MODEL', 'rolesMiddlwareEnabled' => 'LARAVEL_USERS_ROLES_MIDDLWARE_ENABLED', 'rolesMiddlware' => 'LARAVEL_USERS_ROLES_MIDDLWARE'];
+        $this->saveRoleEnvironment($files, $settings, $environment);
+        $settings = array_merge(config('laravelusers-roles', []), $settings);
         $lines = [];
         foreach ($settings as $key => $value) {
             $export = var_export($value, true);
@@ -226,6 +227,31 @@ class InstallCommand extends Command
             $lines[] = '    '.var_export($key, true).' => '.$export.',';
         }
         $files->replace(config_path('laravelusers-roles.php'), "<?php\n\nreturn [\n".implode("\n", $lines)."\n];\n");
+    }
+
+    private function saveRoleEnvironment(Filesystem $files, array $settings, array $environment): void
+    {
+        $path = $this->laravel->environmentFilePath();
+        if (!$files->isFile($path)) {
+            return;
+        }
+        $contents = $files->get($path);
+        foreach ($settings as $key => $value) {
+            if (!isset($environment[$key])) {
+                continue;
+            }
+            $name = $environment[$key];
+            $pattern = '/^\h*(?:export\h+)?'.preg_quote($name, '/').'\h*=[^\r\n]*(?:\r?\n|$)/m';
+            if (is_array($value)) {
+                $contents = preg_replace($pattern, '', $contents);
+
+                continue;
+            }
+            $literal = is_bool($value) ? ($value ? 'true' : 'false') : '"'.strtr((string) $value, ['\\' => '\\\\', '"' => '\\"', '$' => '\\$', "\r" => '\\r', "\n" => '\\n']).'"';
+            $entry = $name.'='.$literal.PHP_EOL;
+            $contents = preg_match($pattern, $contents) ? preg_replace_callback($pattern, fn () => $entry, $contents) : rtrim($contents, "\r\n").PHP_EOL.$entry;
+        }
+        $files->replace($path, $contents, fileperms($path) & 0777);
     }
 
     private function frontendOptionsValid(): bool
