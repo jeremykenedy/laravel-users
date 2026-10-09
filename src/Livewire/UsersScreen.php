@@ -114,8 +114,11 @@ class UsersScreen extends Component
     {
         if ($this->activeForm) {
             foreach ($this->page['forms'][$this->activeForm]['fields'] as $field) {
-                if ($field['type'] === 'password') {
+                if ($field['type'] === 'password' || isset($field['required_text'])) {
                     Arr::set($this->values[$this->activeForm], $field['key'], '');
+                }
+                if ($field['type'] === 'checkbox' && ($field['required'] ?? false)) {
+                    Arr::set($this->values[$this->activeForm], $field['key'], false);
                 }
             }
         }
@@ -179,6 +182,15 @@ class UsersScreen extends Component
         }
         $this->activeForm = $id;
         $this->activeAction = $action['url'] ?? null;
+        $source = $action['values_from'] ?? null;
+        if ($source && isset($this->page['forms'][$source])) {
+            $fields = array_column($this->page['forms'][$source]['fields'], 'key');
+            foreach ($this->page['forms'][$id]['fields'] as $field) {
+                if (in_array($field['key'], $fields, true)) {
+                    Arr::set($this->values[$id], $field['key'], Arr::get($this->values[$source], $field['key']));
+                }
+            }
+        }
         foreach ($action['values'] ?? [] as $key => $value) {
             Arr::set($this->values[$id], $key, $value);
         }

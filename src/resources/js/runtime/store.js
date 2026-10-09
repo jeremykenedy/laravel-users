@@ -1,4 +1,4 @@
-import { displayUsers, displayValue, fieldVisible, formData, formReady, getValue, request, sameOriginUrl, setValue } from './shared.js';
+import { displayUsers, displayValue, fieldVisible, formData, formReady, getValue, passwordFeedback, request, sameOriginUrl, setValue } from './shared.js';
 import { createPackageOperationTracker, createPackageRequirementsTracker } from './package-operation.js';
 
 function initialState(page) {
@@ -19,6 +19,7 @@ function initialState(page) {
         dismissedMessages: [],
         appearancePreviewAvatars: page.data.appearance_preview?.avatars ?? {},
         appearancePreviewLoading: false,
+        passwordMismatch: {},
     };
 }
 
@@ -27,6 +28,7 @@ export function createNativeStore(page, runtime) {
     let searchTimer;
     let requestId = 0;
     let previewRequestId = 0;
+    const passwordTimers = new Map();
     const listeners = new Set();
     const emit = () => { state = { ...state }; listeners.forEach(listener => listener(state)); };
     const report = error => { state.notice = { type: 'error', message: error.message }; state.dismissedMessages = []; };
@@ -43,6 +45,8 @@ export function createNativeStore(page, runtime) {
         });
     };
     const load = payload => {
+        for (const timer of passwordTimers.values()) clearTimeout(timer);
+        passwordTimers.clear();
         const previousActor = state.page.data.current_user?.id;
         state = initialState(payload);
         trackRequirements(payload);
@@ -59,6 +63,12 @@ export function createNativeStore(page, runtime) {
         if (!form || form.disabled || action.disabled) return;
         state.activeForm = action.form;
         state.activeAction = action.url ?? null;
+        for (const field of form.fields) {
+            if (field.required_text) setValue(state.values[action.form], field.key, '');
+            if (field.type === 'checkbox' && field.required) setValue(state.values[action.form], field.key, false);
+        }
+        const source = state.page.forms[action.values_from];
+        if (source) for (const field of form.fields) if (source.fields.some(item => item.key === field.key)) setValue(state.values[action.form], field.key, structuredClone(getValue(state.values[source.id], field.key)));
         for (const [key, value] of Object.entries(action.values ?? {})) setValue(state.values[action.form], key, structuredClone(value));
         state.preview = null;
         state.notice = null;
@@ -74,6 +84,12 @@ export function createNativeStore(page, runtime) {
             setValue(state.values[id], key, value);
             state.preview = null;
             if (state.errors[id]) delete state.errors[id][key];
+            if (state.page.features.password_feedback && ['password', 'password_confirmation'].includes(key)) {
+                clearTimeout(passwordTimers.get(id));
+                state.passwordMismatch[id] = false;
+                const feedback = passwordFeedback(state.values[id].password, state.values[id].password_confirmation, state.page.data.password);
+                if (feedback?.mismatch) passwordTimers.set(id, setTimeout(() => { state.passwordMismatch[id] = true; emit(); }, state.page.data.password.feedback_delay));
+            }
             emit();
             if (id === 'settings' && key === 'avatar_source') store.previewAvatars();
         },
@@ -107,7 +123,11 @@ export function createNativeStore(page, runtime) {
         },
         closeDialog() {
             const form = store.activeForm();
-            for (const field of form?.fields ?? []) if (field.type === 'password') setValue(state.values[form.id], field.key, '');
+            for (const field of form?.fields ?? []) {
+                if (field.type === 'password' || field.required_text) setValue(state.values[form.id], field.key, '');
+                if (field.type === 'checkbox' && field.required) setValue(state.values[form.id], field.key, false);
+            }
+            if (form) { clearTimeout(passwordTimers.get(form.id)); state.passwordMismatch[form.id] = false; }
             state.activeForm = null;
             state.activeAction = null;
             state.preview = null;

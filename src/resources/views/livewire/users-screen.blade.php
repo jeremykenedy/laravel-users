@@ -35,7 +35,7 @@
         @if($page['data']['settings_actions'] ?? null)<div class="lu-pad lu-actions">@foreach(array_filter($page['data']['settings_actions'], fn ($action) => !str_starts_with($action['name'], 'package-')) as $action)<button type="button" class="lu-button {{ $action['class'] ?? 'lu-secondary' }}" wire:click="openSettingsAction('{{ $action['name'] }}')" @if($action['disabled'] ?? false) disabled @endif>{{ $action['label'] }}</button>@endforeach</div>@endif
     </section>
     @if($dialogForm)
-        <x-laravelusers::livewire.dialog id="lu-native-action" :title="$dialogForm['title']">
+        <x-laravelusers::livewire.dialog id="lu-native-action" :title="$dialogForm['title']" :footer="false">
             <x-laravelusers::livewire.form :form="$dialogForm" :values="$values[$activeForm]" :active-tab="$tabs[$activeForm]" :dialog="true" :ready="$dialogReady" :page="$page" />
         </x-laravelusers::livewire.dialog>
     @endif

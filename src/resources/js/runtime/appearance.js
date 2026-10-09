@@ -32,7 +32,8 @@ export function profileStyle(page, user, editing = false, values = null) {
             values[`user_card${mode}_gradient`] === 'inherit' || values[`user_card${mode}_gradient`] === undefined ? fallback.gradient : values[`user_card${mode}_gradient`] === 'on',
         );
         light = make('', page.data.appearance_defaults[kind]);
-        dark = make('_dark', page.data.appearance_defaults[kind + '_dark']);
+        const fallback = page.data.appearance_defaults[kind + '_dark'];
+        dark = make('_dark', { ...fallback, highlight_color: fallback.highlight_inherits_light ? light.highlight.slice(0, 7) : fallback.highlight_color });
     }
     return { ...styleVariables(light), ...styleVariables(dark, true) };
 }

@@ -80,7 +80,9 @@ class LivewireScreensTest extends TestCase
             ->call('confirmSubmit')->assertNotDispatched('laravelusers-native-submit');
         $screen->set('values.account-delete.confirmation', 'delete')->call('confirmSubmit')
             ->assertDispatched('laravelusers-native-submit', form: 'account-delete', dialog: true)
-            ->call('closeDialog')->assertSet('values.account-delete.current_password', '');
+            ->call('closeDialog')->assertSet('values.account-delete.current_password', '')
+            ->assertSet('values.account-delete.confirmation', '')
+            ->call('openSettingsAction', 'account-delete')->assertSet('values.account-delete.confirmation', '');
         $this->assertDatabaseHas('users', ['id' => $user->id]);
     }
 
@@ -99,6 +101,25 @@ class LivewireScreensTest extends TestCase
             ->set('values.user.name', 'Edited Name')->call('prepareSubmit', 'user')->assertSet('activeForm', 'user')
             ->call('confirmSubmit')->assertDispatched('laravelusers-native-submit', form: 'user', dialog: true);
         $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => $user->name]);
+    }
+
+    public function test_apply_all_confirmation_uses_current_account_access_selections_without_writing_them(): void
+    {
+        (require dirname(__DIR__, 2).'/src/database/accounts/2026_10_08_182816_create_laravelusers_account_preferences_table.php')->up();
+        $user = $this->user();
+        $this->actingAs($user);
+        config(['laravelusers.settings.enabled' => true]);
+        $page = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true]);
+
+        Livewire::test(UsersScreen::class, ['nativePage' => $page])
+            ->set('values.accounts.enabled', true)
+            ->call('openSettingsAction', 'accounts-apply-enabled')
+            ->assertSet('values.accounts-apply-enabled.enabled', true)
+            ->assertSet('values.accounts-apply-enabled.confirmation', '')
+            ->set('values.accounts-apply-enabled.confirmation', 'change')
+            ->call('confirmSubmit')->assertDispatched('laravelusers-native-submit', form: 'accounts-apply-enabled', dialog: true)
+            ->call('closeDialog')->assertSet('values.accounts-apply-enabled.confirmation', '');
+        $this->assertDatabaseCount('laravelusers_account_preferences', 0);
     }
 
     private function page(string $view, array $data): array

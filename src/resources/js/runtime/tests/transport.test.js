@@ -70,6 +70,44 @@ test('inherited highlight pickers follow the selected light color while their su
     assert.equal(store.value('settings', field.key), null);
 });
 
+test('password mismatch feedback waits for the configured pause and clears when passwords match', t => {
+    environment(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const payload = page();
+    payload.features.password_feedback = true;
+    payload.data.password = { feedback_delay: 2000, settings: { min: 8, max: null }, strength_labels: ['Weak', 'Fair', 'Good', 'Strong'] };
+    payload.forms.user = { id: 'user', fields: [{ key: 'password', type: 'password' }, { key: 'password_confirmation', type: 'password' }], values: { password: '', password_confirmation: '' }, errors: {} };
+    const store = createNativeStore(payload, 'react');
+    store.setValue('user', 'password', 'NativePass123!');
+    t.mock.timers.tick(1999);
+    assert.equal(store.getSnapshot().passwordMismatch.user, false);
+    t.mock.timers.tick(1);
+    assert.equal(store.getSnapshot().passwordMismatch.user, true);
+    store.setValue('user', 'password_confirmation', 'NativePass123!');
+    assert.equal(store.getSnapshot().passwordMismatch.user, false);
+});
+
+test('apply-all dialogs carry current selections and reset explicit confirmations when reopened', t => {
+    environment(t);
+    const payload = page();
+    payload.forms.accounts = { id: 'accounts', fields: [{ key: 'enabled', type: 'checkbox' }], values: { enabled: false }, errors: {} };
+    payload.forms.apply = { id: 'apply', fields: [{ key: 'enabled', type: 'checkbox' }, { key: 'confirmation', type: 'text', required_text: 'change' }, { key: 'acknowledgement', type: 'checkbox', required: true }], values: { enabled: false, confirmation: '', acknowledgement: false }, errors: {} };
+    payload.data.settings_actions = [{ name: 'apply', form: 'apply', values_from: 'accounts' }];
+    const store = createNativeStore(payload, 'svelte');
+    store.setValue('accounts', 'enabled', true);
+    store.openSettingsAction('apply');
+    assert.equal(store.value('apply', 'enabled'), true);
+    store.setValue('apply', 'confirmation', 'change');
+    store.setValue('apply', 'acknowledgement', true);
+    assert.equal(store.ready('apply'), true);
+    store.closeDialog();
+    store.openSettingsAction('apply');
+    assert.equal(store.value('apply', 'enabled'), true);
+    assert.equal(store.value('apply', 'confirmation'), '');
+    assert.equal(store.value('apply', 'acknowledgement'), false);
+    assert.equal(store.ready('apply'), false);
+});
+
 test('transport rejects cross-origin and executable action URLs before fetching', t => {
     environment(t);
     assert.equal(sameOriginUrl('/users').href, 'https://example.test/users');

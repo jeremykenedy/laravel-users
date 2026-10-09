@@ -66,6 +66,88 @@ for (const runtime of runtimes) {
 }
 
 for (const runtime of runtimes) {
+    test(`${runtime} with bootstrap5 verifies edits bulk actions and account confirmations`, async ({ page }) => {
+        test.setTimeout(90000);
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto(`/__browser/bootstrap5?runtime=${runtime}&accounts=1&settings=1&soft-deletes=1&appearance=1&avatar-preferences=1&search-debounce=0`);
+        const prefix = `Lifecycle${runtime}${Date.now()}`;
+        for (const suffix of ['First', 'Second']) {
+            await page.getByRole('link', { name: 'Create New User', exact: true }).click();
+            const form = page.locator('form[data-lu-native-form="user"]').first();
+            await form.locator('[name="name"]').fill(prefix + suffix);
+            await form.locator('[name="email"]').fill(`${prefix.toLowerCase()}${suffix.toLowerCase()}@example.com`);
+            await form.locator('[name="password"]').fill('NativePass123!');
+            await form.locator('[name="password_confirmation"]').fill('NativePass123!');
+            await form.getByRole('button', { name: 'Save changes', exact: true }).click();
+            await expect(page.locator('[data-lu-native-screen="users"]')).toBeVisible();
+        }
+        await page.locator('#lu-native-search').fill(prefix);
+        await page.locator('.lu-search').getByRole('button', { name: 'Search', exact: true }).click();
+        await page.getByRole('link', { name: prefix + 'First', exact: true }).click();
+        await expect(page.locator('[data-lu-native-screen="show-user"]')).toBeVisible();
+        await page.getByRole('link', { name: 'Edit', exact: true }).click();
+        await expect(page.locator('[data-lu-native-screen="edit-user"]')).toBeVisible();
+        const editor = page.locator('form[data-lu-native-form="user"]').first();
+        await editor.locator('[name="name"]').fill(prefix + 'Edited');
+        await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toBeVisible();
+        await page.getByRole('dialog').getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.goto(`/users?user_search_box=${prefix}`);
+        await expect(page.getByRole('link', { name: prefix + 'Edited', exact: true })).toBeVisible();
+        const table = page.locator('[data-lu-native-table]');
+        await table.getByRole('button', { name: 'Select all visible users', exact: true }).click();
+        await table.getByRole('button', { name: 'Delete', exact: true }).first().click();
+        await expect(page.getByRole('dialog')).toBeVisible();
+        await page.getByRole('dialog').getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.goto('/users/deleted');
+        await expect(page.locator('[data-lu-native-screen="deleted-users"]')).toBeVisible();
+        await expect(table.locator('tbody')).toContainText(prefix + 'Edited');
+        await expect(table.locator('tbody')).toContainText(prefix + 'Second');
+        await table.getByRole('button', { name: 'Select all visible users', exact: true }).click();
+        await table.getByRole('button', { name: 'Restore', exact: true }).first().click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.goto(`/users?user_search_box=${prefix}`);
+        await expect(table.locator('tbody tr')).toHaveCount(2);
+        await table.getByRole('button', { name: 'Select all visible users', exact: true }).click();
+        await table.getByRole('button', { name: 'Delete', exact: true }).first().click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.goto('/users/deleted');
+        await table.getByRole('button', { name: 'Select all visible users', exact: true }).click();
+        await table.getByRole('button', { name: 'Permanently delete', exact: true }).first().click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await expect(table.locator('tbody')).not.toContainText(prefix);
+        await page.goto('/users/account');
+        await expect(page.locator('[data-lu-native-screen="account"]')).toBeVisible();
+        const account = page.locator('form[data-lu-native-form="account-profile"]');
+        await account.locator('[name="full_name"]').fill(prefix + ' Account');
+        await account.getByRole('button', { name: 'Save changes', exact: true }).click();
+        await expect(page.locator('.lu-native-profile')).toContainText(prefix + ' Account');
+        await page.getByRole('button', { name: 'Delete my account', exact: true }).click();
+        const dialog = page.getByRole('dialog');
+        await expect(dialog.getByRole('button', { name: 'Save changes', exact: true })).toBeDisabled();
+        await dialog.locator('[name="confirmation"]').fill('Delete');
+        await expect(dialog.getByRole('button', { name: 'Save changes', exact: true })).toBeDisabled();
+        await dialog.locator('[name="confirmation"]').fill('delete');
+        await expect(dialog.getByRole('button', { name: 'Save changes', exact: true })).toBeEnabled();
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+        await expect(dialog).toHaveCount(0);
+        await page.getByRole('button', { name: 'Delete my account', exact: true }).click();
+        await expect(dialog.locator('[name="confirmation"]')).toHaveValue('');
+        await expect(dialog.getByRole('button', { name: 'Save changes', exact: true })).toBeDisabled();
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+        await account.locator('[name="full_name"]').fill('Morgan Hayes');
+        await account.getByRole('button', { name: 'Save changes', exact: true }).click();
+        expect(errors).toEqual([]);
+    });
+}
+
+for (const runtime of runtimes) {
     test(`${runtime} with bootstrap5 checks saved settings and actual Toast`, async ({ page }) => {
         test.setTimeout(60000);
         const errors = [];
@@ -109,7 +191,7 @@ for (const runtime of runtimes) {
         await expect(darkHighlight).toBeDisabled();
         await expect(darkHighlight).toHaveValue('#b14c8a');
         await expect(page.getByRole('button', { name: 'Complete setup', exact: true })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Complete setup', exact: true })).toBeDisabled();
+        await expect(page.getByRole('button', { name: 'Complete setup', exact: true })).toBeEnabled({ timeout: 20000 });
         await page.getByRole('button', { name: 'Verify package requirements', exact: true }).click();
         await expect(page.locator('[data-lu-native-package-requirements]')).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
         const templates = page.locator('form[data-lu-native-form="email-templates"]');
@@ -125,6 +207,45 @@ for (const runtime of runtimes) {
         await form.locator('[name="notifications_driver"]').selectOption('alert');
         await form.getByRole('button', { name: 'Save changes', exact: true }).click();
         await expect(page.locator('.lu-breadcrumbs')).toHaveCount(0);
+        expect(errors).toEqual([]);
+    });
+}
+
+for (const runtime of runtimes) {
+    test(`${runtime} with bootstrap5 completes package setup through the actual worker`, async ({ page }) => {
+        test.setTimeout(60000);
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto(`/__browser/bootstrap5?runtime=${runtime}&accounts=1&settings=1&packages=1&search-debounce=0`);
+        await page.getByRole('link', { name: 'User settings', exact: true }).click();
+        const configure = page.getByRole('button', { name: 'Complete setup', exact: true });
+        await expect(configure).toBeEnabled({ timeout: 20000 });
+        await configure.click();
+        const dialog = page.getByRole('dialog');
+        const save = dialog.getByRole('button', { name: 'Save changes', exact: true });
+        await expect(save).toBeDisabled();
+        await dialog.locator('[name="confirmation"]').fill('Continue');
+        await dialog.locator('[name="acknowledgement"]:not([type="hidden"])').check();
+        await expect(save).toBeDisabled();
+        await dialog.locator('[name="confirmation"]').fill('continue');
+        await expect(save).toBeEnabled();
+        const queued = page.waitForResponse(response => response.url().endsWith('/users/settings/packages') && response.request().method() === 'POST');
+        await save.click();
+        const response = await queued;
+        expect(response.status()).toBe(202);
+        const operation = await response.json();
+        expect(operation.operation).toBe('configure');
+        expect(operation.package).toBe('toast');
+        expect(new URL(operation.status_url).origin).toBe('http://127.0.0.1:19855');
+        await expect(dialog).toHaveCount(0);
+        const status = page.locator('[data-lu-package-state]');
+        await expect(status).toBeVisible();
+        await expect(status.locator('svg path')).toHaveAttribute('d', /.+/);
+        await page.reload();
+        await expect(status).toBeVisible();
+        await expect(status).toHaveAttribute('data-lu-package-state', 'completed', { timeout: 30000 });
+        await expect(status).toContainText('Package setup completed');
+        await page.screenshot({ path: `tests/browser/runtime/native-${runtime}-package-completed.png`, fullPage: true });
         expect(errors).toEqual([]);
     });
 }

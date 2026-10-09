@@ -444,7 +444,7 @@ class NativePageData
             }
             if ($data['appearanceHighlightAvailable'] ?? false) {
                 $prefix = $mode === '' ? 'profileCard' : 'profileCardDark';
-                $fields[] = $this->field('user_card'.$mode.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', $preference[$key.'highlight_color'] ?? null, ['nullable' => true, 'fallback' => config('laravelusers.'.$prefix.'GradientHighlightColor') ?? config('laravelusers.profileCardGradientHighlightColor', '#ffffff'), 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'disabled' => !$available, 'section' => 'appearance']);
+                $fields[] = $this->field('user_card'.$mode.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', $preference[$key.'highlight_color'] ?? null, ['nullable' => true, 'fallback' => config('laravelusers.'.$prefix.'GradientHighlightColor') ?? config('laravelusers.profileCardGradientHighlightColor', '#ffffff'), 'inherit_from' => $mode !== '' && config('laravelusers.profileCardDarkGradientHighlightColor') === null ? 'user_card_gradient_highlight_color' : null, 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'disabled' => !$available, 'section' => 'appearance']);
             }
         }
 
@@ -466,7 +466,7 @@ class NativePageData
             $editing = str_starts_with($kind, 'edit');
             $dark = str_ends_with($kind, '_dark');
             $prefix = $editing ? 'editCard' : 'profileCard';
-            $colors[$kind] = Frontend::profileColors($prefix.'Color', $editing ? '#705000' : '#2458b7', $dark) + ['gradient' => (bool) (($dark ? config('laravelusers.'.$prefix.'DarkGradient') : null) ?? config('laravelusers.'.$prefix.'Gradient', true)), 'highlight_color' => ($dark ? config('laravelusers.'.$prefix.'DarkGradientHighlightColor') : null) ?? config('laravelusers.'.$prefix.'GradientHighlightColor', '#ffffff')];
+            $colors[$kind] = Frontend::profileColors($prefix.'Color', $editing ? '#705000' : '#2458b7', $dark) + ['gradient' => (bool) (($dark ? config('laravelusers.'.$prefix.'DarkGradient') : null) ?? config('laravelusers.'.$prefix.'Gradient', true)), 'highlight_color' => ($dark ? config('laravelusers.'.$prefix.'DarkGradientHighlightColor') : null) ?? config('laravelusers.'.$prefix.'GradientHighlightColor', '#ffffff'), 'highlight_inherits_light' => $dark && config('laravelusers.'.$prefix.'DarkGradientHighlightColor') === null];
         }
 
         return $colors;
@@ -706,7 +706,7 @@ class NativePageData
         foreach (['enabled', 'settings_enabled'] as $key) {
             $id = 'accounts-apply-'.$key;
             $page['forms'][$id] = $this->form($id, __('laravelusers::ui.account_apply_all'), route('users.settings.accounts'), 'PUT', array_merge($fields, [$this->field('apply_all', '', 'hidden', $key), $this->field('confirmation', __('laravelusers::ui.account_apply_confirmation'), 'text', '', ['required_text' => 'change'])]), $request) + ['dialog' => true, 'disabled' => !$ready || !$available, 'help' => __('laravelusers::ui.account_apply_warning')];
-            $page['data']['settings_actions'][] = ['name' => $id, 'label' => __('laravelusers::ui.account_apply_all').' ('.__('laravelusers::ui.account_'.$key).')', 'form' => $id];
+            $page['data']['settings_actions'][] = ['name' => $id, 'label' => __('laravelusers::ui.account_apply_all').' ('.__('laravelusers::ui.account_'.$key).')', 'form' => $id, 'values_from' => 'accounts'];
         }
 
         return $page;
