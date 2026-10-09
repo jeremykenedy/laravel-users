@@ -5,6 +5,17 @@ exclude_paths:
   - "tests/browser/runtime/**"
   - "src/resources/views/modern/tailwind.blade.php"
   - "src/resources/assets/tailwind.css"
+  # Upstream framework CSS is verified against versions.json checksums.
+  - "src/resources/css/frameworks/bulma.css"
+  - "src/resources/css/frameworks/foundation.css"
+  - "src/resources/css/frameworks/materialize.css"
+  # Analyze the source adapters and runtime modules instead of generated bundles.
+  - "src/resources/assets/bulma.css"
+  - "src/resources/assets/foundation.css"
+  - "src/resources/assets/materialize.css"
+  - "src/resources/assets/material3.css"
+  - "src/resources/assets/material3.js"
+  - "src/resources/assets/runtime-*.js"
 engines:
   phpmd:
     exclude_paths:
