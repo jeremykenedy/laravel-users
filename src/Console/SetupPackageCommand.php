@@ -8,14 +8,28 @@ use Illuminate\Console\Command;
 use Illuminate\Support\ServiceProvider;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\ToastSetup;
+use Throwable;
 
 class SetupPackageCommand extends Command
 {
-    protected $signature = 'laravelusers:setup-package {package : toast, laravel-roles, or spatie} {--framework= : bootstrap4, bootstrap5, or tailwind} {--migrate : Run only the selected package migrations}';
+    protected $signature = 'laravelusers:setup-package {package : toast, laravel-roles, or spatie} {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation} {--migrate : Run only the selected package migrations}';
 
     protected $description = 'Publish missing optional package configuration and set up its database';
 
     public function handle(ManagedPackages $packages): int
+    {
+        try {
+            return $this->setup($packages);
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error('The optional package could not finish setup.');
+
+            return self::FAILURE;
+        }
+    }
+
+    private function setup(ManagedPackages $packages): int
     {
         $package = $this->argument('package');
         $framework = $this->option('framework') ?? Frontend::framework();
@@ -60,7 +74,13 @@ class SetupPackageCommand extends Command
             return self::SUCCESS;
         }
 
-        return $this->call('toast:install', ['--css' => $framework, '--frontend' => 'blade', '--no-interaction' => true]);
+        $css = ToastSetup::framework($framework);
+        if ($css !== $framework) {
+            $this->line('Laravel Toast uses bootstrap5 for its standalone views. Laravel Users keeps '.$framework.' styling.');
+        }
+        config(['toast.css_framework' => $css, 'toast.frontend' => 'blade']);
+
+        return $this->call('toast:install', ['--css' => $css, '--frontend' => 'blade', '--no-interaction' => true]);
     }
 
     private function migratePackage(string $provider): bool

@@ -5,12 +5,14 @@ namespace jeremykenedy\laravelusers\Test\Feature;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Jeremykenedy\LaravelToast\Providers\ToastServiceProvider;
 use jeremykenedy\laravelusers\LaravelUsersServiceProvider;
 use jeremykenedy\laravelusers\Support\Avatar;
 use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\LocalAvatars;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Test\TestCase;
 
@@ -60,9 +62,35 @@ class CommandsTest extends TestCase
         $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
     }
 
+    public function test_new_toast_install_runs_automatic_setup_before_enabling_notifications(): void
+    {
+        if (class_exists(ToastServiceProvider::class)) {
+            $this->markTestSkipped('This check requires the optional package to be absent.');
+        }
+        $composer = $this->mock(ComposerPackages::class);
+        $composer->shouldReceive('install')->once()->with('jeremykenedy/laravel-toast', \Mockery::type('callable'))->andReturn(true)->ordered();
+        $composer->shouldReceive('setup')->once()->with('toast', 'foundation', false, \Mockery::type('callable'))->andReturn(true)->ordered();
+        $this->artisan('laravelusers:update', ['--toast' => 'install', '--notifications' => 'both', '--framework' => 'foundation', '--no-interaction' => true])->assertExitCode(0);
+        $this->assertSame('both', (require config_path('laravelusers-notifications.php'))['driver']);
+        $this->assertSame('foundation', (require config_path('laravelusers-ui.php'))['framework']);
+    }
+
+    public function test_new_toast_install_failure_never_starts_setup_or_enables_notifications(): void
+    {
+        if (class_exists(ToastServiceProvider::class)) {
+            $this->markTestSkipped('This check requires the optional package to be absent.');
+        }
+        $composer = $this->mock(ComposerPackages::class);
+        $composer->shouldReceive('install')->once()->andReturn(false);
+        $composer->shouldNotReceive('setup');
+        $this->artisan('laravelusers:update', ['--toast' => 'install', '--notifications' => 'both', '--no-interaction' => true])->assertExitCode(1);
+        $this->assertFileDoesNotExist(config_path('laravelusers-notifications.php'));
+        $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
+    }
+
     public function test_invalid_avatar_and_notification_options_are_rejected_before_writing(): void
     {
-        foreach ([['--avatar' => 'unknown'], ['--install-avatars' => true], ['--toast' => 'unknown'], ['--notifications' => 'unknown'], ['--toast' => 'remove', '--notifications' => 'toast']] as $options) {
+        foreach ([['--avatar' => 'unknown'], ['--install-avatars' => true], ['--toast' => 'unknown'], ['--notifications' => 'unknown'], ['--toast' => 'remove', '--notifications' => 'toast'], ['--toast' => 'remove', '--notifications' => 'both']] as $options) {
             $this->artisan('laravelusers:update', $options + ['--no-interaction' => true])->assertExitCode(1);
         }
         $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
@@ -210,6 +238,7 @@ class CommandsTest extends TestCase
     public function test_interactive_choices_are_saved(): void
     {
         $this->artisan('laravelusers:install')
+            ->expectsChoice('Frontend runtime', 'blade', NativeRuntime::STACKS)
             ->expectsChoice('CSS framework', 'bootstrap5', Frontend::FRAMEWORKS)
             ->expectsChoice('Color theme', 'dark', ['light', 'dark', 'system'])
             ->expectsChoice('Views (existing overrides always take precedence)', 'package', ['package', 'publish'])
@@ -217,7 +246,7 @@ class CommandsTest extends TestCase
             ->expectsChoice('Avatar source (keep preserves current settings)', 'keep', array_merge(['keep'], Avatar::SOURCES))
             ->expectsChoice('Laravel Toast integration', 'keep', ['keep', 'install', 'remove'])
             ->assertExitCode(0);
-        $this->assertSame(['framework' => 'bootstrap5', 'theme' => 'dark'], require config_path('laravelusers-ui.php'));
+        $this->assertSame(['framework' => 'bootstrap5', 'theme' => 'dark', 'runtime' => 'blade'], require config_path('laravelusers-ui.php'));
     }
 
     public function test_quick_switch_and_css_alias_preserve_configuration(): void
@@ -233,7 +262,7 @@ class CommandsTest extends TestCase
     public function test_conflicting_frameworks_and_unsupported_frontends_write_nothing(): void
     {
         $this->artisan('laravelusers:install', ['--css' => 'tailwind', '--framework' => 'bootstrap5', '--no-interaction' => true])->assertExitCode(1);
-        $this->artisan('laravelusers:update', ['--frontend' => 'vue', '--no-interaction' => true])->assertExitCode(1);
+        $this->artisan('laravelusers:update', ['--frontend' => 'unknown', '--no-interaction' => true])->assertExitCode(1);
         $this->artisan('laravelusers:switch')->assertExitCode(1);
         $this->assertFileDoesNotExist(config_path('laravelusers-ui.php'));
     }

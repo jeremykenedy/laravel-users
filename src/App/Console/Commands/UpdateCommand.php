@@ -10,9 +10,9 @@ use jeremykenedy\laravelusers\Console\InstallCommand;
 class UpdateCommand extends InstallCommand
 {
     protected $signature = 'laravelusers:update
-        {--framework= : bootstrap4, bootstrap5, or tailwind}
+        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
         {--css= : Alias for --framework}
-        {--frontend= : blade}
+        {--frontend= : blade, livewire, vue, react, or svelte}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}
@@ -26,7 +26,7 @@ class UpdateCommand extends InstallCommand
         {--avatar= : keep or a supported avatar source}
         {--install-avatars : Install the local DiceBear libraries when --avatar=dicebear}
         {--toast= : keep, install, or remove Laravel Toast}
-        {--notifications= : alert or toast}
+        {--notifications= : alert, toast, or both}
         {--force : Back up and replace published package views}';
 
     protected $description = 'Update Laravel Users views or switch frontend while preserving configuration';

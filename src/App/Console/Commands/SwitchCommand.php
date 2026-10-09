@@ -17,9 +17,9 @@ use jeremykenedy\laravelusers\Support\ToastSetup;
 class SwitchCommand extends InstallCommand
 {
     protected $signature = 'laravelusers:switch
-        {--framework= : bootstrap4, bootstrap5, or tailwind}
+        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
         {--css= : Alias for --framework}
-        {--frontend= : blade}
+        {--frontend= : blade, livewire, vue, react, or svelte}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}
@@ -33,7 +33,7 @@ class SwitchCommand extends InstallCommand
         {--avatar= : keep or a supported avatar source}
         {--install-avatars : Install the local DiceBear libraries when --avatar=dicebear}
         {--toast= : keep, install, or remove Laravel Toast}
-        {--notifications= : alert or toast}
+        {--notifications= : alert, toast, or both}
         {--force : Back up and replace published package views}';
 
     protected $description = 'Switch Laravel Users frontend choices using explicit options';
@@ -46,9 +46,9 @@ class SwitchCommand extends InstallCommand
 
     public function handle(Filesystem $files, RolesSetup $roles, AvatarSetup $avatars, ToastSetup $toast, PackageRequirements $requirements, ComposerPackages $composer, PublicAssets $assets, HostRouting $routing): int
     {
-        $options = ['framework', 'css', 'theme', 'views', 'roles', 'avatar', 'toast', 'notifications', 'setup-packages'];
+        $options = ['frontend', 'framework', 'css', 'theme', 'views', 'roles', 'avatar', 'toast', 'notifications', 'setup-packages', 'setup-accounts'];
         if (!array_filter($options, fn ($option) => $this->option($option))) {
-            $this->error('Choose --framework, --css, --theme, --views, --roles, --avatar, --toast or --notifications.');
+            $this->error('Choose --frontend, --framework, --css, --theme, --views, --roles, --avatar, --toast or --notifications.');
 
             return self::FAILURE;
         }

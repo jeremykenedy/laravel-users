@@ -13,19 +13,21 @@ use jeremykenedy\laravelusers\Support\ComposerPackages;
 use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\HostRouting;
 use jeremykenedy\laravelusers\Support\ManagedPackages;
+use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PublicAssets;
 use jeremykenedy\laravelusers\Support\RolesSetup;
 use jeremykenedy\laravelusers\Support\ToastSetup;
+use jeremykenedy\laravelusers\Support\UserNotifications;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
 class InstallCommand extends Command
 {
     protected $signature = 'laravelusers:install
-        {--framework= : bootstrap4, bootstrap5, or tailwind}
+        {--framework= : bootstrap4, bootstrap5, tailwind, materialize, material3, bulma, or foundation}
         {--css= : Alias for --framework}
-        {--frontend= : blade}
+        {--frontend= : blade, livewire, vue, react, or svelte}
         {--theme= : light, dark, or system}
         {--views= : package or publish}
         {--with=* : Show setup instructions for optional integrations}
@@ -39,7 +41,7 @@ class InstallCommand extends Command
         {--avatar= : keep or a supported avatar source}
         {--install-avatars : Install the local DiceBear libraries when --avatar=dicebear}
         {--toast= : keep, install, or remove Laravel Toast}
-        {--notifications= : alert or toast}
+        {--notifications= : alert, toast, or both}
         {--force : Back up and replace published package views}';
 
     protected $description = 'Set up Laravel Users without replacing application configuration';
@@ -77,16 +79,15 @@ class InstallCommand extends Command
         if ($choices === false) {
             return self::FAILURE;
         }
-        [$framework, $theme, $views] = $choices;
+        [$framework, $theme, $views, $runtime] = $choices;
         $routePlan = ConsolePrompts::spin($this, fn () => $routing->prepare(), 'Checking host route middleware...', $this->input->isInteractive());
 
         ConsolePrompts::table($this, ['Area', 'Selected behavior'], [
+            ['Frontend runtime', $runtime],
             ['CSS framework', $framework],
             ['Color theme', $theme],
             ['Views', $views],
         ], $this->input->isInteractive());
-
-        $this->configurePackageRequirements($requirements);
 
         $roleSettings = $roles->configure($this, $this->input->isInteractive());
         if ($roleSettings === false) {
@@ -106,22 +107,24 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        $this->configurePackageRequirements($requirements);
+
         if ($views === 'publish' && !ConsolePrompts::spin($this, fn () => $this->publishViews($files), 'Publishing package views...', $this->input->isInteractive())) {
             return self::FAILURE;
         }
 
         $this->exportFiles($files, $assets, $routing, $routePlan, $choices, $roleSettings, $avatarSettings, $notificationDriver);
 
-        return $this->finishInstallation($framework, $theme);
+        return $this->finishInstallation($framework, $theme, $runtime);
     }
 
-    private function finishInstallation(string $framework, string $theme): int
+    private function finishInstallation(string $framework, string $theme, string $runtime): int
     {
         if ($this->option('setup-accounts') && $this->call('laravelusers:setup-accounts') !== self::SUCCESS) {
             return self::FAILURE;
         }
         $this->call('view:clear');
-        ConsolePrompts::outro($this, 'Laravel Users configured: '.$framework.', '.$theme.'. Existing custom view settings are preserved.', $this->input->isInteractive());
+        ConsolePrompts::outro($this, 'Laravel Users configured: '.$runtime.', '.$framework.', '.$theme.'. Existing custom view settings are preserved.', $this->input->isInteractive());
         ConsolePrompts::note($this, 'Package views use installed overrides first. Remove or rename an override yourself to return to the bundled view.', $this->input->isInteractive());
         $this->printIntegrationInstructions();
 
@@ -130,12 +133,12 @@ class InstallCommand extends Command
 
     private function exportFiles(Filesystem $files, PublicAssets $assets, HostRouting $routing, ?array $routePlan, array $choices, array $roleSettings, array $avatarSettings, ?string $notificationDriver): void
     {
-        [$framework, $theme] = $choices;
+        [$framework, $theme, , $runtime] = $choices;
         $published = ConsolePrompts::spin($this, fn () => $assets->publish(), 'Publishing Laravel Users assets...', $this->input->isInteractive());
         ConsolePrompts::table($this, ['Public asset', 'Destination'], array_map(fn ($name) => [$name, 'public/vendor/laravelusers/'], $published), $this->input->isInteractive());
         ConsolePrompts::spin($this, fn () => $routing->write($routePlan), 'Configuring web route middleware...', $this->input->isInteractive());
-        ConsolePrompts::spin($this, function () use ($files, $framework, $theme, $roleSettings, $avatarSettings, $notificationDriver): void {
-            $this->saveConfiguration($files, $framework, $theme);
+        ConsolePrompts::spin($this, function () use ($files, $framework, $theme, $runtime, $roleSettings, $avatarSettings, $notificationDriver): void {
+            $this->saveConfiguration($files, $framework, $theme, $runtime);
             $this->saveRoles($files, $roleSettings);
             $this->saveAvatars($files, $avatarSettings);
             $this->saveNotifications($files, $notificationDriver);
@@ -171,7 +174,7 @@ class InstallCommand extends Command
         if (!$this->option('setup-integrations')) {
             return true;
         }
-        $selected = array_filter([$this->option('roles'), $this->option('toast') === 'install' ? 'toast' : null], fn ($package) => isset(ManagedPackages::PACKAGES[$package ?? '']));
+        $selected = array_filter([$this->option('roles')], fn ($package) => isset(ManagedPackages::PACKAGES[$package ?? '']));
         foreach ($selected as $package) {
             if (!$composer->setup($package, $framework, (bool) $this->option('migrate-integrations'), fn ($text) => $this->getOutput()->write($text))) {
                 $this->error('Optional package setup failed. Existing Laravel Users settings were preserved.');
@@ -227,9 +230,8 @@ class InstallCommand extends Command
 
     private function frontendOptionsValid(): bool
     {
-        if (($this->option('framework') && $this->option('css') && $this->option('framework') !== $this->option('css'))
-            || ($this->option('frontend') && $this->option('frontend') !== 'blade')) {
-            $this->error('Use one CSS framework. The supported frontend is blade.');
+        if ($this->option('framework') !== null && $this->option('css') !== null && $this->option('framework') !== $this->option('css')) {
+            $this->error('Use one CSS framework. --css is an alias for --framework.');
 
             return false;
         }
@@ -239,11 +241,13 @@ class InstallCommand extends Command
 
     private function frontendChoices(): array
     {
+        $runtime = $this->option('frontend');
         $framework = $this->option('framework') ?? $this->option('css');
         $theme = $this->option('theme');
         $views = $this->option('views');
 
         if ($this->input->isInteractive()) {
+            $runtime = $runtime ?? ConsolePrompts::select($this, 'Frontend runtime', array_combine(NativeRuntime::STACKS, NativeRuntime::STACKS), NativeRuntime::name(), true);
             $framework = $framework ?? ConsolePrompts::search($this, 'CSS framework', Frontend::FRAMEWORKS, Frontend::framework(), true);
             $themes = ['light', 'dark', 'system'];
             $theme = $theme ?? ConsolePrompts::select($this, 'Color theme', array_combine($themes, $themes), Frontend::theme(), true);
@@ -251,15 +255,19 @@ class InstallCommand extends Command
             $views = $views ?? ConsolePrompts::select($this, 'Views (existing overrides always take precedence)', array_combine($viewChoices, $viewChoices), 'package', true);
         }
 
+        $runtime = $runtime ?? NativeRuntime::name();
         $framework = $framework ?? Frontend::framework();
         $theme = $theme ?? Frontend::theme();
         $views = $views ?? 'package';
 
-        return [(string) $framework, (string) $theme, (string) $views];
+        return [(string) $framework, (string) $theme, (string) $views, (string) $runtime];
     }
 
-    private function optionsValid(string $framework, string $theme, string $views): bool
+    private function optionsValid(string $framework, string $theme, string $views, string $runtime): bool
     {
+        if (!$this->runtimeValid($runtime)) {
+            return false;
+        }
         if (!$this->notificationsValid() || !$this->avatarValid() || !$this->rolesValid()) {
             return false;
         }
@@ -278,12 +286,35 @@ class InstallCommand extends Command
         return true;
     }
 
+    private function runtimeValid(string $runtime): bool
+    {
+        if (!in_array($runtime, NativeRuntime::STACKS, true)) {
+            $this->error('Choose --frontend='.implode(', ', NativeRuntime::STACKS).'.');
+
+            return false;
+        }
+        if (!NativeRuntime::available($runtime)) {
+            $this->error($runtime === 'livewire'
+                ? 'Install Livewire 3 or 4 and register its service provider before selecting --frontend=livewire.'
+                : 'The bundled '.$runtime.' runtime is missing. Reinstall Laravel Users before changing the frontend.');
+
+            return false;
+        }
+
+        return true;
+    }
+
     private function notificationsValid(): bool
     {
         if (($this->option('toast') !== null && !in_array($this->option('toast'), ['keep', 'install', 'remove'], true))
-            || ($this->option('notifications') !== null && !in_array($this->option('notifications'), ['alert', 'toast'], true))
-            || ($this->option('toast') === 'remove' && $this->option('notifications') === 'toast')) {
-            $this->error('Use --toast=keep, install or remove and --notifications=alert or toast.');
+            || ($this->option('notifications') !== null && !in_array($this->option('notifications'), ['alert', 'toast', 'both'], true))
+            || ($this->option('toast') === 'remove' && in_array($this->option('notifications'), ['toast', 'both'], true))) {
+            $this->error('Use --toast=keep, install or remove and --notifications=alert, toast or both.');
+
+            return false;
+        }
+        if (in_array($this->option('notifications'), ['toast', 'both'], true) && $this->option('toast') !== 'install' && !UserNotifications::toastInstalled()) {
+            $this->error('Install and configure Laravel Toast before selecting --notifications=toast or both.');
 
             return false;
         }
@@ -373,7 +404,7 @@ class InstallCommand extends Command
         return true;
     }
 
-    private function saveConfiguration(Filesystem $files, string $framework, string $theme): void
+    private function saveConfiguration(Filesystem $files, string $framework, string $theme, string $runtime): void
     {
         $files->ensureDirectoryExists(config_path());
         $config = config_path('laravelusers.php');
@@ -382,7 +413,10 @@ class InstallCommand extends Command
         }
 
         $settings = array_merge(config('laravelusers-ui', []), ['framework' => $framework, 'theme' => $theme]);
-        $environment = ['framework' => 'LARAVEL_USERS_FRONTEND', 'theme' => 'LARAVEL_USERS_THEME'];
+        if ($this->option('frontend') !== null || $this->input->isInteractive() || array_key_exists('runtime', $settings)) {
+            $settings['runtime'] = $runtime;
+        }
+        $environment = ['framework' => 'LARAVEL_USERS_FRONTEND', 'theme' => 'LARAVEL_USERS_THEME', 'runtime' => 'LARAVEL_USERS_RUNTIME'];
         $lines = [];
         foreach ($settings as $key => $value) {
             $default = var_export($value, true);
