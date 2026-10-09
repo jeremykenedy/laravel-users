@@ -7,6 +7,7 @@
     #laravelusers .lu-page-heading .lu-title-text { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #laravelusers .lu-page-heading :is(.lu-actions, .lu-header-actions, .pull-right) { flex-shrink: 0; flex-wrap: nowrap; }
     #laravelusers .lu-page-heading :is(.lu-button, .btn) { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; height: 40px; min-height: 40px; }
+    #laravelusers .lu-page-heading .lu-settings-button { width: 40px; padding: 0; }
     @media (max-width: 640px) {
         #laravelusers .lu-page-heading { padding: 16px; }
         #laravelusers .lu-page-heading .lu-list-title { font-size: 16px; line-height: 20px; }
