@@ -10,7 +10,7 @@
                         @if($navigationLastLogin)
                             @foreach(['ip_address', 'device', 'os', 'browser'] as $field)
                                 @if($navigationLastLogin->$field)
-                                    <div class="lu-user-menu-login-row"><span class="lu-user-menu-login-icon">@include('laravelusers::partials.icon', ['name' => $navigationLoginIcons[$field]])</span><span>{{ __('laravelusers::ui.'.$field) }}</span><span>{{ $navigationLastLogin->$field }}</span></div>
+                                    <div class="lu-user-menu-login-row"><span class="lu-user-menu-login-icon">@include('laravelusers::partials.icon', ['name' => $navigationLoginIcons[$field]])</span><span>{{ __('laravelusers::ui.'.$field) }}</span><span title="{{ $navigationLastLogin->$field }}">{{ $navigationLastLogin->$field }}</span></div>
                                 @endif
                             @endforeach
                         @endif

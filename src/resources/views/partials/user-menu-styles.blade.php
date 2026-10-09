@@ -6,11 +6,14 @@
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-toggle::-webkit-details-marker { display: none; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-caret { margin: 3px 8px 0 2px; border: 4px solid transparent; border-top-color: currentColor; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items { position: absolute; right: 0; top: 100%; z-index: 30; min-width: 200px; padding: 5px; background: var(--lu-bg, #fff); color: var(--lu-text, #172033); border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; box-shadow: 0 4px 12px #0002; }
-    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login { min-width: 260px; max-width: 340px; padding: 7px 9px; border-bottom: 1px solid var(--lu-border, #ced4da); color: inherit; font-size: .68rem; line-height: 1.35; }
-    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-row { display: grid; grid-template-columns: 14px 66px minmax(0, 1fr); align-items: center; gap: 6px; padding: 2px 0; }
-    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-row > :last-child { min-width: 0; overflow-wrap: anywhere; }
-    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-icon svg { width: 13px; height: 13px; vertical-align: middle; }
-    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login .lu-date { white-space: normal; }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items:has(.lu-user-menu-login) { width: min(330px, calc(100vw - 96px)); min-width: 0; box-sizing: border-box; }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login { min-width: 0; padding: 9px 10px; border-bottom: 1px solid var(--lu-border, #ced4da); color: inherit; font-size: .7rem; line-height: 1.45; }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-row { display: grid; grid-template-columns: 12px 94px minmax(0, 1fr); align-items: center; gap: 8px; padding: 2px 0; }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-row > :nth-child(2) { white-space: nowrap; color: var(--lu-muted, #667085); }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-row > :last-child { min-width: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-icon { display: flex; align-items: center; justify-content: center; }
+    :is(#laravelusers, .lu-user-menu-component) .lu-user-menu-login-icon .lu-icon { width: 12px; height: 12px; margin: 0; }
+    :is(#laravelusers, .lu-user-menu-component) .lu-user-menu-login .lu-date { font-size: inherit; white-space: nowrap; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items :is(button, a) { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 0; background: transparent; color: inherit; font: inherit; font-size: .875rem; text-align: left; cursor: pointer; text-decoration: none; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items a { color: var(--lu-text, #172033) !important; text-decoration: none !important; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items :is(button, a):hover { background: var(--lu-soft, #f1f4f9); }

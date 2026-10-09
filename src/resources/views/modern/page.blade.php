@@ -20,7 +20,7 @@
             @include(config('laravelusers.headerView'))
         @else
         <nav class="lu-toolbar" aria-label="{{ __('laravelusers::ui.navigation') }}">
-            <a class="lu-brand" href="{{ url('/') }}">{{ __('laravelusers::ui.package_name') }}</a>
+            <a class="lu-brand" href="{{ \jeremykenedy\laravelusers\Support\Frontend::homeUrl() }}">{{ __('laravelusers::ui.package_name') }}</a>
             <div class="lu-actions">
                 @include('laravelusers::partials.user-menu')
                 @if(config('laravelusers.themeToggle'))

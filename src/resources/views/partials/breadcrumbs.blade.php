@@ -1,5 +1,5 @@
 @php
-    $crumbs = [['label' => __('laravelusers::ui.home'), 'url' => url('/')]];
+    $crumbs = [['label' => __('laravelusers::ui.home'), 'url' => \jeremykenedy\laravelusers\Support\Frontend::homeUrl()]];
     $routeName = request()->route()?->getName();
 
     if (request()->routeIs('users.account*')) {
@@ -41,8 +41,6 @@
 </nav>
 <style>
     #laravelusers .lu-breadcrumbs { margin: 0 0 24px; color: var(--lu-muted, #667085); font-size: .8rem; line-height: 1.4; }
-    #laravelusers:not(.lu-shell) .lu-breadcrumbs-profile { max-width: 960px; margin-inline: auto; }
-    @media (min-width: 992px) { #laravelusers:not(.lu-shell) .lu-breadcrumbs-form { width: calc(83.333333% - 5px); margin-inline: auto; } }
     #laravelusers .lu-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
     #laravelusers .lu-breadcrumbs li { display: inline-flex; align-items: center; gap: 8px; }
     #laravelusers .lu-breadcrumbs li + li::before { content: ""; width: 6px; height: 6px; border-top: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: rotate(45deg); opacity: .65; }

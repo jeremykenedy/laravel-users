@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace jeremykenedy\laravelusers\Support;
 
+use Illuminate\Support\Facades\Route;
+
 class Frontend
 {
     public const FRAMEWORKS = ['bootstrap4', 'bootstrap5', 'tailwind', 'materialize', 'material3', 'bulma', 'foundation'];
@@ -83,6 +85,24 @@ class Frontend
     public static function theme(): string
     {
         return config('laravelusers-ui.theme', config('laravelusers.theme', 'light'));
+    }
+
+    public static function homeUrl(): string
+    {
+        foreach (Route::getRoutes() as $route) {
+            if ($route->uri() === '/' && in_array('GET', $route->methods(), true)) {
+                return url('/');
+            }
+        }
+
+        foreach (['home', 'index'] as $name) {
+            $route = Route::getRoutes()->getByName($name);
+            if ($route && in_array('GET', $route->methods(), true) && !$route->parameterNames()) {
+                return route($name);
+            }
+        }
+
+        return route('users');
     }
 
     public static function profileColors(string $setting = 'profileCardColor', string $default = '#2458b7', bool $dark = false): array

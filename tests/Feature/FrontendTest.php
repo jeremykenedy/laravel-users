@@ -86,9 +86,9 @@ class FrontendTest extends TestCase
             config(['laravelusers.frontend' => $framework, 'laravelusers.showBreadcrumbs' => false]);
             $response = $this->get('/users')->assertOk()->assertDontSee('class="lu-breadcrumbs"', false);
             if ($framework === 'bootstrap4') {
-                $response->assertSee('class="navbar-brand" href="'.url('/').'"', false);
+                $response->assertSee('class="navbar-brand" href="'.route('users').'"', false);
             } else {
-                $response->assertSee('class="lu-brand" href="'.url('/').'"', false);
+                $response->assertSee('class="lu-brand" href="'.route('users').'"', false);
             }
 
             config(['laravelusers.showBreadcrumbs' => true]);
@@ -98,8 +98,8 @@ class FrontendTest extends TestCase
             if ($headerPosition === false) {
                 $headerPosition = strpos($content, 'class="navbar navbar-expand-md');
             }
-            $this->assertLessThan(strpos($content, 'class="lu-breadcrumbs"'), $headerPosition);
-            $breadcrumbPosition = strpos($content, 'class="lu-breadcrumbs"');
+            $this->assertLessThan(strpos($content, 'class="lu-breadcrumbs'), $headerPosition);
+            $breadcrumbPosition = strpos($content, 'class="lu-breadcrumbs');
             $this->assertStringContainsString('<a href="'.route('users').'">Users</a>', substr($content, $breadcrumbPosition));
             $this->assertStringContainsString('<span>Create user</span>', substr($content, $breadcrumbPosition));
         }

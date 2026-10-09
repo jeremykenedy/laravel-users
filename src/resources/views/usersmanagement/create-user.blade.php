@@ -19,13 +19,13 @@
     <div class="container">
         @if(config('laravelusers.enablePackageBootstapAlerts'))
             <div class="row">
-                <div class="col-lg-10 offset-lg-1">
+                <div class="col-12">
                     @include('laravelusers::partials.form-status')
                 </div>
             </div>
         @endif
         <div class="row">
-            <div class="col-lg-10 offset-lg-1">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">

@@ -1,5 +1,5 @@
 <style>
-    #laravelusers .lu-profile { max-width: 960px; margin: 0 auto; background: var(--lu-bg, #fff); border: 1px solid var(--lu-border, #dee2e6); border-radius: 8px; overflow: hidden; }
+    #laravelusers .lu-profile { width: 100%; margin: 0 auto; background: var(--lu-bg, #fff); border: 1px solid var(--lu-border, #dee2e6); border-radius: 8px; overflow: hidden; }
     #laravelusers .lu-profile-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--lu-border, #dee2e6); }
     #laravelusers .lu-profile-header h1 { margin: 0; font-size: 1.25rem; font-weight: 500; letter-spacing: normal; }
     #laravelusers .lu-profile-identity { display: flex; align-items: center; gap: 24px; padding: 28px 24px; background-color: var(--lu-profile-color); background-image: var(--lu-profile-image, radial-gradient(ellipse at var(--lu-profile-highlight, 50% 40%), var(--lu-profile-glow), transparent 75%), linear-gradient(145deg, transparent, var(--lu-profile-shade))); color: var(--lu-profile-text); }

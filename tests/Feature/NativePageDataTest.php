@@ -147,7 +147,7 @@ class NativePageDataTest extends TestCase
         config(['laravelusers.showBreadcrumbs' => true]);
         $page = $this->page('laravelusers::modern.edit-user', ['user' => $user, 'rolesEnabled' => false]);
         $crumbs = $page['data']['breadcrumbs'];
-        $this->assertSame(url('/'), $crumbs[0]['url']);
+        $this->assertSame(route('users'), $crumbs[0]['url']);
         $this->assertFalse($crumbs[0]['native']);
         $this->assertSame(route('users'), $crumbs[1]['url']);
         $this->assertSame(route('users.show', $user->id), $crumbs[2]['url']);

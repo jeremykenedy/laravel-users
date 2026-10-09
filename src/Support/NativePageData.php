@@ -50,7 +50,7 @@ class NativePageData
             'features'     => $this->features($screen),
             'capabilities' => $capabilities,
             'labels'       => $this->labels(),
-            'data'         => ['navigation' => $this->navigation($request, $public), 'form_ids' => [], 'home' => url('/')],
+            'data'         => ['navigation' => $this->navigation($request, $public), 'form_ids' => [], 'home' => Frontend::homeUrl()],
             'forms'        => [],
             'flash'        => UserNotifications::useAlerts() ? $this->flash($request) : [],
         ];
@@ -220,7 +220,7 @@ class NativePageData
 
     private function breadcrumbs(array $page): array
     {
-        $crumbs = [['label' => __('laravelusers::ui.home'), 'url' => url('/'), 'native' => false]];
+        $crumbs = [['label' => __('laravelusers::ui.home'), 'url' => Frontend::homeUrl(), 'native' => false]];
         if (in_array($page['screen'], ['account', 'account-link', 'confirm-email'], true)) {
             return array_merge($crumbs, [['label' => $page['title']]]);
         }

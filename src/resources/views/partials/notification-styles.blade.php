@@ -1,24 +1,11 @@
 @include('laravelusers::partials.asset', ['name' => 'notifications.css'])
 <style>
     #laravelusers .lu-notifications { width: 100%; min-width: 0; margin-inline: auto; }
-    #laravelusers .lu-notifications:has(+ .lu-profile) { max-width: 960px; }
-    #laravelusers.lu-shell:has(> .lu-profile) > :is(.lu-toolbar, .lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 960px; margin-inline: auto; }
-    #laravelusers.lu-shell:has(> .lu-edit-card, > .lu-account-card) > :is(.lu-toolbar, .lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 1120px; margin-inline: auto; }
-    #laravelusers.lu-shell:has(> .lu-settings-panel) > :is(.lu-toolbar, .lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 1160px; margin-inline: auto; }
+    #laravelusers.lu-shell > :is(.lu-toolbar, .lu-notifications, .lu-breadcrumbs, .lu-panel, .lu-profile) { width: 100%; max-width: none; margin-inline: auto; }
     #laravelusers.lu-shell > .lu-toolbar { position: relative; border-bottom: 0; }
     #laravelusers.lu-shell > .lu-toolbar::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 1px; background: var(--lu-border, #ced4da); box-shadow: 0 0 0 100vmax var(--lu-border, #ced4da); clip-path: inset(0 -100vmax); pointer-events: none; }
     #laravelusers:not(.lu-shell) #app > .navbar-laravel { padding-inline: 0; border-bottom: 1px solid var(--lu-border, #ced4da); }
     #laravelusers:not(.lu-shell) #app > .navbar-laravel > .container { padding-inline: 15px; }
-    @media (min-width: 992px) {
-        #laravelusers:not(.lu-shell) #app:has(> .laravel-users-main-card > .container > .row > .col-lg-10) > .navbar-laravel > .container { max-width: 800px; }
-        #laravelusers:not(.lu-shell) #app[data-lu-full-width="true"]:has(> .laravel-users-main-card > .container > .row > .col-lg-10) > .navbar-laravel > .container { width: 83.333333%; max-width: none; }
-    }
-    @media (min-width: 1200px) {
-        #laravelusers:not(.lu-shell) #app:has(> .laravel-users-main-card > .container > .row > .col-lg-10) > .navbar-laravel > .container { max-width: 950px; }
-        #laravelusers:not(.lu-shell) #app:has(> .laravel-users-main-card > .container > .lu-profile) > .navbar-laravel > .container { max-width: 990px; }
-        #laravelusers:not(.lu-shell) #app[data-lu-full-width="true"]:has(> .laravel-users-main-card > .container > .row > .col-lg-10) > .navbar-laravel > .container { max-width: none; }
-    }
-    #laravelusers:not(.lu-shell) #app[data-lu-full-width="true"]:has(> .laravel-users-main-card > .container > .lu-profile) > .navbar-laravel > .container { max-width: 990px; }
     #laravelusers .lu-flash { box-sizing: border-box; }
     #laravelusers .lu-flash { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; width: 100%; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--lu-border, #ced4da); border-radius: 6px; background: var(--lu-soft, #f1f4f9); color: var(--lu-text, #172033); font-size: .875rem; overflow-wrap: anywhere; }
     #laravelusers .lu-flash > span, #laravelusers .lu-flash > div { min-width: 0; }
