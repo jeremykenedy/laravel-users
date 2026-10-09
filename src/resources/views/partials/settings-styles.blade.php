@@ -127,7 +127,7 @@
     #laravelusers input[type="color"] { width: 72px; height: 38px; padding: 3px; border: 1px solid var(--lu-border, #ced4da); border-radius: 5px; background: var(--lu-bg, #fff); vertical-align: middle; cursor: pointer; }
     #laravelusers .lu-appearance-inherit { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; font-size: .875rem; }
     #laravelusers .lu-appearance-inherit input { margin: 0; }
-    #laravelusers .lu-heading .lu-settings-button, #laravelusers .card-header .lu-settings-button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; min-width: 34px; padding: 0; gap: 0; flex: 0 0 34px; }
+    #laravelusers .lu-heading .lu-settings-button, #laravelusers .card-header .lu-settings-button { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; min-width: 40px; padding: 0; gap: 0; flex: 0 0 40px; }
     #laravelusers .lu-settings-button .lu-icon { width: 18px; height: 18px; flex-shrink: 0; }
     #laravelusers .lu-settings-form { padding: 24px; }
     #laravelusers .lu-settings-form > fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
