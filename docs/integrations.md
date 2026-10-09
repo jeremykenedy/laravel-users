@@ -26,6 +26,8 @@ Laravel Toast is optional. Use `php artisan laravelusers:update --toast=install 
 
 When Toast is selected, the Notifications tab exposes position, direction, duration, visible count, opacity, animations, progress, stacking, hover behavior, icons, border, closing and automatic dismissal. Saved choices require notification-edit access and fall back to the host Toast configuration. Normal session notifications do not need the package-management queue; installing or removing dependencies through the UI does.
 
+The **Preview notification** button uses unsaved choices without making a settings request. Select inline alerts, Toast, or both to compare them before saving.
+
 `--toast=remove` removes the Composer dependency explicitly, preserves published files and selects alerts. Application references must be reviewed separately. [Settings](settings.md) documents the optional web installation/removal workflow, dedicated gate, queue requirements and typed confirmations.
 
 ## Local avatars

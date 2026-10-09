@@ -90,6 +90,8 @@ The command completes Toast setup automatically and preserves existing Toast con
 
 Selecting Toast or Alerts and Toast reveals controls for position, text direction, duration, visible count, opacity, enter/exit animations and duration, progress direction/position, automatic dismissal, pause on hover, stacking, icons, borders, closing and flash-message conversion. Existing host Toast config supplies unsaved defaults. Only notification-edit access can change these values. Animation respects reduced-motion preferences. A successful settings save displays the selected notification style.
 
+Use **Preview notification** to test the current choices before saving. It renders the selected inline alert, Toast, or both directly in the browser without submitting the settings form. Toast previews use the current appearance, animation, timing, progress and stacking options; inline previews use the current dismissal choice. Reloading clears previews and restores the saved values. Flash-message conversion controls saved session notices; the preview is an explicit notification.
+
 Normal Toast notifications use the application session and do not require a persistent queue, worker or shared cache. Toast's optional real-time broadcasting has separate requirements. See the [Laravel Toast requirements](https://github.com/jeremykenedy/laravel-toast#requirements). Installing or removing Toast through this settings page runs Composer through the same queued package-management workflow as the roles packages; its queue and cache requirements still apply. The Artisan installation path does not need a package-management worker.
 
 ## Access rules
