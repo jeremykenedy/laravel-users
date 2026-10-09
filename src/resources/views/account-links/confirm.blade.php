@@ -7,7 +7,9 @@
     <style>
         :root { color-scheme: light dark; }
         body { margin: 0; background: #f3f6fa; color: #253145; font: 16px/1.6 system-ui, sans-serif; }
-        main { box-sizing: border-box; width: min(100% - 32px, 480px); margin: 12vh auto; padding: 32px; background: #fff; border: 1px solid #dce3ed; border-radius: 12px; }
+        .lu-public-container { box-sizing: border-box; width: 100%; max-width: {{ config('laravelusers.fullWidth', false) ? 'none' : '1160px' }}; margin: 12vh auto; padding: 0 24px; }
+        main { box-sizing: border-box; width: 100%; margin: 0; padding: 32px; background: #fff; border: 1px solid #dce3ed; border-radius: 12px; }
+        @media (max-width: 640px) { .lu-public-container { padding-inline: 14px; } main { padding: 24px; } }
         h1 { margin: 0 0 16px; font-size: 24px; line-height: 1.3; }
         button { padding: 12px 20px; border: 0; border-radius: 6px; background: #2456c2; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
         button.danger { background: #b42332; }
@@ -22,6 +24,7 @@
     @endif
 </head>
 <body>
+<div class="lu-public-container">
 <main @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet()) id="laravelusers" class="lu-public-page" data-lu-css="{{ \jeremykenedy\laravelusers\Support\Frontend::framework() }}" data-lu-theme="{{ \jeremykenedy\laravelusers\Support\Frontend::theme() }}" @endif>
     @if($completed ?? false)
         <h1>{{ __('laravelusers::ui.account_'.$completed.'_complete') }}</h1>
@@ -40,6 +43,7 @@
         <p>{{ __('laravelusers::ui.account_link_invalid_help') }}</p>
     @endif
 </main>
+</div>
 @if(\jeremykenedy\laravelusers\Support\Frontend::stylesheet())
     @include('laravelusers::scripts.theme')
     @include('laravelusers::partials.framework-module')
