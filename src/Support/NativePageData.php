@@ -37,10 +37,12 @@ class NativePageData
         if (!UserAccess::canImpersonate()) {
             unset($capabilities['impersonate_users']);
         }
+        $classKeys = ['shell', 'panel', 'scroll', 'table', 'field', 'field-label', 'field-control', 'control', 'input', 'select'];
         $page = [
             'screen'       => $screen,
             'title'        => $this->title($screen, $data),
             'framework'    => Frontend::framework(),
+            'classes'      => array_combine($classKeys, array_map(fn ($key) => Frontend::classes($key), $classKeys)),
             'theme'        => Frontend::theme(),
             'csrf'         => $request->hasSession() ? $request->session()->token() : null,
             'urls'         => $this->urls($public, $request, $screen),
@@ -59,6 +61,9 @@ class NativePageData
             'account'                  => $this->account($page, $data, $request),
             default                    => $this->confirmation($page, $data, $request),
         };
+        if (collect($page['forms'])->contains(fn ($form) => in_array('password', array_column($form['fields'], 'key'), true))) {
+            $page['data']['password'] = ['settings' => PasswordRules::settings($screen === 'create-user'), 'strength_labels' => array_map(fn ($strength) => __('laravelusers::ui.password_'.$strength), ['weak', 'fair', 'good', 'strong']), 'feedback_delay' => max(0, (int) config('laravelusers.password.confirmation_debounce', 2000))];
+        }
         if (!$public && $request->user() instanceof Model) {
             $page['data']['current_user'] = $this->identity($request->user());
             $state = $request->hasSession() ? $this->impersonation->read($request) : null;
@@ -178,9 +183,12 @@ class NativePageData
     private function labels(): array
     {
         $labels = [];
-        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions'] as $key) {
+        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions', 'select_user', 'total_users', 'pagination', 'page', 'account_email_pending_to', 'role_level', 'theme_light', 'theme_dark', 'appearance_inherit', 'password_strength', 'password_mismatch'] as $key) {
             $labels[$key] = __('laravelusers::ui.'.$key);
         }
+
+        $labels['theme_light'] = __('laravelusers::ui.themes.light');
+        $labels['theme_dark'] = __('laravelusers::ui.themes.dark');
 
         return $labels + ['filter' => __('laravelusers::ui.filters'), 'view' => __('laravelusers::ui.list_view'), 'table' => __('laravelusers::ui.table_view'), 'cards' => __('laravelusers::ui.card_view'), 'select_all' => __('laravelusers::ui.select_all'), 'selected' => __('laravelusers::ui.selected', ['count' => ':count']), 'empty' => __('laravelusers::laravelusers.search.no-results'), 'actions' => __('laravelusers::laravelusers.users-table.actions'), 'cancel' => __('laravelusers::forms.cancel')];
     }
@@ -382,7 +390,7 @@ class NativePageData
             }
             $preference = $data['appearancePreference'] ?? [];
             $key = $mode === '' ? '' : 'dark_';
-            $fields[] = $this->field('user_card'.$mode.'_color', __('laravelusers::ui.'.($mode === '' ? 'appearance_color' : 'appearance_dark_color')), 'color', $preference[$key.'color'] ?? null, ['nullable' => true, 'fallback' => Frontend::profileColors(dark: $mode !== '')['base'], 'disabled' => !$available, 'section' => 'appearance']);
+            $fields[] = $this->field('user_card'.$mode.'_color', __('laravelusers::ui.'.($mode === '' ? 'settings_profile_color' : 'settings_profile_dark_color')), 'color', $preference[$key.'color'] ?? null, ['nullable' => true, 'fallback' => Frontend::profileColors(dark: $mode !== '')['base'], 'disabled' => !$available, 'section' => 'appearance']);
             $gradient = $preference[$key.'gradient'] ?? null;
             $fields[] = $this->field('user_card'.$mode.'_gradient', __('laravelusers::ui.appearance_gradient'), 'select', $gradient === null ? 'inherit' : ($gradient ? 'on' : 'off'), ['options' => $this->options(['inherit', 'on', 'off'], 'appearance_'), 'disabled' => !$available, 'section' => 'appearance']);
             if ($mode !== '' || ($data['appearanceStrengthAvailable'] ?? false)) {
