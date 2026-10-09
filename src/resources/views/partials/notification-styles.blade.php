@@ -3,6 +3,7 @@
     #laravelusers .lu-notifications { width: 100%; min-width: 0; margin-inline: auto; }
     #laravelusers.lu-shell > :is(.lu-toolbar, .lu-notifications, .lu-breadcrumbs, .lu-panel, .lu-profile) { width: 100%; max-width: none; margin-inline: auto; }
     #laravelusers.lu-shell > .lu-toolbar { position: relative; border-bottom: 0; }
+    #laravelusers :is(.lu-brand, .navbar-brand), #laravelusers :is(.lu-brand, .navbar-brand):is(:hover, :focus, :active) { text-decoration: none; }
     #laravelusers.lu-shell > .lu-toolbar::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 1px; background: var(--lu-border, #ced4da); box-shadow: 0 0 0 100vmax var(--lu-border, #ced4da); clip-path: inset(0 -100vmax); pointer-events: none; }
     #laravelusers:not(.lu-shell) #app > .navbar-laravel { padding-inline: 0; border-bottom: 1px solid var(--lu-border, #ced4da); }
     #laravelusers:not(.lu-shell) #app > .navbar-laravel > .container { padding-inline: 15px; }
