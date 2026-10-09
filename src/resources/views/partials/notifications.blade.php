@@ -1,4 +1,4 @@
-<div class="lu-notifications{{ isset($user) ? ' lu-notifications-profile' : '' }}">
+<div class="lu-notifications">
 @if(config('laravelusers.enablePackageBootstapAlerts', true))
     @if(\jeremykenedy\laravelusers\Support\UserNotifications::useToast())
         @once @include('laravelusers::partials.toasts') @endonce

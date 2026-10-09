@@ -1,6 +1,10 @@
 @include('laravelusers::partials.asset', ['name' => 'notifications.css'])
 <style>
-    #laravelusers .lu-notifications-profile { max-width: 960px; margin-inline: auto; }
+    #laravelusers .lu-notifications { width: 100%; min-width: 0; margin-inline: auto; }
+    #laravelusers .lu-notifications:has(+ .lu-profile) { max-width: 960px; }
+    #laravelusers.lu-shell:has(> .lu-profile) > :is(.lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 960px; margin-inline: auto; }
+    #laravelusers.lu-shell:has(> .lu-edit-card, > .lu-account-card) > :is(.lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 1120px; margin-inline: auto; }
+    #laravelusers.lu-shell:has(> .lu-settings-panel) > :is(.lu-notifications, .lu-breadcrumbs) { width: 100%; max-width: 1160px; margin-inline: auto; }
     #laravelusers .lu-flash { box-sizing: border-box; }
     #laravelusers .lu-flash { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; width: 100%; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--lu-border, #ced4da); border-radius: 6px; background: var(--lu-soft, #f1f4f9); color: var(--lu-text, #172033); font-size: .875rem; overflow-wrap: anywhere; }
     #laravelusers .lu-flash > span, #laravelusers .lu-flash > div { min-width: 0; }
