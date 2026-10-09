@@ -225,11 +225,14 @@ class RoleIntegrationsTest extends TestCase
         $unprivileged = $actor->newInstance(['name' => 'Unprivileged Account', 'email' => 'unprivileged@example.com', 'password' => bcrypt('password')]);
         $unprivileged->save();
 
-        $this->actingAs($unprivileged)->post('/users/'.$target->getKey().'/impersonate')->assertNotFound();
+        $this->flushSession();
+        $this->actingAs($unprivileged)->get('/users')->assertOk()->assertDontSee('impersonat', false);
+        $this->post('/users/'.$target->getKey().'/impersonate')->assertNotFound();
+        $this->actingAs($actor)->get('/users')->assertOk()->assertSee('lu-impersonate-form', false)->assertDontSee('lu-impersonation-banner', false);
         $this->actingAs($actor)->post('/users/'.$actor->getKey().'/impersonate')->assertForbidden();
         $this->withHeader('referer', 'http://localhost/users?page=2')->actingAs($actor)->post('/users/'.$target->getKey().'/impersonate')->assertRedirect('/');
         $this->assertAuthenticatedAs($target);
-        $this->get('/users/'.$target->getKey())->assertOk()->assertSee('Impersonating Temporary Account')->assertSee('Exit impersonation');
+        $this->get('/users/'.$target->getKey())->assertOk()->assertSee('Impersonating Temporary Account')->assertSee('Exit impersonation')->assertSee('.lu-impersonation-banner {', false);
         $this->assertNull($this->app->make(UserActivity::class)->lastLogin($target));
         $this->post('/users/'.$target->getKey().'/impersonate')->assertStatus(409);
         $this->post('/users/impersonation/stop')->assertRedirect('/users?page=2')->assertSessionHas('success');

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Omit impersonation styles and legacy search actions from page source when the user cannot access the feature.
+- Keep standalone theme controls synchronized when they render after the first control, without delaying theme changes while assets load.
 - Read only the four supported login-detail fields and verify escaping in live search results.
 - Verify optional package and account setup against real installers without running unrelated host migrations.
 - Cover package worker setup failures, explicit migration choices and operation lock ownership.

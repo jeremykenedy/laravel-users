@@ -15,6 +15,7 @@ for (const framework of ['bootstrap5', 'tailwind']) {
         try {
             const toggle = page.locator('#lu-theme');
             await expect(toggle).toBeVisible();
+            await expect(toggle).toBeEnabled();
             expect(await page.evaluate(() => document.readyState)).toBe('loading');
             await toggle.click();
             await expect(toggle.locator('svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'light');
@@ -22,6 +23,8 @@ for (const framework of ['bootstrap5', 'tailwind']) {
             releaseAsset();
             await page.waitForLoadState('domcontentloaded');
         }
+        await page.locator('#lu-theme').click();
+        await expect(page.locator('#lu-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'dark');
     });
 }
 
@@ -215,6 +218,14 @@ test('standalone navigation components work without the package shell', async ({
     await expect(page.locator('html')).toHaveAttribute('data-lu-theme', 'dark');
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.locator('#secondary-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'dark');
+    await page.locator('#secondary-theme').click();
+    await expect(page.locator('#dashboard-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'system');
+    await expect(page.locator('#secondary-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'system');
+    await page.locator('#secondary-theme').click();
+    await expect(page.locator('html')).toHaveAttribute('data-lu-theme', 'light');
+    await expect(page.locator('#dashboard-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'light');
+    await page.locator('#dashboard-theme').click();
+    await expect(page.locator('html')).toHaveAttribute('data-lu-theme', 'dark');
     await page.locator('.lu-user-menu summary').click();
     await expect(page.getByRole('button', {name: 'Log out', exact: true})).toBeVisible();
     await page.keyboard.press('Escape');
@@ -224,6 +235,7 @@ test('standalone navigation components work without the package shell', async ({
     await expect(page.locator('.lu-user-menu')).not.toHaveAttribute('open');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-lu-theme', 'dark');
+    await expect(page.locator('#secondary-theme svg:not([hidden])')).toHaveAttribute('data-theme-icon', 'dark');
 });
 
 for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
@@ -787,6 +799,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         const directory = page.locator(framework === 'bootstrap4' ? '#users_table' : '#lu-users');
         await expect(directory.locator('.lu-login-details').first()).toContainText('127.0.0.1');
         await expect(directory.locator('form[action*="/impersonate"]')).toHaveCount(0);
+        expect(await page.locator('html').innerHTML()).not.toContain('impersonat');
         const tableIp = directory.locator('.lu-login-details [data-lu-login-field="ip_address"] a').first();
         await expect(tableIp).toHaveAttribute('href', 'https://ipinfo.io/127.0.0.1');
         await expect(tableIp).toHaveAttribute('target', '_blank');
@@ -821,6 +834,7 @@ for (const framework of ['bootstrap4', 'bootstrap5', 'tailwind']) {
         await expect(loginDetails.locator('a')).toHaveAttribute('href', 'https://ipinfo.io/198.51.100.2');
         await page.goto('/users/1');
         await expect(page.locator('form[action*="/impersonate"]')).toHaveCount(0);
+        expect(await page.locator('html').innerHTML()).not.toContain('impersonat');
         await expect(page.locator('.lu-profile-identity .lu-avatar')).toBeVisible();
         await expect(page.locator('.lu-profile-details dt svg')).toHaveCount(11);
         await expect(page.locator('.lu-profile-details dt').filter({ hasText: 'Last login' })).toBeVisible();

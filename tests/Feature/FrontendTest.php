@@ -8,6 +8,18 @@ use jeremykenedy\laravelusers\Test\TestCase;
 
 class FrontendTest extends TestCase
 {
+    public function test_impersonation_markup_styles_and_search_actions_are_not_rendered_without_a_roles_integration(): void
+    {
+        $user = $this->user();
+        $this->actingAs($user);
+        foreach (Frontend::FRAMEWORKS as $framework) {
+            config(['laravelusers.frontend' => $framework, 'laravelusers.impersonation.enabled' => true]);
+            foreach (['/users', '/users/create', '/users/'.$user->id, '/users/'.$user->id.'/edit'] as $url) {
+                $this->get($url)->assertOk()->assertDontSee('impersonat', false);
+            }
+        }
+    }
+
     public function test_saved_names_cannot_close_the_document_title_on_show_or_edit(): void
     {
         $name = '</title><script>alert(1)</script>';

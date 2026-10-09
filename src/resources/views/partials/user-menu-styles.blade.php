@@ -14,6 +14,7 @@
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items :is(button, a) { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 0; background: transparent; color: inherit; font: inherit; font-size: .875rem; text-align: left; cursor: pointer; text-decoration: none; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items a { color: var(--lu-text, #172033) !important; text-decoration: none !important; }
     :where(#laravelusers, .lu-user-menu-component) .lu-user-menu-items :is(button, a):hover { background: var(--lu-soft, #f1f4f9); }
+    @if(is_array(session('laravelusers.impersonation')))
     .lu-impersonation-banner { position: fixed; z-index: 1050; top: 0; left: 0; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 7px 14px; background: #9a4b08; color: #fff; box-shadow: 0 2px 8px #0003; }
     .lu-impersonation-mark { display: inline-grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; border: 1px solid #ffffff88; border-radius: 50%; }
     .lu-impersonation-mark svg { width: 17px; height: 17px; }
@@ -21,7 +22,10 @@
     .lu-impersonation-banner form { margin: 0; }
     .lu-impersonation-exit { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 6px 10px; border: 1px solid #ffffff88; border-radius: 5px; background: transparent; color: #fff; font: inherit; cursor: pointer; }
     .lu-impersonation-exit:hover { background: #ffffff20; }
+    @endif
+    @if($canImpersonateUsers ?? false)
     .lu-impersonate-form { display: inline-flex; margin: 0; }
+    @endif
     #laravelusers form label input[type="checkbox"] { margin-right: 8px; flex-shrink: 0; }
     #laravelusers .lu-email-check input[type="checkbox"] { margin-right: 0; }
 </style>
