@@ -8,6 +8,9 @@
     @include('laravelusers::partials.email-styles')
     @include('laravelusers::partials.settings-styles')
     @include('laravelusers::partials.notification-styles')
+    @if(\jeremykenedy\laravelusers\Support\UserNotifications::useToast() && class_exists(\Jeremykenedy\LaravelToast\Support\ToastAnimations::class))
+        <style>{!! \Jeremykenedy\LaravelToast\Support\ToastAnimations::css() !!}</style>
+    @endif
     @if($nativeRuntime === 'livewire')@livewireStyles @endif
 @endsection
 @section('content')
@@ -26,4 +29,6 @@
 @section('template_scripts')
     @if($nativeRuntime === 'livewire')@livewireScripts @endif
     @include('laravelusers::partials.asset', ['name' => 'runtime-'.$nativeRuntime.'.js'])
+    @include('laravelusers::partials.asset', ['name' => 'notifications.js', 'once' => true])
+    @include('laravelusers::partials.framework-module')
 @endsection

@@ -1,4 +1,5 @@
-import { displayUsers, fieldVisible, formData, formReady, getValue, request, sameOriginUrl, setValue } from './shared.js';
+import { displayUsers, displayValue, fieldVisible, formData, formReady, getValue, request, sameOriginUrl, setValue } from './shared.js';
+import { createPackageOperationTracker, createPackageRequirementsTracker } from './package-operation.js';
 
 function initialState(page) {
     return {
@@ -13,6 +14,11 @@ function initialState(page) {
         preview: null,
         notice: null,
         busy: false,
+        packageOperation: page.data.package_operation ?? null,
+        packageRequirements: page.data.packages?.requirements ?? null,
+        dismissedMessages: [],
+        appearancePreviewAvatars: page.data.appearance_preview?.avatars ?? {},
+        appearancePreviewLoading: false,
     };
 }
 
@@ -20,11 +26,30 @@ export function createNativeStore(page, runtime) {
     let state = initialState(page);
     let searchTimer;
     let requestId = 0;
+    let previewRequestId = 0;
     const listeners = new Set();
     const emit = () => { state = { ...state }; listeners.forEach(listener => listener(state)); };
-    const report = error => { state.notice = { type: 'error', message: error.message }; };
+    const report = error => { state.notice = { type: 'error', message: error.message }; state.dismissedMessages = []; };
+    const packageTracker = createPackageOperationTracker(runtime, () => state.page.csrf, page.data.package_operation, value => { state.packageOperation = value; emit(); });
+    let requirementsTracker;
+    const trackRequirements = payload => {
+        requirementsTracker?.stop();
+        requirementsTracker = createPackageRequirementsTracker(runtime, () => state.page.csrf, payload.forms['package-verify'], payload.data.packages?.requirements, value => {
+            state.packageRequirements = value;
+            if (state.page.data.packages) state.page.data.packages.ready = value.queue_ready;
+            for (const form of Object.values(state.page.forms)) if (form.requires_queue) form.disabled = form.blocked || !value.queue_ready;
+            for (const action of state.page.data.settings_actions ?? []) if (action.name.startsWith('package-')) action.disabled = action.name === 'package-requirements' ? value.queue_ready : state.page.forms[action.form]?.disabled;
+            emit();
+        });
+    };
     const load = payload => {
+        const previousActor = state.page.data.current_user?.id;
         state = initialState(payload);
+        trackRequirements(payload);
+        previewRequestId++;
+        if (payload.data.package_operation) packageTracker.update(payload.data.package_operation);
+        else if (previousActor === payload.data.current_user?.id) state.packageOperation = packageTracker.current();
+        else packageTracker.clear();
         const root = document.getElementById('laravelusers');
         if (root) { root.dataset.luTheme = payload.theme; root.dataset.luCss = payload.framework; }
         document.title = payload.title;
@@ -42,6 +67,7 @@ export function createNativeStore(page, runtime) {
     const store = {
         subscribe(listener) { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
         getSnapshot() { return state; },
+        verifyRequirements() { return requirementsTracker.verify(); },
         value(id, key) { return getValue(state.values[id], key); },
         setValue(id, key, value) {
             if (!state.page.forms[id]?.fields.some(field => field.key === key)) return;
@@ -49,15 +75,18 @@ export function createNativeStore(page, runtime) {
             state.preview = null;
             if (state.errors[id]) delete state.errors[id][key];
             emit();
+            if (id === 'settings' && key === 'avatar_source') store.previewAvatars();
         },
         toggleInheritance(id, key) {
             const field = state.page.forms[id]?.fields.find(field => field.key === key);
-            if (field?.nullable) store.setValue(id, key, store.value(id, key) === null ? field.fallback : null);
+            if (field?.nullable) store.setValue(id, key, store.value(id, key) === null ? displayValue(field, state.values[id]) : null);
         },
         setTab(id, section) {
             if (state.page.forms[id]?.fields.some(field => field.section === section)) { state.tabs[id] = section; emit(); }
         },
         ready(id) { return formReady(state.page.forms[id], state.values[id]); },
+        dismissMessage(index) { state.dismissedMessages.push(index); emit(); },
+        dismissToast(id) { state.page.data.toasts = (state.page.data.toasts ?? []).filter(toast => String(toast.id) !== String(id)); emit(); },
         activeForm() {
             const form = state.page.forms[state.activeForm];
             return form ? { ...form, action: state.activeAction ?? form.action } : null;
@@ -124,6 +153,7 @@ export function createNativeStore(page, runtime) {
             if (state.search.trim()) url.searchParams.set('user_search_box', state.search.trim().slice(0, 255));
             return store.navigate(url.href);
         },
+        clearSearch() { state.search = ''; return store.search(); },
         async navigate(value, historyMode = 'push') {
             clearTimeout(searchTimer);
             const id = ++requestId;
@@ -152,19 +182,19 @@ export function createNativeStore(page, runtime) {
             try {
                 let { payload, response } = await request(form.action, runtime, state.page.csrf, { method: 'POST', body: formData(form, state.values[id], state.page.csrf) });
                 if (!payload) return;
-                if (response.status === 422) { state.errors[id] = payload.errors ?? {}; report(new Error(payload.message)); return; }
+                if (response.status === 422) { state.errors[id] = payload.errors ?? {}; report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
                 if (payload.screen) { load(payload); return; }
                 if (form.async && payload.status_url) {
-                    const statusUrl = sameOriginUrl(payload.status_url).href;
-                    do {
-                        state.notice = { type: 'status', message: payload.message ?? payload.status ?? '' };
-                        emit();
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        ({ payload } = await request(statusUrl, runtime, state.page.csrf));
-                    } while (payload && ['queued', 'running'].includes(payload.status));
-                    if (!payload) return;
+                    packageTracker.update(payload);
+                    store.closeDialog();
+                    return;
                 }
                 if (payload.status === 'failed') throw new Error(payload.message);
+                if (form.async && typeof payload.queue_ready === 'boolean') {
+                    requirementsTracker.update(payload);
+                    store.closeDialog();
+                    return;
+                }
                 if (payload.redirect) { await store.navigate(payload.redirect); return; }
                 if (form.async && payload.status === 'completed') { await store.navigate(window.location.href, 'replace'); return; }
                 store.closeDialog();
@@ -181,12 +211,29 @@ export function createNativeStore(page, runtime) {
             try {
                 const { payload, response } = await request(form.preview, runtime, state.page.csrf, { method: 'POST', body: formData(form, state.values[id], state.page.csrf) });
                 if (!payload) return;
-                if (response.status === 422) { state.errors[id] = payload.errors ?? {}; report(new Error(payload.message)); return; }
+                if (response.status === 422) { state.errors[id] = payload.errors ?? {}; report(new Error([payload.message, ...Object.values(payload.errors ?? {}).flat()].filter(Boolean).join(' '))); return; }
                 state.preview = { form: id, html: payload.html ?? '', recipient: payload.recipient ?? '' };
             } catch (error) { report(error); }
             finally { state.busy = false; emit(); }
         },
         editPreview() { state.preview = null; emit(); },
+        async previewAvatars() {
+            const preview = state.page.data.appearance_preview;
+            if (!preview || !state.page.forms.settings) return;
+            const id = ++previewRequestId;
+            const body = new FormData();
+            body.set('_token', state.page.csrf ?? '');
+            body.set('avatar_source', state.values.settings.avatar_source);
+            state.appearancePreviewLoading = true;
+            emit();
+            try {
+                const { payload } = await request(preview.url, runtime, state.page.csrf, { method: 'POST', body });
+                if (id !== previewRequestId || !payload) return;
+                if (payload.errors) throw new Error(Object.values(payload.errors).flat().join(' '));
+                state.appearancePreviewAvatars = Object.fromEntries(['profile', 'edit', 'profile_dark', 'edit_dark'].filter(kind => payload.avatars?.[kind]).map(kind => [kind, payload.avatars[kind]]));
+            } catch (error) { if (id === previewRequestId) report(error); }
+            finally { if (id === previewRequestId) { state.appearancePreviewLoading = false; emit(); } }
+        },
         async submitBanner() {
             const banner = state.page.data.banner;
             if (!banner || state.busy) return;
@@ -207,6 +254,7 @@ export function createNativeStore(page, runtime) {
             emit();
         },
     };
+    trackRequirements(page);
     window.addEventListener('popstate', () => store.navigate(window.location.href, 'none'));
     return store;
 }

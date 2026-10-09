@@ -6,6 +6,7 @@ namespace jeremykenedy\laravelusers\Support;
 
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -201,7 +202,7 @@ class NativePageData
     private function labels(): array
     {
         $labels = [];
-        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions', 'select_user', 'total_users', 'pagination', 'page', 'account_email_pending_to', 'role_level', 'theme_light', 'theme_dark', 'appearance_inherit', 'appearance_inherit_highlight_color', 'appearance_avatar_preview', 'settings_profile_color', 'settings_edit_color', 'settings_profile_dark_color', 'settings_edit_dark_color', 'email_template_welcome', 'email_template_reset', 'email_template_restore', 'email_template_force_delete', 'email_template_goodbye', 'password_strength', 'password_mismatch', 'package_refresh', 'package_queued', 'breadcrumbs', 'home'] as $key) {
+        foreach (['search', 'clear', 'back', 'edit', 'save', 'show', 'delete', 'confirm', 'close', 'previous', 'next', 'directory', 'columns', 'presence', 'online', 'offline', 'last_login_at', 'no_logins', 'device', 'os', 'browser', 'ip_address', 'email_preview', 'email_send', 'email_back_editing', 'email_recipients', 'email_preview_frame', 'password_hint', 'settings', 'account_title', 'navigation', 'package_name', 'direct_permissions', 'select_user', 'total_users', 'pagination', 'page', 'account_email_pending_to', 'role_level', 'theme_light', 'theme_dark', 'appearance_inherit', 'appearance_inherit_highlight_color', 'appearance_avatar_preview', 'settings_profile_color', 'settings_edit_color', 'settings_profile_dark_color', 'settings_edit_dark_color', 'email_template_welcome', 'email_template_reset', 'email_template_restore', 'email_template_force_delete', 'email_template_goodbye', 'password_strength', 'password_mismatch', 'package_refresh', 'package_queued', 'settings_packages', 'packages_hint', 'packages_queue_required', 'package_requirements_setup', 'package_requirements_completed', 'package_requirements_verify', 'package_install', 'package_remove', 'package_installed', 'package_not_installed', 'package_configure', 'package_requirements', 'package_requirements_hint', 'breadcrumbs', 'home'] as $key) {
             $labels[$key] = __('laravelusers::ui.'.$key);
         }
 
@@ -599,7 +600,7 @@ class NativePageData
                 $fields[] = $this->field($kind.'_gradient', __('laravelusers::ui.appearance_gradient'), 'checkbox', config('laravelusers.'.$prefix.'Gradient') ?? config('laravelusers.'.$fallback.'Gradient', true), ['section' => 'appearance']);
                 $fields[] = $this->field($kind.'_gradient_strength', __('laravelusers::ui.gradient_strength'), 'range', config('laravelusers.'.$prefix.'GradientStrength') ?? config('laravelusers.'.$fallback.'GradientStrength', 50), ['min' => 0, 'max' => 100, 'section' => 'appearance']);
                 $dark = str_ends_with($kind, '_dark');
-                $fields[] = $this->field($kind.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', config('laravelusers.'.$prefix.'GradientHighlightColor', $dark ? null : '#ffffff'), ['nullable' => $dark, 'fallback' => config('laravelusers.'.$fallback.'GradientHighlightColor', '#ffffff'), 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'section' => 'appearance']);
+                $fields[] = $this->field($kind.'_gradient_highlight_color', __('laravelusers::ui.gradient_highlight_color'), 'color', config('laravelusers.'.$prefix.'GradientHighlightColor', $dark ? null : '#ffffff'), ['nullable' => $dark, 'fallback' => config('laravelusers.'.$fallback.'GradientHighlightColor', '#ffffff'), 'inherit_from' => $dark ? str_replace('_dark', '', $kind).'_gradient_highlight_color' : null, 'inherit_label' => __('laravelusers::ui.appearance_inherit_highlight_color'), 'section' => 'appearance']);
             }
             if (Route::has('users.settings.avatar-preview')) {
                 $avatars = [];
@@ -622,9 +623,10 @@ class NativePageData
                     if (isset($field['options'])) {
                         $attributes['options'] = array_map(fn ($value) => ['value' => $value, 'label' => ucwords(str_replace(['-', '_'], ' ', $value))], $field['options']);
                     }
-                    $fields[] = $this->field('toast.'.$key, __('laravelusers::ui.settings_toast_'.$key), $field['type'], $values[$key], $attributes);
+                    $fields[] = $this->field('toast.'.$key, __('laravelusers::ui.toast_'.$key), $field['type'], $values[$key], $attributes);
                 }
             }
+
         }
         if ($data['accessAvailable'] ?? false) {
             foreach (UserAccess::ACTIONS as $action) {
@@ -716,16 +718,43 @@ class NativePageData
             return $page;
         }
         $page['data']['packages'] = ['installed' => $data['managedPackages'] ?? [], 'ready' => (bool) ($data['packageQueueReady'] ?? false), 'verify' => route('users.settings.packages.verify'), 'status_url' => route('users.settings.packages.status', ['id' => '__JOB_ID__'])];
+        $page['data']['packages']['requirements'] = is_array($data['packageRequirements'] ?? null) ? Arr::only($data['packageRequirements'], ['status', 'queue_ready', 'message']) : null;
+        $page['data']['packages']['choices'] = [];
+        $docs = 'https://laravel.com/docs/'.explode('.', Application::VERSION)[0].'.x';
+        $page['data']['packages']['help'] = [['label' => __('laravelusers::ui.packages_queue_setup'), 'url' => $docs.'/queues#introduction'], ['label' => __('laravelusers::ui.packages_worker_setup'), 'url' => $docs.'/queues#running-the-queue-worker'], ['label' => __('laravelusers::ui.packages_cache_setup'), 'url' => $docs.'/cache#atomic-locks']];
+        $page['forms']['package-verify'] = $this->form('package-verify', __('laravelusers::ui.package_requirements'), route('users.settings.packages.verify'), 'POST', [$this->field('package', '', 'hidden', 'requirements'), $this->field('operation', '', 'hidden', 'verify')], $request) + ['async' => true, 'verify' => true];
+        $page['forms']['package-verify']['submit'] = __('laravelusers::ui.package_requirements_verify');
         $page['data']['package_operation'] = is_array($data['packageOperation'] ?? null) ? Arr::only($data['packageOperation'], ['id', 'status_url', 'status', 'stage', 'package', 'operation', 'message', 'queued_at', 'started_at', 'updated_at']) : null;
         foreach (['requirements' => 'Package requirements', 'toast' => 'Laravel Toast', 'laravel-roles' => 'Laravel Roles', 'spatie' => 'Spatie Permissions'] as $package => $label) {
             $installed = (bool) ($data['managedPackages'][$package] ?? false);
             $operation = $package === 'requirements' ? 'setup' : ($installed ? 'remove' : 'install');
             $word = $operation === 'remove' ? 'remove' : 'continue';
             $fields = [$this->field('package', '', 'hidden', $package), $this->field('operation', '', 'hidden', $operation), $this->field('setup', __('laravelusers::ui.package_publish_missing'), 'checkbox', true), $this->field('migrate', __('laravelusers::ui.package_run_migrations'), 'checkbox', false), $this->field('acknowledgement', __('laravelusers::ui.packages_acknowledgement'), 'checkbox', false, ['required' => true]), $this->field('confirmation', __('laravelusers::ui.package_confirmation').' '.$word, 'text', '', ['required_text' => $word])];
+            if ($package === 'toast') {
+                $fields = array_values(array_filter($fields, fn ($field) => !in_array($field['key'], ['setup', 'migrate'], true)));
+            }
             $id = 'package-'.$package;
-            $blocked = $package !== 'requirements' && !($data['packageQueueReady'] ?? false);
-            $page['forms'][$id] = $this->form($id, $label, route('users.settings.packages'), 'POST', $fields, $request) + ['dialog' => true, 'async' => true, 'disabled' => $blocked, 'danger' => $operation === 'remove', 'help' => $operation === 'remove' ? __('laravelusers::ui.packages_remove_roles_warning') : __('laravelusers::ui.packages_acknowledgement')];
-            $page['data']['settings_actions'][] = ['name' => $id, 'label' => $label.' ('.$operation.')', 'form' => $id, 'disabled' => $blocked || ($package === 'requirements' && ($data['packageQueueReady'] ?? false))];
+            $conflict = !$installed && in_array($package, ['laravel-roles', 'spatie'], true) && (($data['managedPackages']['laravel-roles'] ?? false) || ($data['managedPackages']['spatie'] ?? false));
+            $unsupported = !$installed && $package === 'toast' && (PHP_VERSION_ID < 80200 || version_compare(Application::VERSION, '10.0.0', '<'));
+            $requiresQueue = $package !== 'requirements';
+            $blocked = $conflict || $unsupported;
+            $disabled = $blocked || ($requiresQueue && !($data['packageQueueReady'] ?? false));
+            $page['forms'][$id] = $this->form($id, $label, route('users.settings.packages'), 'POST', $fields, $request) + ['dialog' => true, 'async' => true, 'disabled' => $disabled, 'blocked' => $blocked, 'requires_queue' => $requiresQueue, 'danger' => $operation === 'remove', 'help' => $operation === 'remove' ? __('laravelusers::ui.packages_remove_roles_warning') : __('laravelusers::ui.packages_acknowledgement')];
+            $page['data']['settings_actions'][] = ['name' => $id, 'label' => $label.' ('.$operation.')', 'form' => $id, 'disabled' => $disabled || ($package === 'requirements' && ($data['packageQueueReady'] ?? false))];
+            if ($package !== 'requirements') {
+                $page['data']['packages']['choices'][] = ['name' => $id, 'package' => $package, 'label' => $label, 'installed' => $installed, 'operation' => $operation, 'blocked' => $blocked, 'disabled' => $disabled, 'reason' => $conflict ? __('laravelusers::ui.packages_roles_conflict') : ($unsupported ? __('laravelusers::ui.packages_toast_unsupported') : null), 'hint' => $package === 'toast' ? __('laravelusers::ui.packages_toast_hint') : null, 'setup_hint' => $installed ? __('laravelusers::ui.'.($package === 'toast' ? 'package_toast_managed_setup' : 'package_roles_setup')) : null, 'configure_name' => $installed ? $id.'-configure' : null];
+            }
+            if ($installed && $package !== 'requirements') {
+                $configureId = $id.'-configure';
+                $configureFields = [$this->field('package', '', 'hidden', $package), $this->field('operation', '', 'hidden', 'configure')];
+                if ($package !== 'toast') {
+                    $configureFields[] = $this->field('migrate', __('laravelusers::ui.package_run_migrations'), 'checkbox', false);
+                }
+                $configureFields[] = $this->field('acknowledgement', __('laravelusers::ui.packages_acknowledgement'), 'checkbox', false, ['required' => true]);
+                $configureFields[] = $this->field('confirmation', __('laravelusers::ui.package_confirmation').' continue', 'text', '', ['required_text' => 'continue']);
+                $page['forms'][$configureId] = $this->form($configureId, __('laravelusers::ui.package_configure').' '.$label, route('users.settings.packages'), 'POST', $configureFields, $request) + ['dialog' => true, 'async' => true, 'disabled' => $disabled, 'blocked' => false, 'requires_queue' => true];
+                $page['data']['settings_actions'][] = ['name' => $configureId, 'label' => __('laravelusers::ui.package_configure'), 'form' => $configureId, 'disabled' => $disabled];
+            }
         }
         if ($data['accessAvailable'] ?? false) {
             $page['forms']['impersonation-settings'] = $this->form('impersonation-settings', __('laravelusers::ui.impersonation'), route('users.settings.impersonation'), 'POST', [$this->field('enabled', __('laravelusers::ui.impersonation'), 'checkbox', (bool) ($data['impersonationEnabled'] ?? false))], $request) + ['disabled' => !($data['settingsAvailable'] ?? false)];

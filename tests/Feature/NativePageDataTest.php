@@ -161,6 +161,7 @@ class NativePageDataTest extends TestCase
         $this->assertSame('#ffffff', $settings['forms']['settings']['values']['profile_gradient_highlight_color']);
         $this->assertNull($settings['forms']['settings']['values']['profile_dark_gradient_highlight_color']);
         $this->assertTrue(collect($settings['forms']['settings']['fields'])->firstWhere('key', 'profile_dark_gradient_highlight_color')['nullable']);
+        $this->assertSame('profile_gradient_highlight_color', collect($settings['forms']['settings']['fields'])->firstWhere('key', 'profile_dark_gradient_highlight_color')['inherit_from']);
 
         $data = ['user' => $user, 'rolesEnabled' => false, 'appearanceEnabled' => true, 'appearanceAvailable' => true, 'appearanceDarkAvailable' => true, 'appearanceHighlightAvailable' => false];
         $page = $this->page('laravelusers::modern.edit-user', $data);
@@ -181,6 +182,31 @@ class NativePageDataTest extends TestCase
         $page = $this->page('laravelusers::modern.settings', ['settingsAvailable' => true, 'packageManagementAllowed' => false, 'packageOperation' => $operation]);
         $this->assertArrayNotHasKey('package_operation', $page['data']);
         $this->assertStringNotContainsString('operation-id', json_encode($page));
+    }
+
+    public function test_native_package_controls_follow_worker_readiness_installed_packages_and_existing_http_actions(): void
+    {
+        $this->actingAs($this->user());
+        $data = ['settingsAvailable' => true, 'packageManagementAllowed' => true, 'packageQueueReady' => false, 'packageRequirements' => ['status' => 'checking', 'queue_ready' => false, 'message' => 'Waiting for the worker.', 'host_path' => '/private/host'], 'managedPackages' => ['toast' => false, 'laravel-roles' => true, 'spatie' => false]];
+        $page = $this->page('laravelusers::modern.settings', $data);
+
+        $this->assertSame(route('users.settings.packages.verify'), $page['forms']['package-verify']['action']);
+        $this->assertSame(['package' => 'requirements', 'operation' => 'verify'], $page['forms']['package-verify']['values']);
+        $this->assertArrayNotHasKey('host_path', $page['data']['packages']['requirements']);
+        $this->assertTrue($page['forms']['package-toast']['disabled']);
+        $this->assertNotContains('setup', array_column($page['forms']['package-toast']['fields'], 'key'));
+        $this->assertNotContains('migrate', array_column($page['forms']['package-toast']['fields'], 'key'));
+        $this->assertTrue($page['forms']['package-spatie']['blocked']);
+        $this->assertSame('configure', $page['forms']['package-laravel-roles-configure']['values']['operation']);
+        $this->assertSame('continue', collect($page['forms']['package-laravel-roles-configure']['fields'])->firstWhere('key', 'confirmation')['required_text']);
+        $this->assertSame(route('users.settings.packages'), $page['forms']['package-laravel-roles-configure']['action']);
+        $this->assertArrayNotHasKey('package-spatie-configure', $page['forms']);
+
+        $data['packageQueueReady'] = true;
+        $page = $this->page('laravelusers::modern.settings', $data);
+        $this->assertFalse($page['forms']['package-toast']['disabled']);
+        $this->assertFalse($page['forms']['package-laravel-roles-configure']['disabled']);
+        $this->assertTrue($page['forms']['package-spatie']['disabled']);
     }
 
     private function page(string $view, array $data): array

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formData, formReady, sameOriginUrl, setValue } from '../shared.js';
+import { displayValue, formData, formReady, sameOriginUrl, setValue } from '../shared.js';
 import { createNativeStore } from '../store.js';
 
 function environment(t) {
@@ -51,6 +51,23 @@ test('security confirmation is exact and conditional, without validating busines
     assert.equal(formReady(form, { enabled: true, confirmation: 'permanently delete' }), true);
     assert.throws(() => setValue({}, '__proto__.polluted', true));
     assert.equal({}.polluted, undefined);
+});
+
+test('inherited highlight pickers follow the selected light color while their submitted value stays nullable', t => {
+    environment(t);
+    const payload = page();
+    const field = { key: 'profile_dark_gradient_highlight_color', name: 'profile_dark_gradient_highlight_color', type: 'color', nullable: true, fallback: '#ffffff', inherit_from: 'profile_gradient_highlight_color', section: 'appearance' };
+    payload.forms.settings = { id: 'settings', action: '/users/settings', method: 'PUT', fields: [field, { key: 'profile_gradient_highlight_color', name: 'profile_gradient_highlight_color', type: 'color', section: 'appearance' }], values: { profile_gradient_highlight_color: '#123456', profile_dark_gradient_highlight_color: null }, errors: {} };
+    const store = createNativeStore(payload, 'vue');
+    const values = store.getSnapshot().values.settings;
+    assert.equal(displayValue(field, values), '#123456');
+    store.setValue('settings', 'profile_gradient_highlight_color', '#abcdef');
+    assert.equal(displayValue(field, values), '#abcdef');
+    assert.equal(formData(payload.forms.settings, values, 'csrf').get(field.name), '');
+    store.toggleInheritance('settings', field.key);
+    assert.equal(store.value('settings', field.key), '#abcdef');
+    store.toggleInheritance('settings', field.key);
+    assert.equal(store.value('settings', field.key), null);
 });
 
 test('transport rejects cross-origin and executable action URLs before fetching', t => {

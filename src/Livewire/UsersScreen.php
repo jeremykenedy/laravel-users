@@ -30,6 +30,7 @@ class UsersScreen extends Component
     public function mount(array $nativePage): void
     {
         $this->page = $nativePage;
+        $this->search = $nativePage['data']['search'] ?? '';
         foreach ($nativePage['forms'] as $id => $form) {
             $this->values[$id] = $form['values'];
             $sections = array_column($form['fields'], 'section');
@@ -54,6 +55,39 @@ class UsersScreen extends Component
         if ($this->page['features']['search'] ?? false) {
             $this->redirect(route('users', trim($this->search) === '' ? [] : ['user_search_box' => mb_substr(trim($this->search), 0, 255)]), navigate: true);
         }
+    }
+
+    public function clearSearch(): void
+    {
+        $this->search = '';
+        $this->searchUsers();
+    }
+
+    public function updatedSearch(): void
+    {
+        if (($this->page['features']['search_debounce'] ?? null) !== null) {
+            $this->searchUsers();
+        }
+    }
+
+    public function toggleTheme(): void
+    {
+        if ($this->page['features']['theme_toggle'] ?? false) {
+            $this->page['theme'] = $this->page['theme'] === 'dark' ? 'light' : 'dark';
+            $this->dispatch('laravelusers-native-theme', theme: $this->page['theme']);
+        }
+    }
+
+    public function dismissFlash(int $index): void
+    {
+        if ($this->page['features']['notification_dismissible'] ?? false) {
+            unset($this->page['flash'][$index]);
+        }
+    }
+
+    public function formReady(string $id): bool
+    {
+        return isset($this->page['forms'][$id]) && !($this->page['forms'][$id]['disabled'] ?? false) && $this->ready($id);
     }
 
     public function prepareSubmit(string $form): void
@@ -122,7 +156,8 @@ class UsersScreen extends Component
     {
         $field = collect($this->page['forms'][$form]['fields'] ?? [])->firstWhere('key', $key);
         if ($field && ($field['nullable'] ?? false)) {
-            Arr::set($this->values[$form], $key, Arr::get($this->values[$form], $key) === null ? $field['fallback'] : null);
+            $fallback = ($field['inherit_from'] ?? null) ? Arr::get($this->values[$form], $field['inherit_from']) : null;
+            Arr::set($this->values[$form], $key, Arr::get($this->values[$form], $key) === null ? ($fallback ?? $field['fallback']) : null);
         }
     }
 
@@ -152,7 +187,7 @@ class UsersScreen extends Component
     private function ready(string $id): bool
     {
         foreach ($this->page['forms'][$id]['fields'] as $field) {
-            if (isset($field['when']) && Arr::get($this->values[$id], $field['when']['key']) != $field['when']['equals']) {
+            if (isset($field['when']) && (isset($field['when']['in']) ? !in_array(Arr::get($this->values[$id], $field['when']['key']), $field['when']['in'], true) : Arr::get($this->values[$id], $field['when']['key']) != $field['when']['equals'])) {
                 continue;
             }
             $value = Arr::get($this->values[$id], $field['key']);

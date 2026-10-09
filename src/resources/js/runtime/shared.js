@@ -9,6 +9,10 @@ export function getValue(values, key) {
     return key.split('.').reduce((value, part) => value?.[part], values);
 }
 
+export function displayValue(field, values) {
+    return getValue(values, field.key) ?? (field.inherit_from ? getValue(values, field.inherit_from) : null) ?? field.fallback ?? '';
+}
+
 export function setValue(values, key, value) {
     const parts = key.split('.');
     if (parts.some(part => ['__proto__', 'constructor', 'prototype'].includes(part))) throw new Error('Invalid field name.');
@@ -18,7 +22,7 @@ export function setValue(values, key, value) {
 }
 
 export function fieldVisible(field, values) {
-    return !field.when || String(getValue(values, field.when.key)) === String(field.when.equals);
+    return !field.when || (field.when.in ? field.when.in.includes(getValue(values, field.when.key)) : String(getValue(values, field.when.key)) === String(field.when.equals));
 }
 
 export function formReady(form, values) {
@@ -51,8 +55,8 @@ export async function request(url, runtime, csrf, options = {}) {
         headers: { Accept: 'application/json', 'X-LaravelUsers-Runtime': runtime, 'X-CSRF-TOKEN': csrf ?? '', ...options.headers },
     });
     if (!(response.headers.get('Content-Type') ?? '').includes('application/json')) {
-        if (response.redirected) {
-            window.location.assign(sameOriginUrl(response.url).href);
+        if (response.redirected || !options.method || options.method === 'GET') {
+            window.location.assign(sameOriginUrl(response.url || url).href);
             return { response, payload: null };
         }
         throw new Error('The application returned an unexpected response.');
