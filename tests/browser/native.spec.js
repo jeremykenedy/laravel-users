@@ -84,7 +84,8 @@ async function verifyRequirementsAndTemplates(page, runtime) {
     await expect(page.getByRole('button', { name: /^(?:Re-)?Verify package requirements$/ })).toBeEnabled();
     const requirements = page.locator('[data-lu-native-package-requirements]');
     await expect(requirements).toContainText(/required|missing|unavailable|not writable|verify|verified/i);
-    await expect(requirements).not.toContainText('Waiting for the package worker', { timeout: 15000 });
+    await expect(requirements).toContainText(/verified/i, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
     const templates = page.locator('form[data-lu-native-form="email-templates"]');
     await expect(templates.locator('details summary')).toHaveCount(5);
     await expect(templates.locator('details summary').first()).toHaveText(/template$/);
@@ -193,6 +194,7 @@ for (const runtime of runtimes) {
         page.on('pageerror', error => errors.push(error.message));
         await page.goto(`/__browser/bootstrap5?runtime=${runtime}&accounts=1&settings=1&soft-deletes=1&appearance=1&avatar-preferences=1&packages=1&search-debounce=0`);
         await page.getByRole('link', { name: 'User settings', exact: true }).click();
+        await verifyRequirementsAndTemplates(page, runtime);
         const form = page.locator('form[data-lu-native-form="settings"]');
         const breadcrumbs = form.locator('[name="show_breadcrumbs"]:not([type="hidden"])');
         const lightHighlight = form.locator('[name="profile_gradient_highlight_color"]:not([type="hidden"])');
@@ -225,7 +227,6 @@ for (const runtime of runtimes) {
         await expect(form.locator('[name="show_breadcrumbs"]:not([type="hidden"])')).toBeChecked();
         await expect(darkHighlight).toBeDisabled();
         await expect(darkHighlight).toHaveValue('#b14c8a');
-        await verifyRequirementsAndTemplates(page, runtime);
         await form.getByRole('tab', { name: 'Appearance', exact: true }).click();
         await breadcrumbs.uncheck();
         await lightHighlight.fill('#ffffff');
