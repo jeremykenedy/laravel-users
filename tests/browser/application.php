@@ -14,6 +14,7 @@ use jeremykenedy\laravelusers\Support\Frontend;
 use jeremykenedy\laravelusers\Support\NativeRuntime;
 use jeremykenedy\laravelusers\Support\PackageRequirements;
 use jeremykenedy\laravelusers\Support\PublicAssets;
+use jeremykenedy\laravelusers\Support\UserSettings;
 use jeremykenedy\laravelusers\Test\Fixtures\SoftUser;
 use jeremykenedy\laravelusers\Test\Fixtures\User;
 use jeremykenedy\laravelusers\Test\TestCase;
@@ -143,6 +144,15 @@ config([
     'cache.default'                               => 'file',
     'cache.stores.file.path'                      => $runtime.'/cache',
 ]);
+if (!$preview && ($_COOKIE['lu-deny-notifications'] ?? '0') === '1') {
+    $app->bind(UserSettings::class, fn () => new class() extends UserSettings {
+        public function load(): void
+        {
+            parent::load();
+            config(['laravelusers.access.edit_notifications' => ['mode' => 'deny']]);
+        }
+    });
+}
 if (is_file(config_path('laravelusers-packages.php'))) {
     config(['laravelusers-packages' => require config_path('laravelusers-packages.php')]);
 }
@@ -254,6 +264,7 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
         ->withCookie(cookie('lu-appearance', request()->query('appearance', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-packages', request()->query('packages', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-settings', request()->query('settings', '0'), 60, '/', null, false, false, false))
+        ->withCookie(cookie('lu-deny-notifications', request()->query('deny-notifications', '0'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-avatar', request()->query('avatar', 'initials'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-view-toggle', request()->query('view-toggle', '1'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-full-width', request()->query('full-width', '0'), 60, '/', null, false, false, false))
@@ -267,7 +278,7 @@ Route::middleware('web')->get('/__browser/{framework}', function ($framework) {
         ->withCookie(cookie('lu-responsive-table', request()->query('responsive-table', '1'), 60, '/', null, false, false, false))
         ->withCookie(cookie('lu-published-assets', request()->query('published-assets', '0'), 60, '/', null, false, false, false));
 });
-EncryptCookies::except(['lu-framework', 'lu-runtime', 'lu-goodbye', 'lu-accounts', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-avatar-preferences', 'lu-appearance', 'lu-settings', 'lu-packages', 'lu-responsive-table', 'lu-responsive-buttons', 'lu-icons', 'lu-icons-only', 'lu-search-debounce-enabled', 'lu-search-delay', 'lu-date-style', 'lu-profile-color', 'lu-view-toggle', 'lu-full-width', 'lu-published-assets']);
+EncryptCookies::except(['lu-framework', 'lu-runtime', 'lu-goodbye', 'lu-accounts', 'lu-theme-toggle', 'lu-table-controls', 'lu-soft-deletes', 'lu-avatar', 'lu-avatar-preferences', 'lu-appearance', 'lu-settings', 'lu-deny-notifications', 'lu-packages', 'lu-responsive-table', 'lu-responsive-buttons', 'lu-icons', 'lu-icons-only', 'lu-search-debounce-enabled', 'lu-search-delay', 'lu-date-style', 'lu-profile-color', 'lu-view-toggle', 'lu-full-width', 'lu-published-assets']);
 Route::post('/logout', function () {
     Auth::logout();
 
