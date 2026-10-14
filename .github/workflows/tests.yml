@@ -143,7 +143,7 @@ jobs:
           $coverage->merge(require 'coverage-optional.cov');
           (new SebastianBergmann\CodeCoverage\Report\Clover())->process($coverage, 'coverage.xml');
           PHP
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: php-coverage
           path: coverage.xml
@@ -178,7 +178,7 @@ jobs:
       - run: git diff --exit-code -- src/resources/views/modern/tailwind.blade.php src/resources/assets
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run test:browser -- --project=${{ matrix.browser }} --grep-invert 'tailwind|materialize|material3|bulma|foundation'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: browser-failures-${{ matrix.browser }}
