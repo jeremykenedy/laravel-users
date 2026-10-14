@@ -13,7 +13,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",
     "@material/web": "2.5.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/cli": "^4.1.0",
     "esbuild": "0.28.2",
     "markdownlint": "^0.41.1",
